@@ -12,13 +12,8 @@ M0 — skeleton. See SPEC §13.
 ```bash
 npm install
 npm test
+npm run dev        # app at http://localhost:5173 (uses packages/core from source, no build needed)
 ```
-
-The React app is not scaffolded yet. Create it with:
-```bash
-npm create vite@latest packages/app -- --template react-ts
-```
-then rename its package to `@linden/app` and add `"@linden/core": "*"` to its dependencies.
 
 ## CSV input format (MVP)
 Wide format: `depth[,age]` then one column per variable. Two optional header rows give each variable's `group` and `kind` (see `examples/demo-pollen.csv`). Empty cell = not assessed (`null`); `0` = looked, none found.

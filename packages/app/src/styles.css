@@ -1,0 +1,43 @@
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: #222; background: #f3f3f1; }
+button { font: inherit; padding: 2px 8px; cursor: pointer; }
+button.active { background: #333; color: #fff; }
+button.link { border: none; background: none; color: #888; padding: 0 4px; }
+.muted { color: #888; font-size: 12px; }
+.loading { padding: 2em; }
+
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr 400px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "top top top" "left centre right";
+  height: 100%;
+}
+.top { grid-area: top; display: flex; gap: 8px; align-items: center; padding: 6px 10px; background: #fff; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+.top .brand { margin-right: 8px; }
+.top .spacer { flex: 1; }
+.left { grid-area: left; overflow: auto; padding: 8px 10px; background: #fff; border-right: 1px solid #ddd; }
+.centre { grid-area: centre; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.right { grid-area: right; display: flex; min-height: 0; background: #fff; border-left: 1px solid #ddd; }
+
+h3 { font-size: 13px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; }
+h4 { font-size: 12px; margin: 8px 0 2px; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
+.dataset { margin-bottom: 12px; }
+.variable { display: block; padding: 1px 0; }
+
+.preview { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.preview .toolbar { display: flex; gap: 6px; align-items: center; padding: 4px 10px; border-bottom: 1px solid #ddd; background: #fafafa; }
+.preview .scroller { flex: 1; overflow: auto; padding: 24px; }
+.preview .page { margin: 0 auto; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); }
+.preview .page svg { display: block; width: 100%; height: 100%; }
+
+.warnings { max-height: 28%; overflow: auto; padding: 6px 10px; border-top: 1px solid #ddd; background: #fffdf3; }
+.warnings ul { margin: 0; padding-left: 16px; }
+.warnings .tag { font-size: 11px; background: #eee; border-radius: 3px; padding: 0 4px; }
+
+.editor { flex: 1; display: flex; flex-direction: column; padding: 8px 10px; min-height: 0; }
+.editor textarea { flex: 1; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; resize: none; border: 1px solid #ccc; padding: 6px; tab-size: 2; }
+.editor textarea.invalid { border-color: #c33; }
+.editor .errors { color: #b00; margin: 6px 0 0; padding-left: 16px; max-height: 30%; overflow: auto; }
+.editor .ok { color: #2a7a2a; margin-top: 6px; }

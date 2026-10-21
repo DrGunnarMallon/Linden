@@ -116,7 +116,7 @@ describe("scaleMap transform", () => {
   it("unmapped text codes reaching a panel warn and leave the column empty", () => {
     const { warnings, svg } = render([ds], { specVersion: 4, panels: [{ type: "taxonCurves", dataset: "m", variables: { ids: ["Moss"] } }] });
     expect(warnings).toEqual(['"Moss" has text codes (D, R, F) but no scaleMap transform maps them; column left empty.']);
-    expect(svg).not.toContain("<rect");
+    expect(svg.replace(/<rect id="background"[^>]*\/>/, "")).not.toContain("<rect");
   });
 });
 
@@ -140,6 +140,8 @@ const mixed: Dataset = {
     [10, 2, 1, 5],
   ],
 };
+/** Texts of the x-axis titles, per panel. */
+const xTitlesOf = (svg: string) => [...svg.matchAll(/<g class="x-title">([\s\S]*?)<\/g>/g)].map((m) => [...m[1]!.matchAll(/>([^<]+)<\/text>/g)].map((t) => t[1]));
 const columnsOf = (svg: string) =>
   Object.fromEntries(
     [...svg.matchAll(/id="panel-(\d)-taxonCurves-([^"]+)" class="column"[\s\S]*?<g class="x-axis">\s*<line x1="0" y1="[^"]+" x2="([^"]+)"/g)].map(
@@ -164,7 +166,7 @@ describe("presence columns", () => {
 });
 
 describe("common vs independent scales", () => {
-  it("a percent panel next to a count panel never shares a scale; units are shown", () => {
+  it("a percent panel next to a count panel never shares a scale; x-axis titles from kind and unit", () => {
     const spec: Spec = {
       specVersion: 4,
       panels: [
@@ -179,11 +181,11 @@ describe("common vs independent scales", () => {
     expect(w.Pollen).toBeCloseTo(20, 2);
     expect(w.SeedsA).toBeCloseTo(32, 2);
     expect(w.SeedsA! / w.SeedsB!).toBeCloseTo(4, 2); // common within the count family
-    // Two families → one unit label per family run.
-    expect([...svg.matchAll(/class="unit"[^>]*>([^<]+)</g)].map((m) => m[1])).toEqual(["%", "n/20 cm³"]);
+    // One x-axis title per panel (one scale family each), from kind and unit.
+    expect(xTitlesOf(svg)).toEqual([["%"], ["Counts (n/20 cm³)"]]);
   });
 
-  it("independent scales: every column its own axis 0…nice max and its own unit label", () => {
+  it("independent scales: every column its own axis 0…nice max; one x-axis title under the panel", () => {
     const spec: Spec = {
       specVersion: 4,
       panels: [{ type: "taxonCurves", dataset: "x", variables: { kinds: ["count"] }, style: { commonScale: false } }],
@@ -193,9 +195,10 @@ describe("common vs independent scales", () => {
     const labels = [...svg.matchAll(/class="x-axis">([\s\S]*?)<\/g>/g)].map((m) => [...m[1]!.matchAll(/>([^<]+)<\/text>/g)].map((t) => t[1]));
     // Seeds A max 40 → step 20 → 0–40; Seeds B max 10 → step 5 → 0–10.
     expect(labels).toEqual([
-      ["0", "20", "40", "n/20 cm³"],
-      ["0", "5", "10", "n/20 cm³"],
+      ["0", "20", "40"],
+      ["0", "5", "10"],
     ]);
+    expect(xTitlesOf(svg)).toEqual([["Counts (n/20 cm³)"]]);
   });
 
   it("warns when one panel mixes kinds", () => {
@@ -270,11 +273,15 @@ describe("example diagrams (synthetic data, presets only)", () => {
     for (const row of ds.values) expect(row.reduce((s: number, x) => s + (x ?? 0), 0)).toBeCloseTo(100, 8);
   });
 
+  it("testate: x-axis title from the preset", () => {
+    expect(xTitlesOf(example("testate-percent").svg)).toEqual([["% of total tests"]]);
+  });
+
   it("macrofossils: counts, classes and presence each in their own panel and scale", () => {
     const { svg } = example("macrofossil-counts");
     expect(svg).toContain('text-anchor="end">D</text>'); // DAFOR axis ends on D
     expect(svg).toContain('text-anchor="end">5</text>'); // numeric class axis ends on 5
-    expect([...svg.matchAll(/class="unit"[^>]*>([^<]+)</g)].map((m) => m[1])).toEqual(Array(5).fill("n/20 cm³"));
+    expect(xTitlesOf(svg)).toEqual([["Counts (n/20 cm³)"], ["Abundance class"], ["Presence"]]);
     expect(svg).toContain("<circle ");
   });
 });

@@ -59,13 +59,34 @@ describe("spec migration", () => {
     const v1 = { specVersion: 1, page: { width: 100 }, panels: [{ type: "yAxis" }] };
     const r = parseSpec(JSON.stringify(v1));
     expect(r).toEqual({ ok: true, value: { specVersion: SPEC_VERSION, page: { width: 100 }, panels: [{ type: "yAxis" }] } });
-    expect(SPEC_VERSION).toBe(5);
-    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 5 });
+    expect(SPEC_VERSION).toBe(6);
+    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 6 });
     expect(v1.specVersion).toBe(1); // input not mutated
   });
 
+  it("migrates v5 → v6 and accepts the v6 fields (title, style, y-axis titles, x-axis titles, unit suffix)", () => {
+    const v5 = {
+      specVersion: 5,
+      title: { text: "Lake *Linden*", subtitle: "Pollen", align: "centre", size: 11 },
+      style: {
+        background: null,
+        fonts: { title: { family: "Helvetica", size: 12 }, labels: { size: 6 }, ticks: { family: "Arial" } },
+        lineWidths: { axis: 0.2, curve: 0.08 },
+        tickLength: 1.5,
+        colours: { axis: "#333333", text: "#111111" },
+      },
+      yAxis: { titles: { depth: "Depth (m below surface)", age: "" } },
+      panels: [{ type: "taxonCurves", dataset: "d", style: { xTitle: { text: "%", show: "column" }, xTicks: { unitSuffix: true } } }],
+    };
+    expect(migrateSpec(v5)).toEqual({ ...v5, specVersion: 6 });
+    expect(parseSpec(v5)).toEqual({ ok: true, value: { ...v5, specVersion: 6 } });
+    // xTitle is panel-level: not allowed in per-variable overrides.
+    const bad = parseSpec({ specVersion: 6, panels: [{ type: "taxonCurves", dataset: "d", overrides: { a: { xTitle: { show: "none" } } } }] });
+    expect(bad.ok).toBe(false);
+  });
+
   it("leaves current, unknown and non-object input to validation", () => {
-    const current = { specVersion: 5, panels: [] };
+    const current = { specVersion: 6, panels: [] };
     expect(migrateSpec(current)).toBe(current);
     expect(migrateSpec({ specVersion: 0, panels: [] })).toEqual({ specVersion: 0, panels: [] });
     expect(migrateSpec("x")).toBe("x");
@@ -78,13 +99,13 @@ describe("spec migration", () => {
       panels: [{ type: "taxonCurves", dataset: "m", variables: { kinds: ["presence"] }, style: { presence: "bar" } }],
     };
     const r = parseSpec(v3);
-    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 5 } });
+    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 6 } });
   });
 
   it("migrates v2 → v3 and accepts the v3 grouping fields (top-level groups end up in the dataset entries)", () => {
     const entry = { dataset: "d", assignments: { Sphagnum: "bryophytes" }, order: ["Sphagnum"], transforms: [{ type: "merge", id: "M", name: "M", from: ["a", "b"] }] };
     const v2 = { specVersion: 2, groups: [{ id: "bryophytes", name: "Bryophytes" }], datasets: [entry], panels: [] };
-    const expected = { specVersion: 5, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
+    const expected = { specVersion: 6, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
     const r = parseSpec(v2);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value).toEqual(expected);
@@ -112,7 +133,7 @@ describe("spec migration", () => {
       };
       const groups = pollenGroups.map((g) => (g.id === "herbs" ? { ...g, name: "Herbs (upland)" } : g));
       expect(migrateSpec(v4)).toEqual({
-        specVersion: 5,
+        specVersion: 6,
         preset: "pollen-percent",
         datasets: [
           {
@@ -137,7 +158,7 @@ describe("spec migration", () => {
     it("creates entries (without transforms, as before) for panel datasets that had none", () => {
       const out = migrateSpec({ specVersion: 4, groups: [{ id: "g", name: "G" }], panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }] });
       expect(out).toEqual({
-        specVersion: 5,
+        specVersion: 6,
         panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }],
         datasets: [{ dataset: "d", transforms: [], groups: [{ id: "g", name: "G" }] }],
       });

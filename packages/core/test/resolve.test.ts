@@ -72,7 +72,7 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
   it("page and yAxis merge core defaults with the spec", () => {
     const r = resolveSpec(spec({ specVersion: 1, page: { height: 120, font: { size: 6 } }, panels: [] }));
     expect(r.spec.page).toEqual({ width: 180, height: 120, units: "mm", font: { family: "Arial", size: 6 } });
-    expect(r.spec.yAxis).toEqual({ primary: "depth", reverse: true, range: null });
+    expect(r.spec.yAxis).toEqual({ primary: "depth", reverse: true, range: null, titles: {} });
   });
 
   it("headerBand: core → preset → spec; nested xTicks merge per key", () => {
@@ -81,7 +81,7 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
     expect(r.spec.headerBand).toEqual({ angle: 45, minFontSize: 4, height: null });
     expect(resolveSpec(spec({ specVersion: 2, panels: [] })).spec.headerBand).toEqual(coreDefaults.headerBand);
     const p = curves(spec({ ...base, panels: [{ type: "taxonCurves", dataset: "d", style: { xTicks: { minSpacing: 10 } } }] }));
-    expect(p.style.xTicks).toEqual({ step: null, minSpacing: 10 });
+    expect(p.style.xTicks).toEqual({ step: null, minSpacing: 10, unitSuffix: false });
     expect(p.style.groupGap).toBe(2);
   });
 

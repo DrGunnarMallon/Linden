@@ -1,4 +1,4 @@
-// Layout engine — SPEC.md §6. Page = header band + plot area + footer band; columns left to right.
+// Layout engine — SPEC.md §6. Page = title band + header band + plot area + footer band; columns left to right.
 // Everything drawn is reserved: panel widths plus what panels draw beyond them (tick and unit
 // labels, markers), the rotated taxon labels and group headers (left and right), overlay labels.
 // The panels stay inside the page margins; ink beyond them (rotated label tails, zone labels, edge
@@ -54,12 +54,16 @@ export interface LayoutOptions {
   labelFont?: { base: number; min: number };
   /** Distinct minWidth values in use, for the info message of step (b). */
   minWidths?: readonly number[];
+  /** Height of the title band above the header band (layout/title.ts); 0 = none. */
+  titleHeight?: number;
 }
 
 export interface LayoutResult {
   xScale: number;
   /** Fit state used (pass to panels / header). */
   fit: FitState;
+  /** Title band height; the band's top is at margin.top. */
+  titleHeight: number;
   headerHeight: number;
   footerHeight: number;
   /** Plot area in page mm; x = left edge of the first panel; height is the shared y-scale range. */
@@ -187,7 +191,8 @@ export function computeLayout(
   const h = options.header?.(s);
   const headerHeight = ms.reduce((acc, m) => Math.max(acc, m.headerHeight), h?.height ?? 0);
   const footer = ms.reduce((f, m) => Math.max(f, m.footerHeight ?? 0), footerHeight(theme));
-  let height = page.height - margin.top - margin.bottom - headerHeight - footer;
+  const titleHeight = options.titleHeight ?? 0;
+  let height = page.height - margin.top - margin.bottom - titleHeight - headerHeight - footer;
   if (height < 10) {
     warnings.push(`Plot area is only ${mm(height)} mm high; using 10 mm. Increase page height or shorten labels.`);
     height = 10;
@@ -204,9 +209,10 @@ export function computeLayout(
   return {
     xScale: s.xScale,
     fit: s,
+    titleHeight,
     headerHeight,
     footerHeight: footer,
-    plot: { x: x0, y: margin.top + headerHeight, width: ms.reduce((acc, m) => acc + m.width, gaps), height },
+    plot: { x: x0, y: margin.top + titleHeight + headerHeight, width: ms.reduce((acc, m) => acc + m.width, gaps), height },
     panels,
     panelsWidth: ms.reduce((acc, m) => acc + m.width, gaps),
     warnings,

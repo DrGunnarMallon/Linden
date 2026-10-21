@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 5;
+export const SPEC_VERSION = 6;
 
 export const MeasurementKindSchema = z.enum([
   "count",
@@ -54,6 +54,8 @@ export const YAxisSchema = z.strictObject({
       minor: z.number().positive().optional(),
     })
     .optional(),
+  /** Axis titles; default from the dataset units ("Depth (cm)", "Age (cal BP)"); "" = no title. */
+  titles: z.strictObject({ depth: z.string().optional(), age: z.string().optional() }).optional(),
 });
 
 export const PercentTransformSchema = z.strictObject({
@@ -128,6 +130,16 @@ export const XTicksSchema = z.strictObject({
   step: z.number().positive().nullable().optional(),
   /** Minimum distance between ticks in mm (automatic step only). */
   minSpacing: z.number().positive().optional(),
+  /** Append the unit to the last tick label, e.g. "40%". */
+  unitSuffix: z.boolean().optional(),
+});
+
+/** x-axis title under the columns. */
+export const XTitleSchema = z.strictObject({
+  /** Default from the variables' kind and unit, e.g. "%", "Counts (n/20 cm³)", "Abundance class"; "" = none. */
+  text: z.string().optional(),
+  /** Once per panel (per run of one scale family), under every column, or not at all. */
+  show: z.enum(["panel", "column", "none"]).optional(),
 });
 
 export const TaxonCurvesStyleSchema = z.strictObject({
@@ -142,6 +154,7 @@ export const TaxonCurvesStyleSchema = z.strictObject({
   /** Extra space in mm between adjacent columns of different groups. */
   groupGap: z.number().min(0).optional(),
   xTicks: XTicksSchema.optional(),
+  xTitle: XTitleSchema.optional(),
   /** Mark for kind "presence" (value > 0): a dot or a full-width bar. */
   presence: z.enum(["dot", "bar"]).optional(),
 });
@@ -157,7 +170,7 @@ export const TaxonCurvesPanelSchema = z.strictObject({
   variables: SelectionSchema.optional(),
   style: TaxonCurvesStyleSchema.optional(),
   /** Per-variable style overrides (panel-level layout keys excluded). */
-  overrides: z.record(z.string(), TaxonCurvesStyleSchema.omit({ groupGap: true })).optional(),
+  overrides: z.record(z.string(), TaxonCurvesStyleSchema.omit({ groupGap: true, xTitle: true })).optional(),
   width: z.number().positive().optional(),
 });
 
@@ -197,10 +210,40 @@ export const HeaderSchema = z.strictObject({
   }),
 });
 
+/** Diagram title and subtitle, in a band above the header band. */
+export const TitleSchema = z.strictObject({
+  text: z.string().optional(),
+  subtitle: z.string().optional(),
+  align: z.enum(["left", "centre"]).optional(),
+  /** Title font size in pt; overrides style.fonts.title.size. */
+  size: z.number().positive().optional(),
+});
+
+const FontSchema = z.strictObject({ family: z.string().optional(), size: z.number().positive().optional() });
+
+/** The figure's own style (independent of the app theme). Lengths in mm, font sizes in pt. */
+export const FigureStyleSchema = z.strictObject({
+  /** Page background; null = transparent. Default white. */
+  background: z.string().nullable().optional(),
+  fonts: z
+    .strictObject({
+      title: FontSchema.optional(),
+      /** Taxon labels, group headers, axis titles, zone labels. */
+      labels: FontSchema.optional(),
+      ticks: FontSchema.optional(),
+    })
+    .optional(),
+  lineWidths: z.strictObject({ axis: z.number().positive().optional(), curve: z.number().positive().optional() }).optional(),
+  tickLength: z.number().min(0).optional(),
+  colours: z.strictObject({ axis: z.string().optional(), text: z.string().optional() }).optional(),
+});
+
 export const SpecSchema = z.strictObject({
   specVersion: z.literal(SPEC_VERSION),
   preset: z.string().optional(),
   page: PageSchema.optional(),
+  title: TitleSchema.optional(),
+  style: FigureStyleSchema.optional(),
   yAxis: YAxisSchema.optional(),
   datasets: z.array(DatasetEntrySchema).optional(),
   panels: z.array(PanelSchema),
@@ -240,6 +283,9 @@ export type ScaleSpec = z.infer<typeof ScaleSchema>;
 export type Selection = z.infer<typeof SelectionSchema>;
 export type TaxonCurvesStyle = z.infer<typeof TaxonCurvesStyleSchema>;
 export type XTicks = z.infer<typeof XTicksSchema>;
+export type XTitle = z.infer<typeof XTitleSchema>;
+export type TitleSpec = z.infer<typeof TitleSchema>;
+export type FigureStyle = z.infer<typeof FigureStyleSchema>;
 export type HeaderBandSpec = z.infer<typeof HeaderBandSchema>;
 export type HeaderSpec = z.infer<typeof HeaderSchema>;
 export type PanelSpec = z.infer<typeof PanelSchema>;

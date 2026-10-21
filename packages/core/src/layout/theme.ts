@@ -1,15 +1,28 @@
-// Drawing constants (mm). Not part of the spec yet; one place to tune the look.
+// Drawing constants (mm): the figure style from the spec (style.*, SPEC §6) plus fixed constants;
+// one place to tune the look.
 
-import type { ResolvedPage } from "../model/defaults.js";
+import type { ResolvedFigureStyle, ResolvedPage } from "../model/defaults.js";
+import { resolveStyle } from "../model/resolve.js";
 import { stripMarkup } from "../render/svg.js";
 import { textWidthEm } from "./metrics.js";
 
 export interface Theme {
   margin: { top: number; right: number; bottom: number; left: number };
+  /** Labels font (taxon labels, group headers, axis titles, zone labels). */
   fontFamily: string;
-  /** Base font size in mm (spec gives pt). */
+  /** Labels font size in mm (spec gives pt). */
   fontSize: number;
+  tickFontFamily: string;
   tickFontSize: number;
+  titleFontFamily: string;
+  /** Diagram title font size in mm before any fitting. */
+  titleFontSize: number;
+  /** Page background; null = transparent. */
+  background: string | null;
+  /** Axis lines, ticks, zero lines, group header lines. */
+  axisColour: string;
+  textColour: string;
+  /** Axis line width. */
   lineWidth: number;
   curveLineWidth: number;
   tickLength: number;
@@ -45,17 +58,23 @@ export interface Theme {
 
 export const PT_TO_MM = 25.4 / 72;
 
-export function makeTheme(page: ResolvedPage): Theme {
-  const fontSize = page.font.size * PT_TO_MM;
+export function makeTheme(page: ResolvedPage, style: ResolvedFigureStyle = resolveStyle(page, undefined)): Theme {
+  const { fonts } = style;
   return {
     margin: { top: 5, right: 5, bottom: 5, left: 5 },
-    fontFamily: page.font.family,
-    fontSize,
-    tickFontSize: fontSize * 0.85,
-    lineWidth: 0.15,
-    curveLineWidth: 0.1,
-    tickLength: 1,
-    minorTickLength: 0.6,
+    fontFamily: fonts.labels.family,
+    fontSize: fonts.labels.size * PT_TO_MM,
+    tickFontFamily: fonts.ticks.family,
+    tickFontSize: fonts.ticks.size * PT_TO_MM,
+    titleFontFamily: fonts.title.family,
+    titleFontSize: fonts.title.size * PT_TO_MM,
+    background: style.background,
+    axisColour: style.colours.axis,
+    textColour: style.colours.text,
+    lineWidth: style.lineWidths.axis,
+    curveLineWidth: style.lineWidths.curve,
+    tickLength: style.tickLength,
+    minorTickLength: style.tickLength * 0.6,
     columnGap: 1,
     panelGap: 2,
     naturalXScale: 0.4,
@@ -87,7 +106,12 @@ export function footerHeight(theme: Theme): number {
   return theme.tickLength + 0.5 + theme.tickFontSize + 0.5;
 }
 
-/** Footer with a second line for unit labels under the tick labels. */
-export function footerHeightWithUnits(theme: Theme): number {
-  return footerHeight(theme) + theme.tickFontSize * 1.1;
+/** Footer with a line for x-axis titles (labels font) under the tick labels; the title's glyph box starts at footerHeight. */
+export function footerHeightWithTitle(theme: Theme): number {
+  return footerHeight(theme) + theme.fontSize;
+}
+
+/** Font-family attribute for text in `family`, given the inherited one (undefined = inherit). */
+export function familyAttr(family: string, inherited: string): string | undefined {
+  return family === inherited ? undefined : family;
 }

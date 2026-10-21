@@ -3,15 +3,16 @@
 // so minWidth widens the column but never distorts it. The scale is shared only within a scale
 // family (kind|unit, see scaleKey): percentages and counts never share one.
 // Kind "presence" has no scale: a fixed-width column with a dot or bar where the value is > 0.
+// x-axis titles sit under the tick labels: once per run of one scale family, or under every column.
 
 import { clean, formatNumber, scaleKey, ticksAt } from "../layout/scales.js";
-import { estimateTextWidth, footerHeightWithUnits } from "../layout/theme.js";
+import { estimateTextWidth, familyAttr, footerHeight, footerHeightWithTitle } from "../layout/theme.js";
 import type { ResolvedTaxonCurvesStyle } from "../model/defaults.js";
 import { resolveVariableStyle, type ResolvedTaxonCurvesPanel } from "../model/resolve.js";
-import type { Variable } from "../model/types.js";
+import type { MeasurementKind, Variable } from "../model/types.js";
 import { columnMax } from "../layout/select.js";
 import { PathBuilder, rotate, translate, type SvgGroup } from "../render/svg.js";
-import { LABEL_OFFSET, type HeaderColumn } from "../layout/header.js";
+import { LABEL_OFFSET, TEXT_ASCENT, type HeaderColumn } from "../layout/header.js";
 import { compactLength, GAP_FLOOR, MIN_WIDTH_FLOOR } from "../layout/layout.js";
 import type { Panel, PanelContext, PanelMeasure } from "./types.js";
 
@@ -41,12 +42,13 @@ export function columnGeometry(
   xScale: number,
   independentWidth: number,
   exact = false,
+  integer = false,
 ): { width: number; scale: number; step?: number } {
   if (style.commonScale) return { width: Math.max(style.minWidth, max * xScale), scale: xScale };
   const width = Math.max(style.minWidth, independentWidth);
   if (!(max > 0)) return { width, scale: 0 };
   if (exact) return { width, scale: width / max };
-  const step = style.xTicks.step ?? autoTickStep(width / max, style.xTicks.minSpacing);
+  const step = style.xTicks.step ?? autoTickStep(width / max, style.xTicks.minSpacing, integer);
   return { width, scale: width / (Math.ceil(max / step - 1e-9) * step), step };
 }
 
@@ -84,7 +86,7 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
       const common = ctx.xScale * (ctx.scaleRatios.get(key) ?? 1);
       // Independent columns shrink with the global x factor like everything else.
       const independent = ctx.theme.independentColumnWidth * (ctx.xScale / ctx.theme.naturalXScale);
-      const { width, scale, step } = columnGeometry(max, style, common, independent, top !== undefined);
+      const { width, scale, step } = columnGeometry(max, style, common, independent, top !== undefined, integerKind(variable.kind));
       const col: TaxonColumn = { index: j, variable, style, max, x, width, scale, key };
       if (step !== undefined) col.step = step;
       cols.push(col);
@@ -94,12 +96,51 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
   return cols;
 }
 
-/** Smallest 1, 2 or 5 × 10^k step (data units) that is at least `minSpacing` mm long at `scale` mm per unit. */
-export function autoTickStep(scale: number, minSpacing: number): number {
+/**
+ * Smallest 1, 2 or 5 × 10^k step (data units) that is at least `minSpacing` mm long at `scale` mm
+ * per unit; at least 1 if `integer` (whole-number data such as counts).
+ */
+export function autoTickStep(scale: number, minSpacing: number, integer = false): number {
   const raw = minSpacing / scale;
   const mag = 10 ** Math.floor(Math.log10(raw));
   const f = [1, 2, 5].find((m) => m * mag >= raw * (1 - 1e-9)) ?? 10;
-  return clean(f * mag);
+  return integer ? Math.max(1, clean(f * mag)) : clean(f * mag);
+}
+
+/** Kinds whose values are whole numbers, so ticks never fall between them. */
+function integerKind(kind: MeasurementKind): boolean {
+  return kind === "count" || kind === "abundanceClass";
+}
+
+/** x-axis title for a variable's kind and unit, e.g. "%", "Counts (n/20 cm³)", "Abundance class"; "" = none. */
+export function defaultXTitle(v: { kind: MeasurementKind; unit?: string }): string {
+  const unit = v.unit ? ` (${v.unit})` : "";
+  switch (v.kind) {
+    case "percent":
+      return v.unit ?? "%";
+    case "volumePercent":
+      return `Volume (${v.unit ?? "%"})`;
+    case "count":
+      return `Counts${unit}`;
+    case "concentration":
+      return `Concentration${unit}`;
+    case "influx":
+      return `Influx${unit}`;
+    case "abundanceClass":
+      return "Abundance class";
+    case "presence":
+      return "Presence";
+    case "continuous":
+      return v.unit ?? "";
+  }
+}
+
+/** Suffix for the last tick label ("%" without a space, other units with one); none for class scales. */
+function unitSuffix(v: Variable): string | undefined {
+  if (v.scaleLabels) return undefined;
+  const unit = v.unit ?? (v.kind === "percent" || v.kind === "volumePercent" ? "%" : undefined);
+  if (!unit) return undefined;
+  return unit === "%" || unit === "‰" ? unit : ` ${unit}`;
 }
 
 /**
@@ -123,7 +164,7 @@ export function columnTicks(
   if (col.variable.scaleLabels) {
     ticks = col.variable.scaleLabels.filter((l) => l.value >= 0 && l.value <= extent + 1e-9).map((l) => ({ value: l.value, text: l.label }));
   } else {
-    const step = col.step ?? col.style.xTicks.step ?? autoTickStep(col.scale, col.style.xTicks.minSpacing);
+    const step = col.step ?? col.style.xTicks.step ?? autoTickStep(col.scale, col.style.xTicks.minSpacing, integerKind(col.variable.kind));
     const values = extent / step <= 100 ? ticksAt(0, extent, step) : [0];
     ticks = values.map((value) => ({ value, text: formatNumber(value) }));
   }
@@ -143,13 +184,28 @@ export function columnTicks(
   };
   const endLeft = endAt > 0 ? extentOf(endAt)[0] : Number.POSITIVE_INFINITY;
   let lastRight = after;
-  return ticks.map(({ value, text }, i) => {
+  let prevRight = after;
+  const out: Tick[] = ticks.map(({ value, text }, i) => {
     const [l, r, anchor] = extentOf(i);
     const clear = l >= lastRight + pad - 1e-9;
     const label = (i === 0 && clear) || i === endAt || (clear && r <= Math.min(rightLimit, endLeft - pad));
-    if (label) lastRight = r;
+    if (label) [prevRight, lastRight] = [lastRight, r];
     return { value, label, text, anchor };
   });
+  // Unit suffix on the last label, only where it still fits ("40%": the number stays on its tick).
+  const suffix = col.style.xTicks.unitSuffix ? unitSuffix(col.variable) : undefined;
+  const last = out.map((t) => t.label).lastIndexOf(true);
+  if (suffix && last >= 0) {
+    const t = out[last]!;
+    const x = t.value * col.scale;
+    const text = t.text + suffix;
+    const shift = t.anchor === "middle" ? -w(t.text) / 2 : 0;
+    const l = t.anchor === "end" ? x - w(text) : x + shift;
+    if (l >= prevRight + pad - 1e-9 && l + w(text) <= rightLimit + 1e-9) {
+      out[last] = t.anchor === "middle" ? { ...t, text, anchor: "start", shift } : { ...t, text };
+    }
+  }
+  return out;
 }
 
 export interface Tick {
@@ -157,11 +213,13 @@ export interface Tick {
   label: boolean;
   text: string;
   anchor: "start" | "middle" | "end";
+  /** Label offset from the tick, mm (a suffixed label starts where the bare number would). */
+  shift?: number;
 }
 
 /** Horizontal extent of a tick label, column-relative. */
 function tickExtent(t: Tick, col: TaxonColumn, tickFontSize: number): [number, number] {
-  const x = t.value * col.scale;
+  const x = t.value * col.scale + (t.shift ?? 0);
   const tw = estimateTextWidth(t.text, tickFontSize);
   return t.anchor === "start" ? [x, x + tw] : t.anchor === "end" ? [x - tw, x] : [x - tw / 2, x + tw / 2];
 }
@@ -179,19 +237,43 @@ function panelTicks(ctx: PanelContext, cols: readonly TaxonColumn[]): Tick[][] {
   });
 }
 
+export interface XAxisTitle {
+  text: string;
+  /** Centre, panel-relative. */
+  x: number;
+  width: number;
+}
+
 /**
- * Unit label under each column's axis, or undefined. Independent scales: every column with a unit.
- * Common scale: only when the diagram has several scale families, once per run of one family.
+ * x-axis titles (style.xTitle): "panel" = one per run of adjacent columns of one scale family,
+ * centred under the run; "column" = one per column. Text = xTitle.text, else from the kind and unit.
+ * Placed left to right; a title that would touch the previous one is skipped (counted in `skipped`).
  */
-function unitLabels(ctx: PanelContext, cols: readonly TaxonColumn[]): (string | undefined)[] {
-  const several = ctx.scaleRatios.size > 1;
-  return cols.map((c, i) => {
-    if (!(c.scale > 0)) return undefined;
-    if (!c.style.commonScale) return c.variable.unit;
-    const prev = cols[i - 1];
-    const startsRun = !prev || prev.key !== c.key || !prev.style.commonScale || !(prev.scale > 0);
-    return several && startsRun ? (c.variable.unit ?? c.variable.kind) : undefined;
+export function xAxisTitles(ctx: PanelContext, cols: readonly TaxonColumn[]): { titles: XAxisTitle[]; skipped: number } {
+  const { xTitle } = panelSpec(ctx)?.style ?? { xTitle: { show: "none" } };
+  if (xTitle.show === "none") return { titles: [], skipped: 0 };
+  const spans: { text: string; x0: number; x1: number; key: string }[] = [];
+  cols.forEach((c, i) => {
+    if (c.variable.codes) return; // unmapped codes: nothing plotted
+    const prev = spans[spans.length - 1];
+    if (xTitle.show === "panel" && prev && prev.key === c.key && !cols[i - 1]!.variable.codes) prev.x1 = c.x + c.width;
+    else spans.push({ text: xTitle.text ?? defaultXTitle(c.variable), x0: c.x, x1: c.x + c.width, key: c.key });
   });
+  const titles: XAxisTitle[] = [];
+  let skipped = 0;
+  let lastRight = Number.NEGATIVE_INFINITY;
+  for (const s of spans) {
+    if (!s.text) continue;
+    const width = estimateTextWidth(s.text, ctx.theme.fontSize);
+    const x = (s.x0 + s.x1) / 2;
+    if (x - width / 2 < lastRight + ctx.theme.tickLabelPad - 1e-9) {
+      skipped++;
+      continue;
+    }
+    titles.push({ text: s.text, x, width });
+    lastRight = x + width / 2;
+  }
+  return { titles, skipped };
 }
 
 function fillColour(ctx: PanelContext, col: TaxonColumn): string {
@@ -259,11 +341,11 @@ function renderPresence(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, fill: 
   }
 }
 
-function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, ticks: readonly Tick[], unit: string | undefined): void {
+function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, ticks: readonly Tick[]): void {
   const { theme, y } = ctx;
   const h = y.height;
   const fill = fillColour(ctx, col);
-  const line = { stroke: theme.stroke, "stroke-width": theme.lineWidth };
+  const line = { stroke: theme.axisColour, "stroke-width": theme.lineWidth };
   if (col.variable.kind === "presence" && !col.variable.codes) {
     renderPresence(ctx, g, col, fill);
     g.group({ class: "x-axis" }).line(0, h, col.width, h, line);
@@ -317,23 +399,20 @@ function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, ticks: r
   const xg = g.group({ class: "x-axis" });
   xg.line(0, h, col.width, h, line);
   const tickY = h + theme.tickLength + 0.5 + theme.tickFontSize * 0.8;
+  const family = familyAttr(theme.tickFontFamily, theme.fontFamily);
   for (const t of ticks) {
     const x = t.value * col.scale;
     xg.line(x, h, x, h + theme.tickLength, line);
-    if (t.label) xg.text(x, tickY, t.text, { "font-size": theme.tickFontSize, "text-anchor": t.anchor });
-  }
-  if (unit !== undefined) {
-    xg.text(col.width / 2, tickY + theme.tickFontSize * 1.1, unit, { class: "unit", "font-size": theme.tickFontSize, "text-anchor": "middle" });
+    if (t.label) xg.text(x + (t.shift ?? 0), tickY, t.text, { "font-family": family, "font-size": theme.tickFontSize, "text-anchor": t.anchor });
   }
   renderLabel(ctx, g, col);
 }
 
 /** Horizontal extent (relative to the column) of everything renderColumn draws below the header band. */
-function columnInk(ctx: PanelContext, col: TaxonColumn, ticks: readonly Tick[], unit: string | undefined): [number, number] {
+function columnInk(ctx: PanelContext, col: TaxonColumn, ticks: readonly Tick[]): [number, number] {
   const { theme } = ctx;
   let left = 0;
   let right = col.width;
-  const w = (t: string) => estimateTextWidth(t, theme.tickFontSize);
   if (col.variable.kind === "presence" && col.style.presence === "dot") {
     left = Math.min(left, col.width / 2 - theme.presenceDotRadius);
     right = Math.max(right, col.width / 2 + theme.presenceDotRadius);
@@ -343,10 +422,6 @@ function columnInk(ctx: PanelContext, col: TaxonColumn, ticks: readonly Tick[], 
     const [l, r] = tickExtent(t, col, theme.tickFontSize);
     left = Math.min(left, l);
     right = Math.max(right, r);
-  }
-  if (unit !== undefined) {
-    left = Math.min(left, col.width / 2 - w(unit) / 2);
-    right = Math.max(right, col.width / 2 + w(unit) / 2);
   }
   if (col.style.plusBelow > 0 && col.scale > 0) {
     right = Math.max(right, theme.plusOffset + col.style.plusBelow * col.scale + theme.plusSize);
@@ -395,20 +470,27 @@ export const taxonCurvesPanel: Panel = {
       }
     }
     const last = cols[cols.length - 1];
-    const units = unitLabels(ctx, cols);
+    const { titles, skipped } = xAxisTitles(ctx, cols);
+    if (skipped > 0) {
+      ctx.warn(`taxonCurves (${ctx.id}): ${skipped} x-axis title(s) omitted where the columns are too narrow; use xTitle.show "panel" or a shorter xTitle.text.`);
+    }
     // Labels live in the shared header band (layout/header.ts), not in this panel's header height.
     const width = last ? last.x + last.width : 0;
     const m: PanelMeasure = { width, headerHeight: 0 };
-    if (units.some((u) => u !== undefined)) m.footerHeight = footerHeightWithUnits(ctx.theme);
+    if (titles.length > 0) m.footerHeight = footerHeightWithTitle(ctx.theme);
     // What the columns draw beyond the panel's [0, width]: reserved by the layout.
     let left = 0;
     let right = width;
     const ticks = panelTicks(ctx, cols);
     cols.forEach((col, i) => {
-      const [l, r] = columnInk(ctx, col, ticks[i]!, units[i]);
+      const [l, r] = columnInk(ctx, col, ticks[i]!);
       left = Math.min(left, col.x + l);
       right = Math.max(right, col.x + r);
     });
+    for (const t of titles) {
+      left = Math.min(left, t.x - t.width / 2);
+      right = Math.max(right, t.x + t.width / 2);
+    }
     if (left < 0 || right > width) m.overhang = { left: -left, right: right - width };
     return m;
   },
@@ -423,11 +505,16 @@ export const taxonCurvesPanel: Panel = {
 
   render(ctx, g) {
     const cols = taxonColumns(ctx);
-    const units = unitLabels(ctx, cols);
     const ticks = panelTicks(ctx, cols);
     cols.forEach((col, i) => {
       const cg = g.group({ id: `${ctx.id}-${slug(col.variable.id)}`, class: "column", transform: translate(col.x, 0) });
-      renderColumn(ctx, cg, col, ticks[i]!, units[i]);
+      renderColumn(ctx, cg, col, ticks[i]!);
     });
+    const { titles } = xAxisTitles(ctx, cols);
+    if (titles.length > 0) {
+      const tg = g.group({ class: "x-title" });
+      const ty = ctx.y.height + footerHeight(ctx.theme) + TEXT_ASCENT * ctx.theme.fontSize;
+      for (const t of titles) tg.text(t.x, ty, t.text, { "text-anchor": "middle" });
+    }
   },
 };

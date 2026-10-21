@@ -6,6 +6,7 @@ import { computeLayout, type FitState } from "./layout/layout.js";
 import { makeYScale, referenceRange, scaleKey, type YScale } from "./layout/scales.js";
 import { columnMax, selectVariables } from "./layout/select.js";
 import { makeTheme } from "./layout/theme.js";
+import { layoutTitle, renderTitle } from "./layout/title.js";
 import { applyGroups } from "./model/groups.js";
 import { resolveSpec, type ResolvedSpec } from "./model/resolve.js";
 import type { Preset, Spec } from "./model/spec.js";
@@ -143,7 +144,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   resolved.warnings.forEach(warn);
   const rs = resolved.spec;
   const byId = applyTransforms(datasets, rs, warn);
-  const theme = makeTheme(rs.page);
+  const theme = makeTheme(rs.page, rs.style);
   const axisDs = axisDataset(byId, rs);
 
   const data: (PanelData | undefined)[] = rs.panels.map((p) => {
@@ -200,9 +201,10 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     });
     return out;
   };
+  const labelFontSize = rs.style.fonts.labels.size;
   const labelOptions = {
     angle: rs.headerBand.angle,
-    fontSize: rs.page.font.size,
+    fontSize: labelFontSize,
     minFontSize: rs.headerBand.minFontSize,
     height: rs.headerBand.height,
     step: theme.headerFontStep,
@@ -226,13 +228,25 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   const minWidths = rs.panels.flatMap((p) =>
     p.type === "taxonCurves" ? [p.style.minWidth, ...Object.values(p.overrides).flatMap((o) => (o.minWidth === undefined ? [] : [o.minWidth]))] : [],
   );
+  // Title band (§6): its height is reserved above the header band; too wide → smaller, then a warning.
+  const title = layoutTitle(rs.title, rs.page.width - theme.margin.left - theme.margin.right, labelFontSize, theme.headerFontStep);
+  title.warnings.forEach(warn);
+  const measureAt = (i: number, fit: FitState) => panels.get(rs.panels[i]!.type).measure(ctxFor(i, fit, provisionalY));
   const layout = computeLayout(
     rs.page,
     theme,
-    rs.panels.map((p, i) => (fit: FitState) => panels.get(p.type).measure(ctxFor(i, fit, provisionalY))),
-    { extraRight, header: headerAt, labelFont: { base: rs.page.font.size, min: rs.headerBand.minFontSize }, minWidths },
+    rs.panels.map((_, i) => (fit: FitState) => measureAt(i, fit)),
+    { extraRight, header: headerAt, labelFont: { base: labelFontSize, min: rs.headerBand.minFontSize }, minWidths, titleHeight: title.height },
   );
   layout.warnings.forEach(warn);
+  // Ink between adjacent panels (x-axis titles, edge tick labels) must not meet.
+  const measured = rs.panels.map((_, i) => measureAt(i, layout.fit));
+  measured.slice(1).forEach((m, k) => {
+    const overlap = (measured[k]!.overhang?.right ?? 0) + (m.overhang?.left ?? 0) - theme.panelGap;
+    if (overlap > 0.05) {
+      warn(`Panels ${k} and ${k + 1}: x-axis titles or tick labels overlap by ${Math.round(overlap * 10) / 10} mm; shorten the x-axis title (style.xTitle.text) or hide it.`);
+    }
+  });
   const header = headerAt(layout.fit);
   header.labels.warnings.forEach(warn);
   const spans = spansAt(header.cols, warn);
@@ -240,7 +254,9 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
 
   const y = makeYScale(domain, layout.plot.height, rs.yAxis.reverse);
   const svg = svgDocument(rs.page.width, rs.page.height, (root) => {
-    const body = root.group({ "font-family": theme.fontFamily, "font-size": theme.fontSize });
+    if (theme.background !== null) root.rect(0, 0, rs.page.width, rs.page.height, { id: "background", fill: theme.background });
+    const body = root.group({ fill: theme.textColour, "font-family": theme.fontFamily, "font-size": theme.fontSize });
+    renderTitle(body, title, rs.title?.align ?? "left", theme.margin.top, layout.plot, rs.page, theme);
     rs.panels.forEach((p, i) => {
       const ctx = ctxFor(i, layout.fit, y, labelStyle);
       const g = body.group({ id: ctx.id, transform: translate(layout.panels[i]!.x, layout.plot.y) });
@@ -256,5 +272,5 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     });
   }, svgMetadata(spec));
 
-  return { svg, warnings: [...warnings], info: layout.info };
+  return { svg, warnings: [...warnings], info: [...title.info, ...layout.info] };
 }

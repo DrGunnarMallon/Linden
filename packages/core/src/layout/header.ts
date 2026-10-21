@@ -253,7 +253,7 @@ export function renderGroupHeaders(g: SvgGroup, spans: readonly GroupSpan[], top
   for (const s of spans) {
     if (line !== "none") {
       const d = t > 0 ? new PathBuilder().moveTo(s.x0, y + t).lineTo(s.x0, y).lineTo(s.x1, y).lineTo(s.x1, y + t) : new PathBuilder().moveTo(s.x0, y).lineTo(s.x1, y);
-      g.path(d, { class: line, fill: "none", stroke: theme.stroke, "stroke-width": theme.lineWidth });
+      g.path(d, { class: line, fill: "none", stroke: theme.axisColour, "stroke-width": theme.lineWidth });
     }
     if (s.label) g.text((s.x0 + s.x1) / 2, y - 0.5, s.label, { class: "group-header", "text-anchor": "middle" });
   }

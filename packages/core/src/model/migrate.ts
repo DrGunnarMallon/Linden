@@ -13,6 +13,8 @@ const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   // v4 added the scaleMap transform, dataset `scales`, selection `kinds` and style `presence`, all optional.
   3: (spec) => ({ ...spec, specVersion: 4 }),
   4: toV5,
+  // v6 added title, style, yAxis.titles and taxonCurves style.xTitle / xTicks.unitSuffix, all optional.
+  5: (spec) => ({ ...spec, specVersion: 6 }),
 };
 
 /**

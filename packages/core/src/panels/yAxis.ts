@@ -1,8 +1,9 @@
 // yAxis panel — SPEC.md §7.1. Depth axis with major/minor ticks and title; optional secondary
 // age axis whose ticks are placed by interpolating sample depth–age pairs (never by re-scaling).
+// Titles (yAxis.titles, default from the dataset units) are rotated 90°, left of the tick labels.
 
 import { interpolate, formatNumber, niceStep, ticksAt } from "../layout/scales.js";
-import { estimateTextWidth } from "../layout/theme.js";
+import { estimateTextWidth, familyAttr } from "../layout/theme.js";
 import type { SvgGroup } from "../render/svg.js";
 import { rotate, translate } from "../render/svg.js";
 import type { Panel, PanelContext } from "./types.js";
@@ -29,7 +30,7 @@ function depthAxis(ctx: PanelContext): Axis {
   const majors = ticksAt(d0, d1, major);
   const unit = ctx.data?.dataset.depthUnit ?? "cm";
   return {
-    title: `Depth (${unit})`,
+    title: ctx.yAxis.titles.depth ?? `Depth (${unit})`,
     major: majors.map((d) => ({ depth: d, label: formatNumber(d) })),
     minor: minor ? ticksAt(d0, d1, minor).filter((d) => !majors.includes(d)).map((d) => ({ depth: d })) : [],
     from: d0,
@@ -66,7 +67,7 @@ function ageAxis(ctx: PanelContext): Axis | undefined {
     if (depth !== undefined) major.push({ depth, label: formatNumber(age) });
   }
   const unit = ds?.ageUnit;
-  return { title: unit ? `Age (${unit})` : "Age", major, minor: [], from, to };
+  return { title: ctx.yAxis.titles.age ?? (unit ? `Age (${unit})` : "Age"), major, minor: [], from, to };
 }
 
 function axes(ctx: PanelContext): Axis[] {
@@ -81,10 +82,11 @@ function axes(ctx: PanelContext): Axis[] {
   return out;
 }
 
+/** Title (1 em of the labels font + 1 mm clearance, none if the title is ""), tick labels, ticks. */
 function axisWidth(ctx: PanelContext, axis: Axis): number {
   const { theme } = ctx;
   const labelWidth = axis.major.reduce((w, t) => Math.max(w, estimateTextWidth(t.label ?? "", theme.tickFontSize)), 0);
-  return theme.fontSize + 1 + labelWidth + 0.6 + theme.tickLength;
+  return (axis.title ? theme.fontSize + 1 : 0) + labelWidth + 0.6 + theme.tickLength;
 }
 
 export const yAxisPanel: Panel = {
@@ -98,14 +100,21 @@ export const yAxisPanel: Panel = {
 
   render(ctx, g: SvgGroup) {
     const { theme, y } = ctx;
-    const stroke = { stroke: theme.stroke, "stroke-width": theme.lineWidth };
+    const stroke = { stroke: theme.axisColour, "stroke-width": theme.lineWidth };
+    const family = familyAttr(theme.tickFontFamily, theme.fontFamily);
     let x = 0;
     axes(ctx).forEach((axis, i) => {
       const w = axisWidth(ctx, axis);
       const ag = g.group({ class: i === 0 ? "axis-primary" : "axis-secondary", transform: translate(x, 0) });
       const tx = theme.fontSize * 0.8;
       const ty = (y.toMm(axis.from) + y.toMm(axis.to)) / 2;
-      ag.text(tx, ty, axis.title, { transform: rotate(-90, tx, ty), "text-anchor": "middle" });
+      if (axis.title) {
+        ag.text(tx, ty, axis.title, { transform: rotate(-90, tx, ty), "text-anchor": "middle" });
+        const length = Math.abs(y.toMm(axis.to) - y.toMm(axis.from));
+        if (estimateTextWidth(axis.title, theme.fontSize) > length) {
+          ctx.warn(`y-axis title "${axis.title}" is longer than its axis (${formatNumber(Math.round(length * 10) / 10)} mm); shorten it in yAxis.titles.`);
+        }
+      }
       ag.line(w, y.toMm(axis.from), w, y.toMm(axis.to), stroke);
       for (const t of axis.minor) {
         ag.line(w - theme.minorTickLength, y.toMm(t.depth), w, y.toMm(t.depth), stroke);
@@ -114,6 +123,7 @@ export const yAxisPanel: Panel = {
         const ty2 = y.toMm(t.depth);
         ag.line(w - theme.tickLength, ty2, w, ty2, stroke);
         ag.text(w - theme.tickLength - 0.6, ty2 + 0.35 * theme.tickFontSize, t.label ?? "", {
+          "font-family": family,
           "font-size": theme.tickFontSize,
           "text-anchor": "end",
         });

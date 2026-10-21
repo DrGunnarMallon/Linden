@@ -1,11 +1,16 @@
 // App state. The spec is the single source of truth: the editor text, the variable checkboxes
 // and the preset picker all produce new Spec values via commitSpec, which feeds undo/redo.
 
-import { SPEC_VERSION, importers, parseSpec, render, type Dataset, type Preset, type Spec } from "@linden/core";
+import { SPEC_VERSION, importers, parseProject, parseSpec, render, resolveSpec, serializeProject, type Dataset, type Preset, type Spec } from "@linden/core";
 import { create } from "zustand";
 import { demo, loadBundledPresets } from "./bundled";
+import { download } from "./download";
+import { exporters } from "./export";
+import { fontSubstitutionWarning } from "./export/fonts";
+import type { PngOptions } from "./export/png";
 import { loadProject, saveProject, type Project } from "./persist";
 import {
+  applyPagePreset,
   createGroup,
   deleteGroup,
   ensureDatasetInSpec,
@@ -16,6 +21,7 @@ import {
   removeDatasetFromSpec,
   renameGroup,
   reorderGroups,
+  setPageSize,
   setVariableVisible,
   unmergeVariable,
   variableTree,
@@ -38,6 +44,8 @@ interface State {
   importWarnings: string[];
   renderWarnings: string[];
   storageWarnings: string[];
+  exportWarnings: string[];
+  exporting: boolean;
   svg: string;
   past: Spec[];
   future: Spec[];
@@ -60,6 +68,11 @@ interface State {
   deleteGroup(datasetId: string, id: string): void;
   mergeVariables(datasetId: string, ids: string[], name: string): void;
   unmergeVariable(datasetId: string, mergedId: string): void;
+  setPageSize(size: { width?: number; height?: number }): void;
+  applyPagePreset(presetId: string): void;
+  exportDiagram(type: "svg" | "pdf" | "png", png?: PngOptions): Promise<void>;
+  saveProjectBundle(): void;
+  openProjectBundle(file: File): Promise<void>;
 }
 
 const bundled = loadBundledPresets();
@@ -120,6 +133,8 @@ export const useStore = create<State>()((set, get) => {
     importWarnings: [],
     renderWarnings: [],
     storageWarnings: [],
+    exportWarnings: [],
+    exporting: false,
     svg: "",
     past: [],
     future: [],
@@ -229,6 +244,45 @@ export const useStore = create<State>()((set, get) => {
     unmergeVariable(datasetId, mergedId) {
       const raw = rawDataset(datasetId);
       if (raw) edit(unmergeVariable(get().spec, get().presets, raw, mergedId));
+    },
+
+    setPageSize(size) {
+      edit(setPageSize(get().spec, size));
+    },
+
+    applyPagePreset(presetId) {
+      const { spec, presets } = get();
+      edit(applyPagePreset(spec, presetId, resolveSpec(spec, presets).spec.page.height));
+    },
+
+    async exportDiagram(type, png) {
+      const { svg, spec, presets } = get();
+      if (!svg || get().exporting) return;
+      const fontWarning = type === "svg" ? null : fontSubstitutionWarning(resolveSpec(spec, presets).spec.page.font.family);
+      set({ exporting: true, exportWarnings: fontWarning ? [fontWarning] : [] });
+      try {
+        const out = await exporters.get(type).export(svg, png);
+        const mime = { svg: "image/svg+xml", pdf: "application/pdf", png: "image/png" }[type];
+        download(type === "png" ? `diagram-${png?.dpi ?? 600}dpi.png` : `diagram.${type}`, out, mime);
+      } catch (e) {
+        set({ exportWarnings: [...get().exportWarnings, `${type.toUpperCase()} export failed: ${(e as Error).message}`] });
+      } finally {
+        set({ exporting: false });
+      }
+    },
+
+    saveProjectBundle() {
+      const { spec, datasets } = get();
+      download("diagram.linden.json", serializeProject({ spec, datasets }), "application/json");
+    },
+
+    async openProjectBundle(file) {
+      const parsed = parseProject(await file.text());
+      if (!parsed.ok) {
+        set({ importWarnings: parsed.errors.map((e) => `${file.name}: ${e}`) });
+        return;
+      }
+      setProject({ datasets: parsed.value.datasets, spec: parsed.value.spec, specText: prettySpec(parsed.value.spec), importWarnings: [] });
     },
 
     async importFile(file) {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="120mm" viewBox="0 0 180 120">
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: 9c22291aba712e80dedf3872ed050cbcb45ca2c3348199b6230f458d95140c38</metadata>
   <g font-family="Arial" font-size="2.47">
     <g id="panel-0-yAxis" transform="translate(5,22.73)">
       <g class="axis-primary" transform="translate(0,0)">

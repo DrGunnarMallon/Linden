@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -10,4 +11,6 @@ export default defineConfig({
   },
   // Relative asset paths so the build can be hosted as static files anywhere (SPEC §1.5).
   base: "./",
+  // svg2pdf.js's "main" is a UMD build expecting a global jsPDF; inlined, tests use its ES module.
+  test: { server: { deps: { inline: ["svg2pdf.js"] } } },
 });

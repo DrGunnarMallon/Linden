@@ -31,6 +31,7 @@ linden/
     app/             ← React UI (Vite); depends on core
     cli/             ← (later) Node CLI: linden render data.csv spec.json -o fig.svg
   presets/           ← proxy presets (JSON)
+  fonts/             ← bundled export font (Liberation Sans regular + italic, SIL OFL 1.1)
   examples/          ← example datasets + specs used in docs and tests
 ```
 
@@ -45,7 +46,7 @@ core/src/
   layout/       page, columns, scales, label placement
   panels/       one file per panel type
   render/       SVG builder (string-based, no DOM)
-  export/       svg, pdf, png (pdf/png may need browser APIs → kept behind interfaces)
+  export/       svg exporter (pdf/png need browser APIs → app/src/export, registered into `exporters`)
   registry.ts   plugin registries
   index.ts      public API
 ```
@@ -261,6 +262,8 @@ interface Overlay {          // drawn across all panels, after them
 interface Exporter { type: string; export(svg: string, opts: unknown): Promise<Blob | string>; }
 ```
 
+Core registers the `svg` exporter in `exporters`; the app registers its browser-only `pdf` and `png` exporters into the same registry.
+
 ### 5.2 Transforms (initial set)
 
 | type            | purpose |
@@ -282,7 +285,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 
 ## 6. Layout engine
 
-- Coordinates in mm. Page = plot area + header band (taxon labels) + footer band (x-axis scales). The SVG viewBox is in mm; `page.font.size` is in points (converted to mm) and is the base size for all text. No DOM: text widths come from a deterministic per-character metrics table for Helvetica/Arial (`layout/metrics.ts`, unknown characters ≈ 0.556 em); the app may later substitute real measurement behind the same function.
+- Coordinates in mm. Page = plot area + header band (taxon labels) + footer band (x-axis scales). The SVG viewBox is in mm; `page.font.size` is in points (converted to mm) and is the base size for all text. No DOM: text widths come from a deterministic per-character metrics table (`layout/metrics.ts`, unknown characters ≈ 0.556 em) holding the advance widths of the bundled font, Liberation Sans (metrically compatible with Arial/Helvetica; a test checks the table against `fonts/*.ttf`). No kerning.
 - `measure()` must not depend on the plot height; it may grow with the fit state (x factor, compaction, label font) but never shrink when they grow. Panels report what they draw beyond their own width (`PanelMeasure.overhang`: edge tick and unit labels, markers) so the layout can reserve it.
 - **Everything drawn is reserved; nothing is drawn outside the page.** The panels stay inside the page margins; ink beyond them — rotated taxon labels (their full rotated glyph box: baseline offset 0.35 em, ascent 0.75 em, descent 0.25 em), group-header labels, zone labels, edge tick/unit labels — may use the margins but never leaves the page. If ink sticks out left of the first panel, the diagram shifts right.
 - Columns are laid out left to right in panel order. Each taxon column's width is proportional to its maximum value **when `commonScale` is true** (the standard convention for percentage diagrams: 10% is the same width in every column). `minWidth` stops rare taxa from vanishing.
@@ -303,7 +306,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 - One shared y-scale for all panels; secondary axis (age) drawn by interpolation from sample depth–age pairs, never by re-scaling.
 - Zone overlays draw across all panels; zone labels sit in a narrow column right of the last panel.
 - The secondary age axis uses the first spec dataset with sample ages; ages must not decrease with depth, and ticks are never extrapolated beyond the dated range.
-- SVG output is deterministic: coordinates rounded to 0.01 mm, attributes in a fixed canonical order.
+- SVG output is deterministic: coordinates rounded to 0.01 mm, attributes in a fixed canonical order. The root carries `<metadata id="linden-metadata">generator: Linden <version>; spec-sha256: <hash></metadata>`, the hash being SHA-256 of the input spec's canonical JSON (keys sorted).
 
 ## 7. Panels (catalogue)
 
@@ -337,7 +340,7 @@ Any new proxy should be expressible by a preset alone. If it needs code, it need
 
 ### 7.4 Typography
 - Taxon names support `*italic*` markup and `type` suffixes (e.g. `*Quercus*`, `Poaceae`, `*Alnus*-type`). A `-type` / ` type` suffix is always upright, even when written inside the asterisks (`*Alnus-type*`).
-- Default font: a widely available sans (Arial/Helvetica fallback). Fonts embedded in PDF export.
+- Default font: Arial (`page.font.family`). PDF and PNG export replace Arial/Helvetica/sans-serif with the bundled, metrically identical Liberation Sans and embed it, so exports look the same on every OS; any other family is substituted too, with a warning. SVG export keeps the spec's family.
 
 ## 8. Presets
 
@@ -367,10 +370,11 @@ Importers never throw on recoverable problems: they return warnings.
 
 ## 10. Export
 
-- **SVG** (native): clean, grouped (`<g id="panel-…">`), text as text (editable in Inkscape/Illustrator).
-- **PDF**: svg2pdf.js + jsPDF, fonts embedded, exact page size.
-- **PNG/TIFF**: raster at chosen dpi (default 600).
-- **Project bundle**: `.linden.json` = spec + embedded data, for sharing and archiving.
+- **SVG** (native): clean, one `<g id="panel-<i>-<type>">` per panel, text as text (editable in Inkscape/Illustrator), `<metadata>` with Linden version and spec hash (§6).
+- **PDF**: svg2pdf.js + jsPDF, vector, page = `page.width × page.height` mm exactly, Liberation Sans regular + italic embedded (subset, with ToUnicode, so text is selectable); document Creator/Subject carry the version and spec hash.
+- **PNG**: rasterised in the browser at 300 / 600 (default) / 1200 dpi, pixels = round(mm / 25.4 × dpi), white or transparent background, resolution recorded in a `pHYs` chunk. (TIFF: later.)
+- **Page presets** (app): single column 85 mm, 1.5 column 120 mm, double column 180 mm (width only, height kept), A4 portrait / landscape, or custom width × height; they only change `spec.page`.
+- **Project bundle**: `.linden.json` = spec + embedded data, for sharing and archiving: `{ "format": "linden-project", "bundleVersion": 1, "generator": "Linden <version>", "spec": {…}, "datasets": [Dataset, …] }` (`core/io/project.ts`: `serializeProject` / `parseProject`). Datasets are stored as imported (§3), so 0 and `null` stay distinct; non-finite values are refused. The spec is migrated like any spec file; the data are validated (shape, values matrix = samples × variables).
 
 ## 11. App (UI) outline
 

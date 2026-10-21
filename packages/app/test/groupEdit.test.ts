@@ -172,7 +172,9 @@ describe("merging with preset default transforms", () => {
     const groups = pollen.spec.datasets![0]!.groups!;
     const spec: Spec = { ...pollen.spec, datasets: [{ dataset: "demo-pollen", groups }] };
     const explicit: Spec = { ...pollen.spec, datasets: [{ dataset: "demo-pollen", groups, transforms: [{ type: "percent" }] }] };
-    expect(render([pollen.ds], spec, presets).svg).toBe(render([pollen.ds], explicit, presets).svg); // preset supplies percent of all counts
+    // Same drawing (preset supplies percent of all counts); only the spec hash in <metadata> differs.
+    const drawing = (s: Spec) => render([pollen.ds], s, presets).svg.replace(/<metadata[^]*?<\/metadata>/, "");
+    expect(drawing(spec)).toBe(drawing(explicit));
     const { spec: merged } = mergeVariables(spec, presets, pollen.ds, ["Poaceae", "Cyperaceae"], "Grasses & sedges");
     expect(valid(merged).datasets![0]!.transforms).toEqual([
       { type: "merge", id: "Grasses & sedges", name: "Grasses & sedges", from: ["Poaceae", "Cyperaceae"], group: "herbs" },

@@ -12,8 +12,10 @@ import type { Preset, Spec } from "./model/spec.js";
 import type { Dataset } from "./model/types.js";
 import type { PanelContext, PanelData } from "./panels/types.js";
 import { overlays, panels, transforms } from "./registry.js";
+import { specHash } from "./io/hash.js";
 import { svgDocument, translate } from "./render/svg.js";
 import { mergedTwice } from "./transforms/merge.js";
+import { LINDEN_VERSION } from "./version.js";
 
 export interface RenderResult {
   svg: string;
@@ -123,6 +125,11 @@ export function prepareDatasets(datasets: readonly Dataset[], spec: Spec, preset
   const byId = applyTransforms(datasets, resolved.spec, warn);
   const out = [...new Set(datasets.map((d) => d.id))].map((id) => byId.get(id)!);
   return { datasets: out, warnings: [...warnings] };
+}
+
+/** Text of the SVG <metadata> element: generator version and the hash of the input spec. */
+export function svgMetadata(spec: Spec): string {
+  return `generator: Linden ${LINDEN_VERSION}; spec-sha256: ${specHash(spec)}`;
 }
 
 export function render(datasets: readonly Dataset[], spec: Spec, presets: readonly Preset[] = []): RenderResult {
@@ -247,7 +254,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
       const g = body.group({ id: `overlay-${i}-${o.type}`, transform: translate(layout.plot.x, layout.plot.y) });
       overlays.get(o.type).render(overlayCtx(i, y, layout.panelsWidth), g);
     });
-  });
+  }, svgMetadata(spec));
 
   return { svg, warnings: [...warnings], info: layout.info };
 }

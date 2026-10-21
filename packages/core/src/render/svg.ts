@@ -160,6 +160,12 @@ export class SvgGroup {
     return this;
   }
 
+  /** Element with plain (escaped) text content, e.g. <metadata>. */
+  textElement(tag: string, content: string, attrs: Attrs = {}): this {
+    this.children.push(`<${tag}${attrString(attrs)}>${escapeXml(content)}</${tag}>`);
+    return this;
+  }
+
   toString(indent = ""): string {
     const open = `${indent}<${this.tag}${attrString(this.attrs)}`;
     if (this.children.length === 0) return `${open}/>`;
@@ -170,8 +176,8 @@ export class SvgGroup {
   }
 }
 
-/** Root document in mm: user units = mm via viewBox. */
-export function svgDocument(widthMm: number, heightMm: number, build: (root: SvgGroup) => void): string {
+/** Root document in mm: user units = mm via viewBox. `metadata` becomes <metadata id="linden-metadata">. */
+export function svgDocument(widthMm: number, heightMm: number, build: (root: SvgGroup) => void, metadata?: string): string {
   const root = new SvgGroup(
     {
       xmlns: "http://www.w3.org/2000/svg",
@@ -181,6 +187,7 @@ export function svgDocument(widthMm: number, heightMm: number, build: (root: Svg
     },
     "svg",
   );
+  if (metadata !== undefined) root.textElement("metadata", metadata, { id: "linden-metadata" });
   build(root);
   return `<?xml version="1.0" encoding="UTF-8"?>\n${root.toString()}\n`;
 }

@@ -384,3 +384,37 @@ export function unmergeVariable(spec: Spec, presets: readonly Preset[], raw: Dat
 function sameJson(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
+
+// ── Page setup ──────────────────────────────────────────────────────────────────────────────
+
+export interface PagePreset {
+  id: string;
+  label: string;
+  width: number;
+  /** Omitted = keep the current height (journal column widths). */
+  height?: number;
+}
+
+export const PAGE_PRESETS: readonly PagePreset[] = [
+  { id: "single", label: "Single column (85 mm)", width: 85 },
+  { id: "oneHalf", label: "1.5 column (120 mm)", width: 120 },
+  { id: "double", label: "Double column (180 mm)", width: 180 },
+  { id: "a4Portrait", label: "A4 portrait (210 × 297 mm)", width: 210, height: 297 },
+  { id: "a4Landscape", label: "A4 landscape (297 × 210 mm)", width: 297, height: 210 },
+];
+
+/** Sets page width and/or height (mm) in `spec.page`; nothing else changes. */
+export function setPageSize(spec: Spec, size: { width?: number; height?: number }): Spec {
+  return { ...spec, page: { ...spec.page, ...size } };
+}
+
+export function applyPagePreset(spec: Spec, presetId: string, currentHeight: number): Spec {
+  const p = PAGE_PRESETS.find((x) => x.id === presetId);
+  return p ? setPageSize(spec, { width: p.width, height: p.height ?? currentHeight }) : spec;
+}
+
+/** Preset matching a page: full-size presets need both sides, column presets the width; else "custom". */
+export function matchPagePreset(page: { width: number; height: number }): string {
+  const full = PAGE_PRESETS.find((p) => p.height !== undefined && p.width === page.width && p.height === page.height);
+  return (full ?? PAGE_PRESETS.find((p) => p.height === undefined && p.width === page.width))?.id ?? "custom";
+}

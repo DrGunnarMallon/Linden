@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Registry } from "../src/registry.js";
+import { exporters, Registry } from "../src/registry.js";
 
 describe("Registry", () => {
   it("registers and retrieves by type", () => {
@@ -15,5 +15,10 @@ describe("Registry", () => {
     r.register({ type: "x" });
     expect(() => r.register({ type: "x" })).toThrow();
     expect(() => r.get("y")).toThrow();
+  });
+
+  it("has the svg exporter, which returns the SVG unchanged", async () => {
+    expect(exporters.types()).toEqual(["svg"]);
+    await expect(exporters.get("svg").export("<svg/>", {})).resolves.toBe("<svg/>");
   });
 });

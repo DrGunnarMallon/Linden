@@ -7,7 +7,7 @@ import { PresetSchema, SpecSchema, type Preset, type Spec } from "../model/spec.
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
 /** "panels[1].style.mode" style path. */
-function formatPath(path: readonly PropertyKey[]): string {
+export function formatPath(path: readonly PropertyKey[]): string {
   let out = "";
   for (const key of path) {
     if (typeof key === "number") out += `[${key}]`;

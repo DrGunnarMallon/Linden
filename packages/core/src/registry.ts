@@ -1,7 +1,8 @@
 // Plugin registries — see SPEC.md §5.1. Every module registers itself by `type`.
 
+import { svgExporter } from "./export/svg.js";
 import { csvImporter } from "./io/delimited.js";
-import type { Importer, Transform } from "./model/types.js";
+import type { Exporter, Importer, Transform } from "./model/types.js";
 import { zonesOverlay } from "./overlays/zones.js";
 import { taxonCurvesPanel } from "./panels/taxonCurves.js";
 import type { Overlay, Panel } from "./panels/types.js";
@@ -56,3 +57,6 @@ panels.register(taxonCurvesPanel);
 
 export const overlays = new Registry<Overlay>("overlay");
 overlays.register(zonesOverlay);
+
+export const exporters = new Registry<Exporter>("exporter");
+exporters.register(svgExporter);

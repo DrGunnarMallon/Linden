@@ -1,8 +1,8 @@
-// Approximate font metrics without a DOM — SPEC.md §6.
-// Advance widths of Helvetica/Arial (regular; the italic widths are near-identical) in 1/1000 em.
-// Deterministic by design. NOTE: the app may later replace this with real measurement
-// (canvas measureText or the embedded PDF font); keep every text-width query going through
-// estimateTextWidth in theme.ts so there is one place to swap.
+// Font metrics without a DOM — SPEC.md §6.
+// Advance widths of Liberation Sans (fonts/, embedded in PDF/PNG export; metrically compatible
+// with Arial/Helvetica) in 1/1000 em. Regular and italic widths are identical for these characters;
+// test/metrics.test.ts checks the table against the font files. Deterministic by design: keep every
+// text-width query going through estimateTextWidth in theme.ts so there is one place to swap.
 
 /** Widths for U+0020 (space) … U+007E (~). */
 const ASCII: readonly number[] = [
@@ -17,8 +17,8 @@ const ASCII: readonly number[] = [
 const EXTRA: Readonly<Record<string, number>> = {
   " ": 278, // no-break space
   "°": 400, // °
-  "±": 584, // ±
-  "µ": 556, // µ
+  "±": 549, // ±
+  "µ": 576, // µ
   "×": 584, // ×
   "–": 556, // –
   "—": 1000, // —

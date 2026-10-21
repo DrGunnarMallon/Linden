@@ -8,21 +8,28 @@
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:export": "node scripts/verify-export.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@linden/core": "*",
+    "jspdf": "^4.2.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "svg2pdf.js": "^2.8.1",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@types/jsdom": "^30.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "jsdom": "^29.1.1",
+    "pdfjs-dist": "^6.4.299",
+    "playwright-core": "^1.64.1",
     "vite": "^8.3.5"
   }
 }

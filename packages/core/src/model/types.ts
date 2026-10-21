@@ -116,3 +116,9 @@ export interface Transform {
   /** Returns a NEW dataset; never mutates `ds`. */
   apply(ds: Dataset, params: unknown, ctx: TransformContext): Dataset;
 }
+
+/** SVG → file. Browser-only exporters (PDF, PNG) live in the app and register into `exporters`. */
+export interface Exporter {
+  type: string;
+  export(svg: string, opts: unknown): Promise<Blob | string>;
+}

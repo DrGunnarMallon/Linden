@@ -1,12 +1,13 @@
 import { useStore } from "./store";
 
 export function Warnings() {
-  const { importWarnings, renderWarnings, presetWarnings, storageWarnings } = useStore();
+  const { importWarnings, renderWarnings, presetWarnings, storageWarnings, exportWarnings } = useStore();
   const sections: [string, string[]][] = [
     ["Import", importWarnings],
     ["Render", renderWarnings],
     ["Presets", presetWarnings],
     ["Storage", storageWarnings],
+    ["Export", exportWarnings],
   ];
   const total = sections.reduce((n, [, w]) => n + w.length, 0);
   return (

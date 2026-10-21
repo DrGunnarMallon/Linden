@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { importDelimited } from "../src/io/delimited.js";
 import { parsePreset, parseSpec } from "../src/io/spec.js";
 import type { Preset, Spec } from "../src/model/spec.js";
+import { specHash } from "../src/io/hash.js";
 import { render } from "../src/pipeline.js";
 import { readRepoFile, readRepoJson } from "./fixtures.js";
 
@@ -28,6 +29,11 @@ describe("render — demo pollen", () => {
   it("is deterministic", () => {
     const again = demo();
     expect(render(again.datasets, again.spec, again.presets).svg).toBe(result.svg);
+  });
+
+  it("has one <g> per panel with ids and <metadata> with the version and spec hash", () => {
+    expect(result.svg.match(/<g id="panel-\d+-[A-Za-z]+"/g)).toEqual(spec.panels.map((p, i) => `<g id="panel-${i}-${p.type}"`));
+    expect(result.svg).toContain(`<metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: ${specHash(spec)}</metadata>`);
   });
 
   it("contains one column per selected taxon, italic names, zone and + markers", () => {

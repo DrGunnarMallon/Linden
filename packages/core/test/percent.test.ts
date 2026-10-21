@@ -111,8 +111,16 @@ describe("percent — small fixtures", () => {
   it("warns and skips on an undefined sum or bad params", () => {
     const ctx = ctxWith({ sums: {} });
     expect(percentTransform.apply(ds, { type: "percent", sum: "x" }, ctx)).toBe(ds);
-    expect(percentTransform.apply(ds, { type: "percent" }, ctx)).toBe(ds);
+    expect(percentTransform.apply(ds, { type: "percent", sum: 3 }, ctx)).toBe(ds);
     expect(ctx.warnings).toHaveLength(2);
+  });
+
+  it("without a named sum: % of every count variable", () => {
+    const ctx = ctxWith({ sums: {} });
+    const out = percentTransform.apply(ds, { type: "percent" }, ctx);
+    const all = percentTransform.apply(ds, { type: "percent", sum: "all" }, ctxWith({ sums: { all: { includeAll: true } } }));
+    expect(out.values).toEqual(all.values);
+    expect(out.variables).toEqual(all.variables);
   });
 
   it("warns about unknown and non-count members", () => {

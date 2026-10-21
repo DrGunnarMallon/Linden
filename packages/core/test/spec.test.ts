@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { parsePreset, parseSpec, specJsonSchema } from "../src/io/spec.js";
 import { migrateSpec } from "../src/model/migrate.js";
 import { SPEC_VERSION } from "../src/model/spec.js";
+import { importDelimited } from "../src/io/delimited.js";
+import { loadPresets } from "../src/io/presets.js";
+import { render } from "../src/pipeline.js";
 import { readRepoFile, readRepoJson } from "./fixtures.js";
 
 describe("parseSpec", () => {
@@ -45,7 +48,7 @@ describe("parseSpec", () => {
   });
 
   it("rejects a malformed percent transform", () => {
-    const r = parseSpec({ specVersion: 1, panels: [], datasets: [{ dataset: "p", transforms: [{ type: "percent" }] }] });
+    const r = parseSpec({ specVersion: 1, panels: [], datasets: [{ dataset: "p", transforms: [{ type: "percent", sum: 3 }] }] });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors[0]).toMatch(/^datasets\[0\]\.transforms\[0\]\.sum: /);
   });
@@ -56,13 +59,13 @@ describe("spec migration", () => {
     const v1 = { specVersion: 1, page: { width: 100 }, panels: [{ type: "yAxis" }] };
     const r = parseSpec(JSON.stringify(v1));
     expect(r).toEqual({ ok: true, value: { specVersion: SPEC_VERSION, page: { width: 100 }, panels: [{ type: "yAxis" }] } });
-    expect(SPEC_VERSION).toBe(4);
-    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 4 });
+    expect(SPEC_VERSION).toBe(5);
+    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 5 });
     expect(v1.specVersion).toBe(1); // input not mutated
   });
 
   it("leaves current, unknown and non-object input to validation", () => {
-    const current = { specVersion: 4, panels: [] };
+    const current = { specVersion: 5, panels: [] };
     expect(migrateSpec(current)).toBe(current);
     expect(migrateSpec({ specVersion: 0, panels: [] })).toEqual({ specVersion: 0, panels: [] });
     expect(migrateSpec("x")).toBe("x");
@@ -75,20 +78,119 @@ describe("spec migration", () => {
       panels: [{ type: "taxonCurves", dataset: "m", variables: { kinds: ["presence"] }, style: { presence: "bar" } }],
     };
     const r = parseSpec(v3);
-    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 4 } });
+    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 5 } });
   });
 
-  it("migrates v2 → v3 and accepts the v3 grouping fields", () => {
-    const v2 = {
-      specVersion: 2,
-      groups: [{ id: "bryophytes", name: "Bryophytes" }],
-      datasets: [{ dataset: "d", assignments: { Sphagnum: "bryophytes" }, order: ["Sphagnum"], transforms: [{ type: "merge", id: "M", name: "M", from: ["a", "b"] }] }],
-      panels: [],
-    };
+  it("migrates v2 → v3 and accepts the v3 grouping fields (top-level groups end up in the dataset entries)", () => {
+    const entry = { dataset: "d", assignments: { Sphagnum: "bryophytes" }, order: ["Sphagnum"], transforms: [{ type: "merge", id: "M", name: "M", from: ["a", "b"] }] };
+    const v2 = { specVersion: 2, groups: [{ id: "bryophytes", name: "Bryophytes" }], datasets: [entry], panels: [] };
+    const expected = { specVersion: 5, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
     const r = parseSpec(v2);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.value).toEqual({ ...v2, specVersion: 4 });
-    expect(migrateSpec(v2)).toEqual({ ...v2, specVersion: 4 });
+    if (r.ok) expect(r.value).toEqual(expected);
+    expect(migrateSpec(v2)).toEqual(expected);
+  });
+
+  describe("v4 → v5: groups per dataset, presets without groups and sums", () => {
+    const pollenGroups = [
+      { id: "trees", name: "Trees", colour: "#2f6b3a", order: 1 },
+      { id: "shrubs", name: "Shrubs", colour: "#7a9a3c", order: 2 },
+      { id: "herbs", name: "Herbs", colour: "#c9a227", order: 3 },
+      { id: "aquatics", name: "Aquatics", colour: "#3a78a8", order: 4 },
+      { id: "spores", name: "Spores", colour: "#8a6a9a", order: 5 },
+    ];
+    const terrestrial = { terrestrial: { includeGroups: ["trees", "shrubs", "herbs"] } };
+    const outsideSum = { groups: ["aquatics", "spores"], basis: "sumPlusGroup" };
+
+    it("copies the old preset's groups (spec fields win), sums, outsideSum and transforms into the entry", () => {
+      const v4 = {
+        specVersion: 4,
+        preset: "pollen-percent",
+        groups: [{ id: "herbs", name: "Herbs (upland)" }, { id: "bryophytes", name: "Bryophytes", order: 6 }],
+        datasets: [{ dataset: "d" }],
+        panels: [{ type: "taxonCurves", dataset: "d" }],
+      };
+      const groups = pollenGroups.map((g) => (g.id === "herbs" ? { ...g, name: "Herbs (upland)" } : g));
+      expect(migrateSpec(v4)).toEqual({
+        specVersion: 5,
+        preset: "pollen-percent",
+        datasets: [
+          {
+            dataset: "d",
+            groups: [...groups, { id: "bryophytes", name: "Bryophytes", order: 6 }],
+            transforms: [{ type: "percent", sum: "terrestrial" }],
+            sums: terrestrial,
+            outsideSum,
+          },
+        ],
+        panels: [{ type: "taxonCurves", dataset: "d" }],
+      });
+      expect(v4.groups).toHaveLength(2); // input not mutated
+    });
+
+    it("keeps the entry's own transforms, sums and outsideSum; copies only sums they name", () => {
+      const own = { dataset: "d", transforms: [{ type: "percent", sum: "total" }], outsideSum: { groups: ["x"], basis: "sum" } };
+      const out = migrateSpec({ specVersion: 4, preset: "diatom-percent", datasets: [own, { dataset: "e" }], panels: [] }) as { datasets: unknown[] };
+      expect(out.datasets).toEqual([{ ...own, sums: { total: { includeAll: true } } }, { dataset: "e" }]);
+    });
+
+    it("creates entries (without transforms, as before) for panel datasets that had none", () => {
+      const out = migrateSpec({ specVersion: 4, groups: [{ id: "g", name: "G" }], panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }] });
+      expect(out).toEqual({
+        specVersion: 5,
+        panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }],
+        datasets: [{ dataset: "d", transforms: [], groups: [{ id: "g", name: "G" }] }],
+      });
+    });
+
+    it("explicit headers keep their brackets; specs without headers get the default group headers", () => {
+      expect(migrateSpec({ specVersion: 4, panels: [], headers: [{ spans: { groups: ["g"] } }] })).toHaveProperty("groupHeaders", { line: "bracket" });
+      expect(migrateSpec({ specVersion: 4, panels: [] })).not.toHaveProperty("groupHeaders");
+    });
+
+    it("a v4 project that relied on preset groups renders exactly as before (golden SVG unchanged)", async () => {
+      const v4 = {
+        specVersion: 4,
+        preset: "pollen-percent",
+        page: { width: 180, height: 120, units: "mm", font: { family: "Arial", size: 7 } },
+        yAxis: { primary: "depth", secondary: "age", reverse: true, ticks: { major: 20, minor: 10 } },
+        groups: [{ id: "bryophytes", name: "Bryophytes", colour: "#6b7f2a", order: 6 }],
+        datasets: [
+          {
+            dataset: "demo-bryophytes",
+            assignments: { Sphagnum: "bryophytes", "Scorpidium scorpioides": "bryophytes" },
+            order: ["Sphagnum", "Calliergon"],
+            transforms: [
+              { type: "merge", id: "Calliergon", name: "*Calliergon*", from: ["Calliergon giganteum", "Calliergon cordifolium"], group: "bryophytes" },
+              { type: "percent", sum: "terrestrial" },
+            ],
+            sums: terrestrial,
+          },
+        ],
+        panels: [
+          { type: "yAxis" },
+          {
+            type: "taxonCurves",
+            dataset: "demo-bryophytes",
+            variables: { groups: ["trees", "shrubs", "herbs", "bryophytes"], order: "data" },
+            style: { mode: "silhouette", fill: "group", exaggeration: 10, commonScale: true, minWidth: 4 },
+          },
+        ],
+        overlays: [{ type: "zones", manual: [{ depth: 65, label: "P1/P2" }] }],
+        headers: [
+          { label: "Trees & shrubs", spans: { groups: ["trees", "shrubs"] } },
+          { spans: { groups: ["herbs"] } },
+          { spans: { groups: ["bryophytes"] } },
+        ],
+      };
+      const spec = parseSpec(v4);
+      if (!spec.ok) throw new Error(spec.errors.join("\n"));
+      const { presets } = loadPresets([{ file: "pollen-percent.json", text: readRepoFile("presets/pollen-percent.json") }]);
+      const datasets = importDelimited(readRepoFile("examples/demo-bryophytes.csv"), { name: "demo-bryophytes" }).datasets;
+      const r = render(datasets, spec.value, presets);
+      expect(r.warnings).toEqual([]);
+      await expect(r.svg).toMatchFileSnapshot("./__snapshots__/demo-bryophytes.svg");
+    });
   });
 
   it("rejects a merge without sources", () => {
@@ -119,5 +221,26 @@ describe("specJsonSchema", () => {
       expect.arrayContaining(["page", "yAxis", "datasets", "panels", "overlays"]),
     );
     expect(JSON.parse(JSON.stringify(schema))).toEqual(schema);
+  });
+});
+
+describe("presets", () => {
+  it.each(["pollen-percent", "testate-percent", "diatom-percent", "macrofossil-counts"])("presets/%s.json defines no groups or sums", (name) => {
+    const json = readRepoJson(`presets/${name}.json`) as Record<string, unknown>;
+    for (const key of ["groups", "sums", "outsideSum"]) expect(json).not.toHaveProperty(key);
+    expect(JSON.stringify(json)).not.toMatch(/"(includeGroups|groups)"/);
+  });
+
+  it("the preset schema rejects groups, sums, outsideSum and group selections", () => {
+    const base = { presetVersion: 1, name: "p" };
+    for (const extra of [
+      { groups: [{ id: "trees", name: "Trees", order: 1 }] },
+      { sums: { total: { includeAll: true } } },
+      { outsideSum: { groups: ["spores"], basis: "sum" } },
+      { selectionDefaults: { groups: ["trees"] } },
+    ]) {
+      expect(parsePreset({ ...base, ...extra }).ok).toBe(false);
+    }
+    expect(parsePreset(base).ok).toBe(true);
   });
 });

@@ -1,13 +1,21 @@
 {
-  "specVersion": 4,
+  "specVersion": 5,
   "preset": "pollen-percent",
   "page": { "width": 180, "height": 120, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "yAxis": { "primary": "depth", "secondary": "age", "reverse": true, "ticks": { "major": 20, "minor": 10 } },
   "datasets": [
     {
       "dataset": "demo-pollen",
+      "groups": [
+        { "id": "trees", "name": "Trees", "colour": "#2f6b3a", "order": 1 },
+        { "id": "shrubs", "name": "Shrubs", "colour": "#7a9a3c", "order": 2 },
+        { "id": "herbs", "name": "Herbs", "colour": "#c9a227", "order": 3 },
+        { "id": "aquatics", "name": "Aquatics", "colour": "#3a78a8", "order": 4 },
+        { "id": "spores", "name": "Spores", "colour": "#8a6a9a", "order": 5 }
+      ],
       "transforms": [{ "type": "percent", "sum": "terrestrial" }],
-      "sums": { "terrestrial": { "includeGroups": ["trees", "shrubs", "herbs"] } }
+      "sums": { "terrestrial": { "includeGroups": ["trees", "shrubs", "herbs"] } },
+      "outsideSum": { "groups": ["aquatics", "spores"], "basis": "sumPlusGroup" }
     }
   ],
   "panels": [
@@ -26,5 +34,6 @@
     { "label": "Trees & shrubs", "spans": { "groups": ["trees", "shrubs"] } },
     { "spans": { "groups": ["herbs"] } },
     { "spans": { "groups": ["spores"] } }
-  ]
+  ],
+  "groupHeaders": { "line": "bracket" }
 }

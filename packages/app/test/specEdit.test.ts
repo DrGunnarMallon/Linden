@@ -51,9 +51,19 @@ describe("variable visibility edits", () => {
 describe("dataset wiring", () => {
   it("adds entry, y axis and panel for a new dataset, and removes them again", () => {
     const empty: Spec = { specVersion: 1, panels: [] };
-    const added = ensureDatasetInSpec(empty, "core-a");
+    const coreA = { ...ds, id: "core-a", groups: [] };
+    const added = ensureDatasetInSpec(empty, coreA);
     expect(added).toEqual({ specVersion: 1, datasets: [{ dataset: "core-a" }], panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "core-a" }] });
-    expect(ensureDatasetInSpec(added, "core-a")).toBe(added);
+    expect(ensureDatasetInSpec(added, coreA)).toBe(added);
     expect(removeDatasetFromSpec(added, "core-a")).toEqual({ specVersion: 1, datasets: [], panels: [{ type: "yAxis" }] });
+  });
+
+  it("the CSV group row seeds the new entry's groups on import; an existing entry keeps its own", () => {
+    const empty: Spec = { specVersion: 5, panels: [] };
+    const added = ensureDatasetInSpec(empty, ds);
+    expect(added.datasets![0]!.groups).toEqual(ds.groups.map((g) => ({ id: g.id, name: g.name, order: g.order })));
+    expect(added.datasets![0]!.groups!.map((g) => g.id)).toEqual(["trees", "shrubs", "herbs", "spores"]);
+    const own: Spec = { specVersion: 5, datasets: [{ dataset: ds.id, groups: [{ id: "x", name: "X" }] }], panels: [] };
+    expect(ensureDatasetInSpec(own, ds).datasets![0]!.groups).toEqual([{ id: "x", name: "X" }]);
   });
 });

@@ -100,16 +100,31 @@ export function setVariableVisible(spec: Spec, presets: readonly Preset[], ds: D
   return { ...spec, panels };
 }
 
-/** Makes a freshly imported dataset visible: adds a dataset entry, a taxonCurves panel and a y axis if missing. */
-export function ensureDatasetInSpec(spec: Spec, datasetId: string): Spec {
+/** The data's groups (e.g. a CSV group row) as spec groups: they only seed the dataset's groups on import. */
+function seedGroups(ds: Dataset): SpecGroup[] {
+  return ds.groups.map((g) => ({
+    id: g.id,
+    name: g.name,
+    ...(g.colour !== undefined ? { colour: g.colour } : {}),
+    ...(Number.isFinite(g.order) ? { order: g.order } : {}),
+  }));
+}
+
+/**
+ * Makes a freshly imported dataset visible: adds a dataset entry (seeded with the data's groups), a
+ * taxonCurves panel and a y axis if missing. An existing entry keeps its (user-defined) groups.
+ */
+export function ensureDatasetInSpec(spec: Spec, ds: Dataset): Spec {
   const datasets = spec.datasets ?? [];
-  const hasEntry = datasets.some((d) => d.dataset === datasetId);
-  const hasPanel = spec.panels.some((p) => p.type === "taxonCurves" && p.dataset === datasetId);
+  const hasEntry = datasets.some((d) => d.dataset === ds.id);
+  const hasPanel = spec.panels.some((p) => p.type === "taxonCurves" && p.dataset === ds.id);
   if (hasEntry && hasPanel) return spec;
   const panels = [...spec.panels];
   if (!panels.some((p) => p.type === "yAxis")) panels.unshift({ type: "yAxis" });
-  if (!hasPanel) panels.push({ type: "taxonCurves", dataset: datasetId });
-  return { ...spec, datasets: hasEntry ? datasets : [...datasets, { dataset: datasetId }], panels };
+  if (!hasPanel) panels.push({ type: "taxonCurves", dataset: ds.id });
+  const groups = seedGroups(ds);
+  const entry: DatasetEntry = groups.length > 0 ? { dataset: ds.id, groups } : { dataset: ds.id };
+  return { ...spec, datasets: hasEntry ? datasets : [...datasets, entry], panels };
 }
 
 /** Drops dataset entries and panels referring to `datasetId`. */
@@ -222,6 +237,9 @@ export function moveVariable(spec: Spec, presets: readonly Preset[], raw: Datase
   let next = updateEntry(spec, raw.id, (e) => {
     const out: DatasetEntry = { ...e };
     if (v.group !== toGroup) {
+      // Keep the source group (greyed out if it becomes empty) instead of letting it disappear.
+      const from = seedGroups(before.prepared).find((g) => g.id === v.group);
+      if (from && !(e.groups ?? []).some((g) => g.id === from.id)) out.groups = [...(e.groups ?? []), from];
       if (isMerge) {
         out.transforms = (e.transforms ?? []).map((t) => (t.type === "merge" && t.id === varId ? { ...t, group: toGroup } : t));
       } else {
@@ -238,34 +256,53 @@ export function moveVariable(spec: Spec, presets: readonly Preset[], raw: Datase
   return sameJson(next, spec) ? spec : next;
 }
 
-function upsertGroup(spec: Spec, id: string, patch: Omit<SpecGroup, "id">): Spec {
-  const groups = spec.groups ?? [];
-  if (groups.some((g) => g.id === id)) return { ...spec, groups: groups.map((g) => (g.id === id ? { ...g, ...patch } : g)) };
-  return { ...spec, groups: [...groups, { id, ...patch }] };
+/** Groups are per dataset (`datasets[].groups`). */
+function upsertGroup(spec: Spec, datasetId: string, id: string, patch: Omit<SpecGroup, "id">): Spec {
+  return updateEntry(spec, datasetId, (e) => {
+    const groups = e.groups ?? [];
+    if (groups.some((g) => g.id === id)) return { ...e, groups: groups.map((g) => (g.id === id ? { ...g, ...patch } : g)) };
+    return { ...e, groups: [...groups, { id, ...patch }] };
+  });
 }
 
 /** Writes order 1…n for the given group ids (all groups shown for a dataset). */
-export function reorderGroups(spec: Spec, groupIds: readonly string[]): Spec {
-  return groupIds.reduce((s, id, i) => upsertGroup(s, id, { order: i + 1 }), spec);
+export function reorderGroups(spec: Spec, datasetId: string, groupIds: readonly string[]): Spec {
+  return groupIds.reduce((s, id, i) => upsertGroup(s, datasetId, id, { order: i + 1 }), spec);
 }
 
-export function renameGroup(spec: Spec, id: string, name: string): Spec {
-  return upsertGroup(spec, id, { name });
+export function renameGroup(spec: Spec, datasetId: string, id: string, name: string): Spec {
+  return upsertGroup(spec, datasetId, id, { name });
 }
 
-export function recolourGroup(spec: Spec, id: string, colour: string): Spec {
-  return upsertGroup(spec, id, { colour });
+export function recolourGroup(spec: Spec, datasetId: string, id: string, colour: string): Spec {
+  return upsertGroup(spec, datasetId, id, { colour });
 }
 
 /** New group after all `existing` ones; id derived from the name and unique. */
-export function createGroup(spec: Spec, name: string, existing: readonly { id: string; order: number }[]): { spec: Spec; id: string } {
+export function createGroup(spec: Spec, datasetId: string, name: string, existing: readonly { id: string; order: number }[]): { spec: Spec; id: string } {
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "group";
-  const taken = new Set([...existing.map((g) => g.id), ...(spec.groups ?? []).map((g) => g.id)]);
+  const taken = new Set([...existing.map((g) => g.id), ...(entryOf(spec, datasetId)?.groups ?? []).map((g) => g.id)]);
   let id = base;
   for (let k = 2; taken.has(id); k++) id = `${base}-${k}`;
   const finite = existing.map((g) => g.order).filter(Number.isFinite);
   const order = (finite.length ? Math.max(...finite) : 0) + 1;
-  return { spec: upsertGroup(spec, id, { name, order }), id };
+  return { spec: upsertGroup(spec, datasetId, id, { name, order }), id };
+}
+
+/**
+ * Deletes an empty group of a dataset (non-empty groups are left alone: move their taxa out first).
+ * A group from the data that the spec does not list disappears by itself once empty (core applyGroups).
+ */
+export function deleteGroup(spec: Spec, presets: readonly Preset[], raw: Dataset, id: string): Spec {
+  const node = variableTree(spec, presets, raw).groups.find((g) => g.id === id);
+  if (!node || node.members.length > 0) return spec;
+  const groups = entryOf(spec, raw.id)?.groups;
+  if (!groups?.some((g) => g.id === id)) return spec;
+  return updateEntry(spec, raw.id, (e) => {
+    const out: DatasetEntry = { ...e, groups: groups.filter((g) => g.id !== id) };
+    if (out.groups!.length === 0) delete out.groups;
+    return out;
+  });
 }
 
 /** Replaces each of `ids` in a list by `by` (at the first hit), keeping everything else. */

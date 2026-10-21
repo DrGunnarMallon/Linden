@@ -24,7 +24,7 @@ export type { TaxonColumn } from "./panels/taxonCurves.js";
 export { zonesOverlay } from "./overlays/zones.js";
 export { computeLayout, compactLength, MIN_WIDTH_FLOOR, GAP_FLOOR, X_FACTOR_FLOOR } from "./layout/layout.js";
 export type { FitState, HeaderMeasure, LayoutOptions, LayoutResult, Rect } from "./layout/layout.js";
-export { layoutLabels, groupSpans, groupRowHeight, renderGroupHeaders } from "./layout/header.js";
+export { layoutLabels, groupSpans, autoGroupSpans, groupRowHeight, renderGroupHeaders } from "./layout/header.js";
 export type { HeaderColumn, LabelOptions, LabelLayout, GroupSpan } from "./layout/header.js";
 export { charWidth, textWidthEm } from "./layout/metrics.js";
 export { makeYScale, niceStep, ticksAt, interpolate } from "./layout/scales.js";

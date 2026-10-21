@@ -6,7 +6,7 @@ import type { YScale } from "../layout/scales.js";
 import type { Theme } from "../layout/theme.js";
 import type { ResolvedPage, ResolvedYAxis } from "../model/defaults.js";
 import type { ResolvedPanel } from "../model/resolve.js";
-import type { OverlaySpec, SpecGroup } from "../model/spec.js";
+import type { OverlaySpec } from "../model/spec.js";
 import type { Dataset } from "../model/types.js";
 import type { SvgGroup } from "../render/svg.js";
 
@@ -33,8 +33,6 @@ export interface PanelContext {
   fit: FitState;
   page: ResolvedPage;
   theme: Theme;
-  /** Group display metadata (colours) from the resolved spec. */
-  groups: SpecGroup[];
   /** Taxon label font size (mm) and angle, shared by all panels; final only in render(). */
   header: { fontSize: number; angle: number };
   analyses: Record<string, unknown>;

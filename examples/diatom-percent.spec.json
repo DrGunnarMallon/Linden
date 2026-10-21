@@ -1,5 +1,5 @@
 {
-  "specVersion": 4,
+  "specVersion": 5,
   "preset": "diatom-percent",
   "page": { "width": 180, "height": 150, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 20, "minor": 5 } },

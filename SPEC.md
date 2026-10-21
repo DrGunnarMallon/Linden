@@ -118,7 +118,7 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
 
 ```jsonc
 {
-  "specVersion": 4,
+  "specVersion": 5,
   "page": { "width": 180, "height": 240, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "headerBand": { "angle": 60, "minFontSize": 5, "height": null },   // taxon labels; height null = fit
   "yAxis": {
@@ -128,13 +128,13 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
     "range": null,                    // null = data extent
     "ticks": { "major": 50, "minor": 10 }
   },
-  "groups": [                                          // define / rename / recolour / order groups
-    { "id": "bryophytes", "name": "Bryophytes", "colour": "#6b7f2a", "order": 6 },
-    { "id": "herbs", "name": "Herbs (upland)" }
-  ],
   "datasets": [
     {
       "dataset": "pollen",
+      "groups": [                                        // this dataset's groups: define / rename / recolour / order
+        { "id": "bryophytes", "name": "Bryophytes", "colour": "#6b7f2a", "order": 6 },
+        { "id": "herbs", "name": "Herbs (upland)" }
+      ],
       "assignments": { "Sphagnum": "bryophytes" },       // variable id → group id
       "order": ["Sphagnum", "Calliergon"],                // explicit order within each group
       "transforms": [
@@ -165,7 +165,8 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
   "overlays": [
     { "type": "zones", "from": "analysis:zones", "n": 4, "labels": ["P1", "P2", "P3", "P4"] }
   ],
-  "headers": [
+  "groupHeaders": { "show": true, "line": "line" },  // default: one header per group
+  "headers": [                                       // optional explicit headers instead
     { "label": "Trees & shrubs", "spans": { "groups": ["trees", "shrubs"] } },
     { "spans": { "groups": ["herbs"] } }               // label defaults to the group name(s)
   ],
@@ -174,7 +175,8 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
 ```
 
 Key rules:
-- **Groups.** The dataset's groups (e.g. a CSV group row) are only defaults. Effective groups = dataset groups, overlaid field by field by preset `groups`, then by spec `groups` (same id); groups that exist only in the preset or spec are added, even when empty (so users can create e.g. "Bryophytes"). `order` decides group order (lower first; groups without one come last, in spec order).
+- **Groups** are user-defined per dataset and stored in the spec (`datasets[].groups`, so in the `.linden.json` project with that dataset); presets define none. The data's groups (e.g. a CSV group row) only seed them: the app writes them into the new dataset entry on import. Effective groups = the data's groups overlaid field by field by the entry's `groups` (same id); groups only in the entry are added, even when empty (so users can create e.g. "Bryophytes"); a data group the entry does not list is dropped once no variable is left in it (so a deleted group stays deleted). `order` decides group order (lower first; groups without one come last, in list order). Groups of one dataset never apply to another.
+- **Empty groups** are never drawn: no columns, no gap, no header. The app lists them greyed out with a delete action, so taxa can still be dragged into them.
 - **Assignments** (`datasets[].assignments`: variable id → group id) override a variable's group. Groups and assignments are applied **before transforms**, so they also change sum membership (moving a taxon out of a sum group takes it out of the sum). An assignment to a group that does not exist, or of an unknown variable, is ignored with a warning; merged variables take their group from the merge transform.
 - **Column order**: group order first; within each group the dataset's explicit `order` list (variable ids), then every unlisted variable in the panel's `variables.order` — new taxa never disappear silently. Ungrouped variables come last. An unknown id in `order` is a warning.
 - **Variable selection** is declarative: by explicit ids, by groups (union of both; neither = all), by threshold (`minMax`: include if max ≥ x), plus ordering:
@@ -185,12 +187,13 @@ Key rules:
   - explicit list of ids — listed variables first in list order, the rest after.
   Variables with no non-zero value go last. These panel orders apply within groups (see column order). All orders except `data` break ties by variable id (code-unit comparison, locale-independent).
 - **Per-variable overrides** are allowed (`overrides: { "Pinus": { "exaggeration": 0 } }`) but discouraged. Panel-level layout keys (`groupGap`) cannot be overridden; overrides for ids not in the dataset produce a warning.
-- **Group headers** (`headers`): a bracket with a label above exactly the columns whose group is in `spans.groups` or whose id is in `spans.ids`, across all panels. `label` defaults to the spanned group names joined by " & ". If the matching columns are not adjacent, one bracket is drawn per run (label on the first) and a warning is emitted; overlapping headers warn. `style.groupGap` (mm) adds space between adjacent columns of different groups.
-- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks`; v3 added top-level `groups`, `datasets[].assignments` / `order` and the `merge` transform; v4 added the `scaleMap` transform, `datasets[].scales`, `variables.kinds` and `style.presence` (all optional, so each migration only bumps the number).
-- **Presets** provide defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named sums and named scales replace whole (a spec sum/scale with the same name as a preset one wins entirely); `outsideSum` comes from the dataset entry, else from the preset; a dataset entry without `transforms` uses the preset's `transforms` (so `"preset": "testate-percent"` alone gives percentages of total tests).
+- **Group headers** are drawn by default: a horizontal line above each group's columns, spanning exactly those columns, with the group name centred above it — one per run of adjacent columns of the same group within a panel (never across panels; ungrouped columns get none). `groupHeaders.show` (default `true`) turns all group headers off; `groupHeaders.line` is `"line"` (default), `"bracket"` (line with end ticks) or `"none"` (label only). Explicit `headers` replace the automatic ones: each spans exactly the columns whose group is in `spans.groups` or whose id is in `spans.ids`, across all panels; `label` defaults to the spanned group names joined by " & ". If the matching columns are not adjacent, one line is drawn per run (label on the first) and a warning is emitted; overlapping headers warn. `style.groupGap` (mm, default 2) is the gap between adjacent columns of different groups.
+- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks`; v3 added top-level `groups`, `datasets[].assignments` / `order` and the `merge` transform; v4 added the `scaleMap` transform, `datasets[].scales`, `variables.kinds` and `style.presence` (all optional, so these migrations only bump the number). v5 moved groups into `datasets[].groups`, added `groupHeaders` (headers on by default) and made the percent transform's `sum` optional; presets lost `groups`, `sums` and `outsideSum`. The v4→v5 migration copies top-level `groups` and the groups, sums, `outsideSum` and default transforms the bundled presets used to define (a frozen copy in `migrate.ts`) into the dataset entries (creating entries without transforms for panel datasets that had none), and gives explicit `headers` `groupHeaders.line: "bracket"`, so old diagrams look the same apart from the new default group headers.
+- **Presets** provide styling/behaviour defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named scales replace whole (a spec scale with the same name as a preset one wins entirely); a dataset entry without `transforms` uses the preset's `transforms` (so `"preset": "testate-percent"` alone gives percentages of total tests).
+- **Sums** are the dataset entry's own (`datasets[].sums`, e.g. a pollen sum of user-defined groups). A percent transform without `sum` uses the default sum: every variable of kind `count` in the dataset (before selection, so thresholds never change the sum).
 - **Dataset entries** may define named ordinal `scales` (`{ "dafor": { "-": 0, "R": 1, …, "D": 5 } }`, code → plotted value, `null` = not assessed), referenced by the `scaleMap` transform.
 - **Selection by kind**: `variables.kinds` keeps only variables of these measurement kinds (after transforms), e.g. one panel each for counts, abundance classes and presence.
-- **Dataset entries** may carry `outsideSum: { "groups": [...], "basis": "sum" | "sumPlusGroup" }` (same shape as in presets).
+- **Dataset entries** may carry `outsideSum: { "groups": [...], "basis": "sum" | "sumPlusGroup" }`.
 - **Zones overlay**: `{ "type": "zones", "manual": [{ "depth": 65, "label": "P1/P2" }] }` draws boundaries at given depths (M1). Zones from an analysis (`from`, `n`, `labels`) follow in M3.
 - Spec objects are strict: unknown keys are validation errors (catches typos). `parseSpec` returns readable errors with paths, e.g. `panels[1].style.mode: …`.
 
@@ -295,7 +298,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
   Each applied step is reported as an **info** message (`RenderResult.info`, e.g. "minWidth reduced from 4 to 2.6 mm, column gaps from 1 to 0.73 mm to fit the page."), not as a warning. Never silently break the common scale.
 - Tick labels are placed left to right across a whole panel: a label (even a column's "0") is skipped if it would touch the previous one, so compacted columns thin their labels instead of overlapping them.
 - Header labels: rotated (`headerBand.angle`, default 60°), anchored at column centre. One header band is laid out for all panels (from their `columns()`), so every taxon label has the same font size. Adjacent labels collide when their perpendicular distance (pitch × sin θ) is under 1 em while they overlap along the text (pitch × cos θ < label length). Resolution order: reduce the font in 0.25 pt steps from `page.font.size` down to `headerBand.minFontSize`; then grow the band beyond `headerBand.height` (if set; warns); labels that still overlap produce a warning — never silently. Both ends of the labels are reserved in the page fit (see "Fitting the page width"), so labels never run off the page.
-- Group headers sit in a row above the taxon labels (§4 `headers`).
+- Group headers sit in a row above the taxon labels (§4 group headers).
 - Per-column x axes: tick step = `style.xTicks.step`, or automatically the smallest 1–2–5 × 10ⁿ step at least `xTicks.minSpacing` mm long at the column's scale (with a common scale, the same step in every column — e.g. 20 % at 0.4 mm/%). Tick labels are placed left to right and skipped if they would touch the previous label or the next column's "0", so narrow columns keep a single label.
 - One shared y-scale for all panels; secondary axis (age) drawn by interpolation from sample depth–age pairs, never by re-scaling.
 - Zone overlays draw across all panels; zone labels sit in a narrow column right of the last panel.
@@ -338,12 +341,12 @@ Any new proxy should be expressible by a preset alone. If it needs code, it need
 
 ## 8. Presets
 
-JSON files in `/presets`, same shape as a partial spec plus metadata: `presetVersion`, `name` (must equal the file name), `description`, `page`, `yAxis`, `headerBand`, `groups`, `sums`, `scales`, `outsideSum`, default dataset `transforms`, `selectionDefaults`, `panelDefaults` (strict: only implemented panel types). `loadPresets(files)` validates them (JSON, schema, name = file name, unique names) and reports readable errors prefixed with the file name; it never throws.
+JSON files in `/presets`, same shape as a partial spec plus metadata: `presetVersion`, `name` (must equal the file name), `description`, `page`, `yAxis`, `headerBand`, `scales`, default dataset `transforms`, `selectionDefaults` (thresholds, ordering; no `groups`), `panelDefaults` (mode, exaggeration, commonScale, minWidth, plusBelow, …; strict: only implemented panel types). Presets hold only styling/behaviour defaults: **no groups, sums or `outsideSum`** — groups are user-defined per dataset and sums belong to the dataset entry (§4); a preset percent transform has no `sum`, so it uses the default sum (all count variables). `loadPresets(files)` validates them (JSON, schema, name = file name, unique names) and reports readable errors prefixed with the file name; it never throws.
 
-- `pollen-percent` — terrestrial sum, groups trees/shrubs/herbs/aquatics/spores, aquatics/spores as % of (sum + group), percent transform, exaggeration ×10, silhouettes, `+` below 0.5 %. (Summary panel: M3.)
+- `pollen-percent` — percent transform, exaggeration ×10, silhouettes, group colours, common scale, `+` below 0.5 %. The terrestrial sum and aquatics/spores as % of (sum + group) are set per dataset (`sums`, `outsideSum`; see `examples/demo-pollen.spec.json`). (Summary panel: M3.)
 - `testate-percent` — percent transform of total tests, bars, common scale. (Inferred WTD panel: M3, continuous panel.)
 - `diatom-percent` — percent transform of total valves, `minMax` threshold 2%, weighted-average-depth ordering.
-- `macrofossil-counts` — groups terrestrial/wetland/aquatic/other, named scales `classes` (0–5), `dafor` (`-` R O F A D) and `presence` (`-` `+`), a default scaleMap trying them in that order, bars, independent scales, presence dots.
+- `macrofossil-counts` — named scales `classes` (0–5), `dafor` (`-` R O F A D) and `presence` (`-` `+`), a default scaleMap trying them in that order, bars, independent scales, presence dots.
 - `geochem` — continuous line panels (M3).
 
 Examples (synthetic data, marked as such in the CSV header): `examples/{testate-percent,diatom-percent,macrofossil-counts}.{csv,spec.json}`; `npm run demo -w @linden/core` renders every example to `examples/out/`.

@@ -2,8 +2,7 @@
   "presetVersion": 1,
   "name": "testate-percent",
   "description": "Testate amoebae: % of total tests, bars, common scale. (Inferred water-table depth needs the continuous panel, M3.)",
-  "sums": { "total": { "includeAll": true } },
-  "transforms": [{ "type": "percent", "sum": "total" }],
+  "transforms": [{ "type": "percent" }],
   "panelDefaults": {
     "taxonCurves": { "mode": "bars", "fill": "#7d5a3c", "commonScale": true, "minWidth": 4, "exaggeration": 0, "plusBelow": 1 }
   }

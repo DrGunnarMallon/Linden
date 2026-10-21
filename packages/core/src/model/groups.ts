@@ -1,14 +1,16 @@
-// Effective groups of a dataset — SPEC.md §4. The CSV's groups are only defaults: resolved spec
-// groups (preset, then spec) rename, recolour and reorder them or add new ones, and assignments
-// move variables between groups. Runs before transforms, so sums see the effective groups.
+// Effective groups of a dataset — SPEC.md §4. Groups are user-defined per dataset (`datasets[].groups`);
+// the data's groups (e.g. a CSV group row) only seed them: spec groups rename, recolour and reorder
+// them or add new ones, and assignments move variables between groups. Runs before transforms, so
+// sums see the effective groups.
 
 import type { SpecGroup } from "./spec.js";
 import type { Dataset, Group } from "./types.js";
 
 /**
  * Returns a new dataset whose `groups` are the dataset groups overlaid with `specGroups` (plus every
- * spec group not in the data, even if empty) and whose variables carry their assigned group.
- * Assignments to unknown groups or variables are ignored with a warning.
+ * spec group not in the data, even if empty) and whose variables carry their assigned group. Data
+ * groups not in `specGroups` are dropped once no variable is left in them (so a deleted group stays
+ * deleted). Assignments to unknown groups or variables are ignored with a warning.
  */
 export function applyGroups(
   ds: Dataset,
@@ -36,14 +38,16 @@ export function applyGroups(
     if (!ds.variables.some((v) => v.id === varId)) {
       warn(`Assignment of "${varId}" in dataset "${ds.id}": no such variable (merged variables take their group from the merge transform); ignored.`);
     } else if (!known.has(groupId)) {
-      warn(`Assignment of "${varId}" to group "${groupId}": no such group in dataset "${ds.id}" or the spec; ignored.`);
+      warn(`Assignment of "${varId}" to group "${groupId}": no such group in dataset "${ds.id}"; ignored.`);
     } else valid.set(varId, groupId);
   }
   const variables = ds.variables.map((v) => {
     const g = valid.get(v.id);
     return g === undefined || g === v.group ? v : { ...v, group: g };
   });
-  return { ...ds, groups, variables };
+  const listed = new Set(specGroups.map((g) => g.id));
+  const kept = groups.filter((g) => listed.has(g.id) || variables.some((v) => v.group === g.id));
+  return { ...ds, groups: kept, variables };
 }
 
 /** Group ids in display order: by `order`, ties in list order. */

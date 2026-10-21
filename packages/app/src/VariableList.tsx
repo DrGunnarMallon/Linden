@@ -54,7 +54,7 @@ function SortableGroup(props: { node: GroupNode; locked: boolean; highlight: boo
   return (
     <div
       ref={s.setNodeRef}
-      className={`group${props.highlight ? " drop-target" : ""}${s.isDragging ? " dragging" : ""}`}
+      className={`group${node.members.length === 0 ? " empty-group" : ""}${props.highlight ? " drop-target" : ""}${s.isDragging ? " dragging" : ""}`}
       style={{ transform: CSS.Translate.toString(s.transform), transition: s.transition }}
     >
       <h4>
@@ -135,7 +135,7 @@ function DatasetBlock({ ds }: { ds: Dataset }) {
     if (activeId.startsWith("g:")) {
       const from = groupIds.indexOf(activeId.slice(2));
       const to = groupIds.indexOf(group.id);
-      if (from !== -1 && from !== to) store.reorderGroups(arrayMove(groupIds, from, to));
+      if (from !== -1 && from !== to) store.reorderGroups(ds.id, arrayMove(groupIds, from, to));
       return;
     }
     const moving = activeId.slice(2);
@@ -221,12 +221,17 @@ function DatasetBlock({ ds }: { ds: Dataset }) {
                         disabled={locked}
                         onClick={() => {
                           const name = prompt("Rename group:", g.name);
-                          if (name?.trim() && name.trim() !== g.name) store.renameGroup(g.id!, name.trim());
+                          if (name?.trim() && name.trim() !== g.name) store.renameGroup(ds.id, g.id!, name.trim());
                         }}
                       >
                         rename
                       </button>
-                      <ColourInput value={g.colour} disabled={locked} onCommit={(c) => store.recolourGroup(g.id!, c)} />
+                      <ColourInput value={g.colour} disabled={locked} onCommit={(c) => store.recolourGroup(ds.id, g.id!, c)} />
+                      {g.members.length === 0 && (
+                        <button className="link" disabled={locked} title="Empty groups are not drawn in the diagram" onClick={() => store.deleteGroup(ds.id, g.id!)}>
+                          delete
+                        </button>
+                      )}
                     </>
                   )}
                 </>

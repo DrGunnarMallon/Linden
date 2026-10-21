@@ -1,7 +1,7 @@
 // Preset resolution — SPEC.md §4: core defaults → preset → spec → per-variable override.
 // Presets are plain (already parsed) objects passed in; core never reads files.
 
-import { coreDefaults, type ResolvedHeaderBand, type ResolvedPage, type ResolvedSelection, type ResolvedTaxonCurvesStyle, type ResolvedYAxis } from "./defaults.js";
+import { coreDefaults, type ResolvedGroupHeaders, type ResolvedHeaderBand, type ResolvedPage, type ResolvedSelection, type ResolvedTaxonCurvesStyle, type ResolvedYAxis } from "./defaults.js";
 import type {
   DatasetEntry,
   HeaderSpec,
@@ -22,6 +22,7 @@ export interface ResolvedDatasetEntry {
   sums: Record<string, SumDefinition>;
   scales: Record<string, Record<string, number | null>>;
   outsideSum?: OutsideSum;
+  groups: SpecGroup[];
   assignments: Record<string, string>;
   order: string[];
 }
@@ -42,12 +43,11 @@ export interface ResolvedSpec {
   preset?: string;
   page: ResolvedPage;
   yAxis: ResolvedYAxis;
-  /** Group metadata from the preset, overlaid field by field with spec groups (spec-only groups appended). */
-  groups: SpecGroup[];
   datasets: ResolvedDatasetEntry[];
   panels: ResolvedPanel[];
   overlays: OverlaySpec[];
   headerBand: ResolvedHeaderBand;
+  groupHeaders: ResolvedGroupHeaders;
   headers: HeaderSpec[];
 }
 
@@ -80,26 +80,19 @@ export function mergeLayers<T>(base: T, ...layers: unknown[]): T {
   return out as T;
 }
 
-/** Preset groups overlaid by spec groups with the same id; spec-only groups follow in spec order. */
-function resolveGroups(preset: readonly SpecGroup[], spec: readonly SpecGroup[]): SpecGroup[] {
-  const out = preset.map((g) => mergeLayers<SpecGroup>({ ...g }, spec.find((s) => s.id === g.id)));
-  for (const g of spec) if (!out.some((o) => o.id === g.id)) out.push({ ...g });
-  return out;
-}
-
 function resolveDatasetEntry(entry: DatasetEntry, preset: Preset | undefined): ResolvedDatasetEntry {
-  // Sum definitions replace whole (merging includeGroups with includeAll would change meaning).
+  // Sums, outsideSum and groups are the dataset's own (presets define none).
   const resolved: ResolvedDatasetEntry = {
     dataset: entry.dataset,
     // Arrays replace: the entry's own transforms, else the preset's defaults.
     transforms: entry.transforms ?? preset?.transforms ?? [],
-    sums: { ...preset?.sums, ...entry.sums },
+    sums: { ...entry.sums },
     scales: { ...preset?.scales, ...entry.scales },
+    groups: entry.groups ?? [],
     assignments: entry.assignments ?? {},
     order: entry.order ?? [],
   };
-  const outsideSum = entry.outsideSum ?? preset?.outsideSum;
-  if (outsideSum) resolved.outsideSum = outsideSum;
+  if (entry.outsideSum) resolved.outsideSum = entry.outsideSum;
   return resolved;
 }
 
@@ -129,11 +122,11 @@ export function resolveSpec(spec: Spec, presets: readonly Preset[] = []): { spec
     specVersion: spec.specVersion,
     page: mergeLayers(coreDefaults.page, preset?.page, spec.page),
     yAxis: mergeLayers(coreDefaults.yAxis, preset?.yAxis, spec.yAxis),
-    groups: resolveGroups(preset?.groups ?? [], spec.groups ?? []),
     datasets: (spec.datasets ?? []).map((d) => resolveDatasetEntry(d, preset)),
     panels: spec.panels.map((p) => resolvePanel(p, preset)),
     overlays: spec.overlays ?? [],
     headerBand: mergeLayers(coreDefaults.headerBand, preset?.headerBand, spec.headerBand),
+    groupHeaders: mergeLayers(coreDefaults.groupHeaders, spec.groupHeaders),
     headers: spec.headers ?? [],
   };
   if (spec.preset !== undefined) resolved.preset = spec.preset;

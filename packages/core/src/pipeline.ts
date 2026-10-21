@@ -1,7 +1,7 @@
 // Full pipeline — SPEC.md §5: resolve → transforms → selection → layout → panels → SVG.
 // Pure: same inputs → identical SVG string. Problems become warnings.
 
-import { groupRowHeight, groupSpans, groupSpansExtent, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
+import { autoGroupSpans, groupRowHeight, groupSpans, groupSpansExtent, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
 import { computeLayout, type FitState } from "./layout/layout.js";
 import { makeYScale, referenceRange, scaleKey, type YScale } from "./layout/scales.js";
 import { columnMax, selectVariables } from "./layout/select.js";
@@ -31,7 +31,7 @@ function applyTransforms(datasets: readonly Dataset[], rs: ResolvedSpec, warn: (
   // Effective groups and assignments first, so sums in the transforms see them.
   for (const [id, ds] of byId) {
     const entry = rs.datasets.find((e) => e.dataset === id);
-    byId.set(id, applyGroups(ds, rs.groups, entry?.assignments ?? {}, warn));
+    byId.set(id, applyGroups(ds, entry?.groups ?? [], entry?.assignments ?? {}, warn));
   }
   for (const entry of rs.datasets) {
     let ds = byId.get(entry.dataset);
@@ -100,11 +100,10 @@ function commonScaleRatios(data: readonly (PanelData | undefined)[]): Map<string
   return new Map([...max].map(([key, { kind, max: m }]) => [key, 100 / referenceRange(kind, m)]));
 }
 
-/** Display name of a group: resolved spec (preset) first, then the datasets in spec order. */
+/** Display name of a group: from the first dataset (in spec order) that has it. */
 function groupName(rs: ResolvedSpec, byId: Map<string, Dataset>, id: string): string {
-  const fromSpec = rs.groups.find((g) => g.id === id)?.name;
-  if (fromSpec !== undefined) return fromSpec;
-  for (const ds of byId.values()) {
+  const ordered = [...rs.datasets.map((d) => byId.get(d.dataset)), ...byId.values()].filter((d): d is Dataset => d !== undefined);
+  for (const ds of ordered) {
     const g = ds.groups.find((x) => x.id === id);
     if (g) return g.name;
   }
@@ -165,7 +164,6 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     fit,
     page: rs.page,
     theme,
-    groups: rs.groups,
     header,
     analyses: {},
     warn,
@@ -186,7 +184,11 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     rs.panels.forEach((p, i) => {
       const panel = panels.get(p.type);
       const ctx = ctxFor(i, fit, provisionalY);
-      for (const c of panel.columns?.(ctx) ?? []) out.push({ ...c, x: x + c.x });
+      const groups = data[i]?.dataset.groups ?? [];
+      for (const c of panel.columns?.(ctx) ?? []) {
+        const name = groups.find((g) => g.id === c.group)?.name;
+        out.push({ ...c, x: x + c.x, panel: i, ...(name !== undefined ? { groupName: name } : {}) });
+      }
       x += panel.measure(ctx).width + theme.panelGap;
     });
     return out;
@@ -199,14 +201,18 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     step: theme.headerFontStep,
     thickness: theme.labelThickness,
   };
-  const groupRow = rs.headers.length > 0 ? groupRowHeight(theme) : 0;
   const nameOf = (id: string) => groupName(rs, byId, id);
+  // Group headers (§4): explicit `headers`, else one per group; none when switched off.
+  const spansAt = (cols: readonly HeaderColumn[], w: (m: string) => void) =>
+    !rs.groupHeaders.show ? [] : rs.headers.length > 0 ? groupSpans(rs.headers, cols, nameOf, theme, w) : autoGroupSpans(cols, theme, w);
+  const grouped = data.some((d) => d?.variables.some((j) => d.dataset.variables[j]!.group !== undefined));
+  const groupRow = rs.groupHeaders.show && (rs.headers.length > 0 || grouped) ? groupRowHeight(theme) : 0;
   // Label font capped by the fit (step c); the label layout may go smaller to avoid collisions.
   const headerAt = (fit: FitState) => {
     const cols = columnsAt(fit);
     const labels = layoutLabels(cols, { ...labelOptions, fontSize: Math.min(labelOptions.fontSize, fit.labelFont) });
     const height = cols.length > 0 ? theme.headerGap + labels.height + groupRow : groupRow;
-    const groups = groupSpansExtent(groupSpans(rs.headers, cols, nameOf, theme, () => undefined), theme);
+    const groups = groupSpansExtent(spansAt(cols, () => undefined), theme);
     return { cols, labels, height, left: Math.min(labels.left, groups.left), right: Math.max(labels.right, groups.right) };
   };
 
@@ -222,7 +228,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   layout.warnings.forEach(warn);
   const header = headerAt(layout.fit);
   header.labels.warnings.forEach(warn);
-  const spans = groupSpans(rs.headers, header.cols, nameOf, theme, warn);
+  const spans = spansAt(header.cols, warn);
   const labelStyle = { fontSize: header.labels.fontSize, angle: header.labels.angle };
 
   const y = makeYScale(domain, layout.plot.height, rs.yAxis.reverse);
@@ -235,7 +241,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     });
     if (spans.length > 0) {
       const g = body.group({ id: "headers", transform: translate(layout.plot.x, layout.plot.y) });
-      renderGroupHeaders(g, spans, -(header.height - groupRow), theme);
+      renderGroupHeaders(g, spans, -(header.height - groupRow), theme, rs.groupHeaders.line);
     }
     rs.overlays.forEach((o, i) => {
       const g = body.group({ id: `overlay-${i}-${o.type}`, transform: translate(layout.plot.x, layout.plot.y) });

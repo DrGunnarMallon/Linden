@@ -1,4 +1,4 @@
-// Percent transform — SPEC.md §5.2. Counts → % of a named sum.
+// Percent transform — SPEC.md §5.2. Counts → % of a named sum, or of every count variable when no sum is named.
 // Only variables of kind "count" take part; other kinds pass through unchanged.
 // Variables outside the sum are % of the sum, or % of (sum + own group) for groups listed
 // in ctx.outsideSum with basis "sumPlusGroup" (a preset choice, not core logic).
@@ -33,8 +33,8 @@ export const percentTransform: Transform = {
       ctx.warn(`percent: invalid parameters; transform skipped.`);
       return ds;
     }
-    const sumName = parsed.data.sum;
-    const def = ctx.sums[sumName];
+    const sumName = parsed.data.sum ?? "all counts";
+    const def: SumDefinition | undefined = parsed.data.sum === undefined ? { includeAll: true } : ctx.sums[sumName];
     if (!def) {
       ctx.warn(`percent: sum "${sumName}" is not defined; transform skipped.`);
       return ds;

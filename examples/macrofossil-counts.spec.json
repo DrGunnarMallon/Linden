@@ -1,9 +1,19 @@
 {
-  "specVersion": 4,
+  "specVersion": 5,
   "preset": "macrofossil-counts",
   "page": { "width": 240, "height": 150, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 50, "minor": 10 } },
-  "datasets": [{ "dataset": "macrofossil-counts" }],
+  "datasets": [
+    {
+      "dataset": "macrofossil-counts",
+      "groups": [
+        { "id": "terrestrial", "name": "Terrestrial", "colour": "#6b5a2e", "order": 1 },
+        { "id": "wetland", "name": "Wetland", "colour": "#4f7d3a", "order": 2 },
+        { "id": "aquatic", "name": "Aquatic", "colour": "#3a78a8", "order": 3 },
+        { "id": "other", "name": "Other", "colour": "#555555", "order": 4 }
+      ]
+    }
+  ],
   "panels": [
     { "type": "yAxis" },
     { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["count"] } },

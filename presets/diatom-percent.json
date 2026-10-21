@@ -2,8 +2,7 @@
   "presetVersion": 1,
   "name": "diatom-percent",
   "description": "Diatoms: % of total valves, 2% inclusion threshold, weighted-average-depth ordering.",
-  "sums": { "total": { "includeAll": true } },
-  "transforms": [{ "type": "percent", "sum": "total" }],
+  "transforms": [{ "type": "percent" }],
   "selectionDefaults": { "minMax": 2, "order": "weightedAverageDepth" },
   "panelDefaults": {
     "taxonCurves": { "mode": "silhouette", "fill": "#3a6f8f", "commonScale": true, "minWidth": 3, "exaggeration": 0, "plusBelow": 0.5 }

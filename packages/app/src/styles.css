@@ -36,6 +36,7 @@ h4 { font-size: 12px; margin: 8px 0 2px; color: #555; text-transform: uppercase;
 .group h4 .name { flex: 1; }
 .group h4 input[type="color"] { width: 22px; height: 16px; padding: 0; border: none; background: none; }
 .group .empty { padding: 2px 0 2px 18px; }
+.group.empty-group h4 .name, .group.empty-group .empty { color: #999; }
 .handle { cursor: grab; color: #aaa; padding: 0 4px 0 0; user-select: none; touch-action: none; }
 .dragging { opacity: 0.4; }
 .drag-overlay { background: #fff; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); font-size: 13px; }

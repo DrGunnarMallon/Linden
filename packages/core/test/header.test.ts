@@ -205,9 +205,10 @@ describe("render — header band with 40 long taxon names", () => {
 describe("render — group headers", () => {
   it("brackets span exactly their columns, with a gap between groups", () => {
     const spec: Spec = {
-      specVersion: 2,
+      specVersion: 5,
       panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "many", style: { minWidth: 4, groupGap: 3 } }],
       headers: [{ label: "First", spans: { groups: ["g1"] } }, { label: "Second", spans: { groups: ["g2"] } }],
+      groupHeaders: { line: "bracket" },
       page: { width: 300 },
     };
     const { svg, warnings } = render([manyTaxa(true)], spec);
@@ -227,5 +228,81 @@ describe("render — group headers", () => {
     expect(cols[15]!.x - (cols[14]!.x + cols[14]!.w)).toBeCloseTo(4, 1);
     expect(svg).toContain(">First</text>");
     expect(svg).toContain(">Second</text>");
+  });
+
+  // Groups g1 (T00–T14) and g2 (T15–T39) named in the spec, plus an empty group ordered between them.
+  const grouped = (extra: Partial<Spec> = {}): Spec => ({
+    specVersion: 5,
+    datasets: [
+      {
+        dataset: "many",
+        groups: [
+          { id: "g1", name: "First", order: 1 },
+          { id: "empty", name: "Nothing here", order: 2 },
+          { id: "g2", name: "Second", order: 3 },
+        ],
+      },
+    ],
+    panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "many", style: { minWidth: 4, groupGap: 3 } }],
+    page: { width: 300 },
+    ...extra,
+  });
+  const columnsOf = (svg: string) => {
+    const panelX = Number(/id="panel-1-taxonCurves" transform="translate\(([^,]+),/.exec(svg)![1]) - 5;
+    return [...svg.matchAll(/class="column" transform="translate\(([^,]+),0\)">\s*(?:<[^>]+>\s*)*?<g class="x-axis">\s*<line x1="0" y1="[^"]+" x2="([^"]+)"/g)].map(
+      (m) => ({ x: panelX + Number(m[1]), w: Number(m[2]) }),
+    );
+  };
+
+  it("by default: a horizontal line over exactly each group's columns, the group name centred above it", () => {
+    const { svg, warnings } = render([manyTaxa(true)], grouped());
+    expect(warnings).toEqual([]);
+    const cols = columnsOf(svg);
+    const lines = [...svg.matchAll(/class="line" d="M([^,]+),([^L ]+) ?L([^,]+),([^"]+)"/g)].map((m) => m.slice(1, 5).map(Number));
+    expect(lines).toHaveLength(2);
+    expect(svg).not.toContain('class="bracket"');
+    for (const [x0, y0, , y1] of lines) expect(y1).toBe(y0); // horizontal, no end ticks
+    expect(lines[0]![0]).toBeCloseTo(cols[0]!.x, 1);
+    expect(lines[0]![2]).toBeCloseTo(cols[14]!.x + cols[14]!.w, 1);
+    expect(lines[1]![0]).toBeCloseTo(cols[15]!.x, 1);
+    expect(lines[1]![2]).toBeCloseTo(cols[39]!.x + cols[39]!.w, 1);
+    const labels = [...svg.matchAll(/<text class="group-header" x="([^"]+)" y="([^"]+)"[^>]*>([^<]+)</g)].map((m) => ({ x: Number(m[1]), y: Number(m[2]), text: m[3] }));
+    expect(labels.map((l) => l.text)).toEqual(["First", "Second"]);
+    labels.forEach((l, i) => {
+      expect(l.x).toBeCloseTo((lines[i]![0]! + lines[i]![2]!) / 2, 1);
+      expect(l.y).toBeLessThan(lines[i]![1]!);
+    });
+  });
+
+  it("empty groups are never drawn: no header and no extra gap", () => {
+    const { svg } = render([manyTaxa(true)], grouped());
+    expect(svg).not.toContain("Nothing here");
+    const cols = columnsOf(svg);
+    // One column gap (1 mm) + one group gap (3 mm) between g1 and g2, as if the empty group did not exist.
+    expect(cols[15]!.x - (cols[14]!.x + cols[14]!.w)).toBeCloseTo(4, 1);
+  });
+
+  it("groupHeaders.show = false draws no group headers and reserves no row; line \"none\" draws labels only", () => {
+    const on = render([manyTaxa(true)], grouped()).svg;
+    const off = render([manyTaxa(true)], grouped({ groupHeaders: { show: false } })).svg;
+    expect(off).not.toContain('class="group-header"');
+    expect(off).not.toContain('id="headers"');
+    const plotTop = (svg: string) => Number(/id="panel-1-taxonCurves" transform="translate\([^,]+,([^)]+)\)"/.exec(svg)![1]);
+    expect(plotTop(off)).toBeLessThan(plotTop(on));
+    const labelsOnly = render([manyTaxa(true)], grouped({ groupHeaders: { line: "none" } })).svg;
+    expect(labelsOnly).toContain(">First</text>");
+    expect(labelsOnly).not.toMatch(/class="(line|bracket)"/);
+  });
+
+  it("automatic headers never span two panels; ungrouped columns get none", () => {
+    const spec = grouped({
+      panels: [
+        { type: "taxonCurves", dataset: "many", variables: { ids: ["T00", "T01"] } },
+        { type: "taxonCurves", dataset: "many", variables: { ids: ["T02", "T03"] } },
+      ],
+    });
+    const { svg } = render([manyTaxa(true)], spec);
+    expect([...svg.matchAll(/>First</g)]).toHaveLength(2);
+    expect(render([manyTaxa(false)], spec).svg).not.toContain('class="group-header"');
   });
 });

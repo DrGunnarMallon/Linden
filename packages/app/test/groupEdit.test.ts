@@ -3,6 +3,7 @@ import { importDelimited, parsePreset, parseSpec, render, type Preset, type Spec
 import { describe, expect, it } from "vitest";
 import {
   createGroup,
+  deleteGroup,
   mergeVariables,
   moveVariable,
   recolourGroup,
@@ -38,7 +39,7 @@ const columns = (s: Spec, ds = pollen.ds) => [...render([ds], s, presets).svg.ma
 const visible = (s: Spec, ds = pollen.ds) => variableVisibility(s, presets, tree(s, ds).prepared);
 
 describe("variable tree", () => {
-  it("lists effective groups in order (preset groups included, even empty) with members in display order", () => {
+  it("lists the dataset's groups in order (empty ones included) with members in display order", () => {
     expect(groupsOf(pollen.spec)).toEqual([
       ["trees", ["Betula", "Pinus", "Quercus"]],
       ["shrubs", ["Corylus"]],
@@ -59,9 +60,9 @@ describe("moving taxa", () => {
   });
 
   it("between groups: becomes an assignment, stays visible, and moving back removes it", () => {
-    const { spec: withGroup, id } = createGroup(pollen.spec, "Bryophytes", tree(pollen.spec).prepared.groups);
+    const { spec: withGroup, id } = createGroup(pollen.spec, "demo-pollen", "Bryophytes", tree(pollen.spec).prepared.groups);
     expect(id).toBe("bryophytes");
-    expect(withGroup.groups).toEqual([{ id: "bryophytes", name: "Bryophytes", order: 6 }]);
+    expect(withGroup.datasets![0]!.groups!.at(-1)).toEqual({ id: "bryophytes", name: "Bryophytes", order: 6 });
     const moved = valid(moveVariable(withGroup, presets, pollen.ds, "Sphagnum", "bryophytes", 0));
     expect(moved.datasets![0]!.assignments).toEqual({ Sphagnum: "bryophytes" });
     expect(groupsOf(moved).at(-1)).toEqual(["bryophytes", ["Sphagnum"]]);
@@ -83,19 +84,38 @@ describe("moving taxa", () => {
 });
 
 describe("group edits", () => {
-  it("reorder, rename and recolour are stored in spec.groups and drive the diagram", () => {
-    let s = valid(reorderGroups(pollen.spec, ["herbs", "trees", "shrubs", "aquatics", "spores"]));
+  it("reorder, rename and recolour are stored in the dataset's groups and drive the diagram", () => {
+    let s = valid(reorderGroups(pollen.spec, "demo-pollen", ["herbs", "trees", "shrubs", "aquatics", "spores"]));
     expect(groupsOf(s).map(([g]) => g)).toEqual(["herbs", "trees", "shrubs", "aquatics", "spores"]);
     expect(columns(s).slice(0, 3)).toEqual(["Poaceae", "Cyperaceae", "Artemisia"]);
-    s = valid(renameGroup(recolourGroup(s, "herbs", "#aa5500"), "herbs", "Herbs (upland)"));
-    expect(s.groups!.find((g) => g.id === "herbs")).toEqual({ id: "herbs", order: 1, colour: "#aa5500", name: "Herbs (upland)" });
+    s = valid(renameGroup(recolourGroup(s, "demo-pollen", "herbs", "#aa5500"), "demo-pollen", "herbs", "Herbs (upland)"));
+    expect(s.datasets![0]!.groups!.find((g) => g.id === "herbs")).toEqual({ id: "herbs", order: 1, colour: "#aa5500", name: "Herbs (upland)" });
     expect(render([pollen.ds], s, presets).svg).toContain('fill="#aa5500"');
     expect(tree(s).groups[0]!.name).toBe("Herbs (upland)");
   });
 
   it("new group ids are unique", () => {
     const existing = tree(pollen.spec).prepared.groups;
-    expect(createGroup(pollen.spec, "Trees", existing).id).toBe("trees-2");
+    expect(createGroup(pollen.spec, "demo-pollen", "Trees", existing).id).toBe("trees-2");
+  });
+
+  it("empty groups are listed (to drop taxa into) but not drawn, and can be deleted", () => {
+    // "aquatics" has no taxa in the demo data.
+    expect(groupsOf(pollen.spec).find(([g]) => g === "aquatics")).toEqual(["aquatics", []]);
+    const svg = render([pollen.ds], { ...pollen.spec, headers: [], groupHeaders: {} }, presets).svg;
+    expect(svg).toContain(">Trees</text>");
+    expect(svg).not.toContain("Aquatics");
+    const s = valid(deleteGroup(pollen.spec, presets, pollen.ds, "aquatics"));
+    expect(groupsOf(s).map(([g]) => g)).toEqual(["trees", "shrubs", "herbs", "spores"]);
+    expect(deleteGroup(pollen.spec, presets, pollen.ds, "herbs")).toBe(pollen.spec); // not empty: left alone
+  });
+
+  it("moving the last taxon out of a data group keeps that group (empty) instead of losing it", () => {
+    const { groups: _seeded, ...entry } = pollen.spec.datasets![0]!;
+    const noGroups: Spec = { ...pollen.spec, datasets: [entry] };
+    const moved = valid(moveVariable(noGroups, presets, pollen.ds, "Corylus", "trees", 0));
+    expect(groupsOf(moved).find(([g]) => g === "shrubs")).toEqual(["shrubs", []]);
+    expect(groupsOf(valid(deleteGroup(moved, presets, pollen.ds, "shrubs"))).map(([g]) => g)).toEqual(["trees", "herbs", "spores"]);
   });
 });
 
@@ -149,12 +169,14 @@ describe("merging", () => {
 
 describe("merging with preset default transforms", () => {
   it("keeps the preset's percent transform when the entry lists none", () => {
-    const spec: Spec = { ...pollen.spec, datasets: [{ dataset: "demo-pollen" }] };
-    expect(render([pollen.ds], spec, presets).svg).toBe(render([pollen.ds], pollen.spec, presets).svg); // preset supplies percent
+    const groups = pollen.spec.datasets![0]!.groups!;
+    const spec: Spec = { ...pollen.spec, datasets: [{ dataset: "demo-pollen", groups }] };
+    const explicit: Spec = { ...pollen.spec, datasets: [{ dataset: "demo-pollen", groups, transforms: [{ type: "percent" }] }] };
+    expect(render([pollen.ds], spec, presets).svg).toBe(render([pollen.ds], explicit, presets).svg); // preset supplies percent of all counts
     const { spec: merged } = mergeVariables(spec, presets, pollen.ds, ["Poaceae", "Cyperaceae"], "Grasses & sedges");
     expect(valid(merged).datasets![0]!.transforms).toEqual([
       { type: "merge", id: "Grasses & sedges", name: "Grasses & sedges", from: ["Poaceae", "Cyperaceae"], group: "herbs" },
-      { type: "percent", sum: "terrestrial" },
+      { type: "percent" },
     ]);
   });
 });

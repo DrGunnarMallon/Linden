@@ -62,10 +62,17 @@ function sixtyTaxa(): Dataset {
 }
 
 const sixtySpec = (width: number): Spec => ({
-  specVersion: 4,
+  specVersion: 5,
   preset: "pollen-percent",
   page: { width, height: 120 },
-  datasets: [{ dataset: "sixty" }],
+  datasets: [
+    {
+      dataset: "sixty",
+      transforms: [{ type: "percent", sum: "terrestrial" }],
+      sums: { terrestrial: { includeGroups: ["trees", "shrubs", "herbs"] } },
+      outsideSum: { groups: ["aquatics", "spores"], basis: "sumPlusGroup" },
+    },
+  ],
   panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "sixty" }],
   overlays: [{ type: "zones", manual: [{ depth: 105, label: "P1/P2" }] }],
   headers: [

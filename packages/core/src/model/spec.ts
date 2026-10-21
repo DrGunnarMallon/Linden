@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 4;
+export const SPEC_VERSION = 5;
 
 export const MeasurementKindSchema = z.enum([
   "count",
@@ -58,7 +58,8 @@ export const YAxisSchema = z.strictObject({
 
 export const PercentTransformSchema = z.strictObject({
   type: z.literal("percent"),
-  sum: z.string(),
+  /** Named sum; omitted = every variable of kind "count" in the dataset. */
+  sum: z.string().optional(),
 });
 
 /** Sums several variables into one, per sample. Must come before "percent". */
@@ -87,12 +88,23 @@ export const ScaleMapTransformSchema = z.strictObject({
 
 export const TransformSpecSchema = z.discriminatedUnion("type", [PercentTransformSchema, MergeTransformSchema, ScaleMapTransformSchema]);
 
+/** Dataset group: defines a new group or renames / recolours / reorders one from the data (e.g. a CSV group row). */
+export const SpecGroupSchema = z.strictObject({
+  id: z.string().min(1),
+  name: z.string().optional(),
+  colour: z.string().optional(),
+  /** Lower first; columns follow group order. */
+  order: z.number().optional(),
+});
+
 export const DatasetEntrySchema = z.strictObject({
   dataset: z.string(),
   transforms: z.array(TransformSpecSchema).optional(),
   sums: z.record(z.string(), SumSchema).optional(),
   scales: z.record(z.string(), ScaleSchema).optional(),
   outsideSum: OutsideSumSchema.optional(),
+  /** The dataset's groups (user-defined); overlay the data's groups by id, may add empty ones. */
+  groups: z.array(SpecGroupSchema).optional(),
   /** variable id → group id; overrides the dataset's group (applied before transforms). */
   assignments: z.record(z.string(), z.string()).optional(),
   /** Explicit column order within each group; unlisted variables follow in the panel's order. */
@@ -158,15 +170,6 @@ export const ZonesOverlaySchema = z.strictObject({
 
 export const OverlaySchema = z.discriminatedUnion("type", [ZonesOverlaySchema]);
 
-/** Spec-level group: defines a new group or renames / recolours / reorders an existing one. */
-export const SpecGroupSchema = z.strictObject({
-  id: z.string().min(1),
-  name: z.string().optional(),
-  colour: z.string().optional(),
-  /** Lower first; columns follow group order. */
-  order: z.number().optional(),
-});
-
 /** Taxon label band above the columns. */
 export const HeaderBandSchema = z.strictObject({
   /** Label angle in degrees from horizontal. */
@@ -177,7 +180,14 @@ export const HeaderBandSchema = z.strictObject({
   height: z.number().positive().nullable().optional(),
 });
 
-/** Group header: a bracket with a label spanning the matching columns. */
+/** Group headers above the taxon labels: on/off and line style. */
+export const GroupHeadersSchema = z.strictObject({
+  show: z.boolean().optional(),
+  /** "line" = horizontal line, "bracket" = line with end ticks, "none" = label only. */
+  line: z.enum(["line", "bracket", "none"]).optional(),
+});
+
+/** Group header: a line with a label spanning the matching columns. */
 export const HeaderSchema = z.strictObject({
   /** Defaults to the names of the spanned groups. */
   label: z.string().optional(),
@@ -192,19 +202,13 @@ export const SpecSchema = z.strictObject({
   preset: z.string().optional(),
   page: PageSchema.optional(),
   yAxis: YAxisSchema.optional(),
-  groups: z.array(SpecGroupSchema).optional(),
   datasets: z.array(DatasetEntrySchema).optional(),
   panels: z.array(PanelSchema),
   overlays: z.array(OverlaySchema).optional(),
   headerBand: HeaderBandSchema.optional(),
+  groupHeaders: GroupHeadersSchema.optional(),
+  /** Explicit group headers; omitted or empty = one header per group (if groupHeaders.show). */
   headers: z.array(HeaderSchema).optional(),
-});
-
-export const GroupSpecSchema = z.strictObject({
-  id: z.string(),
-  name: z.string(),
-  colour: z.string().optional(),
-  order: z.number(),
 });
 
 export const PresetSchema = z.strictObject({
@@ -214,13 +218,11 @@ export const PresetSchema = z.strictObject({
   page: PageSchema.optional(),
   yAxis: YAxisSchema.optional(),
   headerBand: HeaderBandSchema.optional(),
-  groups: z.array(GroupSpecSchema).optional(),
-  sums: z.record(z.string(), SumSchema).optional(),
   scales: z.record(z.string(), ScaleSchema).optional(),
-  outsideSum: OutsideSumSchema.optional(),
   /** Default transforms for dataset entries that do not list their own. */
   transforms: z.array(TransformSpecSchema).optional(),
-  selectionDefaults: SelectionSchema.optional(),
+  /** Groups are user-defined per dataset, so presets cannot select by group. */
+  selectionDefaults: SelectionSchema.omit({ groups: true }).optional(),
   panelDefaults: z.strictObject({ taxonCurves: TaxonCurvesStyleSchema.optional() }).optional(),
 });
 
@@ -244,4 +246,4 @@ export type PanelSpec = z.infer<typeof PanelSchema>;
 export type YAxisPanelSpec = z.infer<typeof YAxisPanelSchema>;
 export type TaxonCurvesPanelSpec = z.infer<typeof TaxonCurvesPanelSchema>;
 export type OverlaySpec = z.infer<typeof OverlaySchema>;
-export type GroupSpec = z.infer<typeof GroupSpecSchema>;
+export type GroupHeadersSpec = z.infer<typeof GroupHeadersSchema>;

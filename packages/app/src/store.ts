@@ -7,6 +7,7 @@ import { demo, loadBundledPresets } from "./bundled";
 import { loadProject, saveProject, type Project } from "./persist";
 import {
   createGroup,
+  deleteGroup,
   ensureDatasetInSpec,
   mergeVariables,
   moveVariable,
@@ -52,10 +53,11 @@ interface State {
   importFile(file: File): Promise<void>;
   removeDataset(id: string): void;
   moveVariable(datasetId: string, varId: string, toGroup: string, toIndex: number): void;
-  reorderGroups(groupIds: string[]): void;
+  reorderGroups(datasetId: string, groupIds: string[]): void;
   createGroup(datasetId: string, name: string): void;
-  renameGroup(id: string, name: string): void;
-  recolourGroup(id: string, colour: string): void;
+  renameGroup(datasetId: string, id: string, name: string): void;
+  recolourGroup(datasetId: string, id: string, colour: string): void;
+  deleteGroup(datasetId: string, id: string): void;
   mergeVariables(datasetId: string, ids: string[], name: string): void;
   unmergeVariable(datasetId: string, mergedId: string): void;
 }
@@ -131,7 +133,9 @@ export const useStore = create<State>()((set, get) => {
         set({ storageWarnings: [`Could not read the saved project from browser storage: ${(e as Error).message}`] });
       }
       const spec = saved ? parseSpec(saved.spec) : undefined;
-      if (saved && spec?.ok) setProject({ ...saved, spec: spec.value });
+      // A project saved with an older spec version is migrated; show the migrated spec in the editor.
+      const migrated = saved && spec?.ok && saved.spec.specVersion !== SPEC_VERSION;
+      if (saved && spec?.ok) setProject({ ...saved, spec: spec.value, specText: migrated ? prettySpec(spec.value) : saved.specText });
       else await get().loadDemo();
       set({ ready: true });
       startAutosave();
@@ -193,23 +197,28 @@ export const useStore = create<State>()((set, get) => {
       if (raw) edit(moveVariable(get().spec, get().presets, raw, varId, toGroup, toIndex));
     },
 
-    reorderGroups(groupIds) {
-      edit(reorderGroups(get().spec, groupIds));
+    reorderGroups(datasetId, groupIds) {
+      edit(reorderGroups(get().spec, datasetId, groupIds));
     },
 
     createGroup(datasetId, name) {
       const raw = rawDataset(datasetId);
       if (!raw) return;
       const existing = variableTree(get().spec, get().presets, raw).prepared.groups;
-      edit(createGroup(get().spec, name, existing).spec);
+      edit(createGroup(get().spec, datasetId, name, existing).spec);
     },
 
-    renameGroup(id, name) {
-      edit(renameGroup(get().spec, id, name));
+    renameGroup(datasetId, id, name) {
+      edit(renameGroup(get().spec, datasetId, id, name));
     },
 
-    recolourGroup(id, colour) {
-      edit(recolourGroup(get().spec, id, colour));
+    recolourGroup(datasetId, id, colour) {
+      edit(recolourGroup(get().spec, datasetId, id, colour));
+    },
+
+    deleteGroup(datasetId, id) {
+      const raw = rawDataset(datasetId);
+      if (raw) edit(deleteGroup(get().spec, get().presets, raw, id));
     },
 
     mergeVariables(datasetId, ids, name) {
@@ -235,7 +244,7 @@ export const useStore = create<State>()((set, get) => {
         datasets: [...get().datasets.filter((d) => !ids.has(d.id)), ...imported],
         importWarnings: warnings.map((w) => `${file.name}: ${w}`),
       });
-      const spec = imported.reduce((s, d) => ensureDatasetInSpec(s, d.id), get().spec);
+      const spec = imported.reduce((s, d) => ensureDatasetInSpec(s, d), get().spec);
       if (!sameSpec(spec, get().spec)) commitSpec(spec);
     },
 

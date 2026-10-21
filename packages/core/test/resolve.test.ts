@@ -85,20 +85,16 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
     expect(p.style.groupGap).toBe(2);
   });
 
-  it("dataset sums: spec replaces a preset sum of the same name; outsideSum comes from the preset", () => {
-    const r = resolveSpec(
-      spec({
-        ...base,
-        panels: [],
-        datasets: [{ dataset: "d", sums: { terrestrial: { includeAll: true }, trees: { includeGroups: ["trees"] } } }],
-      }),
-      [pollen],
-    );
-    const d = r.spec.datasets[0]!;
-    expect(d.sums).toEqual({ terrestrial: { includeAll: true }, trees: { includeGroups: ["trees"] } });
-    expect(d.outsideSum).toEqual({ groups: ["aquatics", "spores"], basis: "sumPlusGroup" });
-    expect(d.transforms).toEqual([{ type: "percent", sum: "terrestrial" }]); // preset default (entry lists none)
-    expect(r.spec.groups.map((g) => g.id)).toEqual(["trees", "shrubs", "herbs", "aquatics", "spores"]);
+  it("dataset sums, outsideSum and groups are the entry's own; transforms default to the preset's", () => {
+    const own = { dataset: "d", sums: { trees: { includeGroups: ["trees"] } }, groups: [{ id: "trees", name: "Trees" }] };
+    const r = resolveSpec(spec({ specVersion: 5, preset: "pollen-percent", panels: [], datasets: [own, { dataset: "e" }] }), [pollen]);
+    const [d, e] = r.spec.datasets;
+    expect(d!.sums).toEqual({ trees: { includeGroups: ["trees"] } });
+    expect(d!.groups).toEqual([{ id: "trees", name: "Trees" }]);
+    expect(d!.outsideSum).toBeUndefined();
+    expect(d!.transforms).toEqual([{ type: "percent" }]); // preset default (entry lists none): % of all counts
+    expect(e!.sums).toEqual({});
+    expect(e!.groups).toEqual([]);
   });
 
   it("warns about an unknown preset and falls back to core defaults", () => {

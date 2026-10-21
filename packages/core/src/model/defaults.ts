@@ -30,10 +30,16 @@ export interface ResolvedHeaderBand {
   height: number | null;
 }
 
+export interface ResolvedGroupHeaders {
+  show: boolean;
+  line: "line" | "bracket" | "none";
+}
+
 export interface CoreDefaults {
   page: ResolvedPage;
   yAxis: ResolvedYAxis;
   headerBand: ResolvedHeaderBand;
+  groupHeaders: ResolvedGroupHeaders;
   selection: ResolvedSelection;
   taxonCurves: ResolvedTaxonCurvesStyle;
 }
@@ -42,6 +48,7 @@ export const coreDefaults: CoreDefaults = {
   page: { width: 180, height: 240, units: "mm", font: { family: "Arial", size: 7 } },
   yAxis: { primary: "depth", reverse: true, range: null },
   headerBand: { angle: 60, minFontSize: 5, height: null },
+  groupHeaders: { show: true, line: "line" },
   selection: { minMax: 0, order: "data" },
   taxonCurves: {
     mode: "silhouette",

@@ -149,7 +149,7 @@ describe("merge before percent (examples/demo-bryophytes)", () => {
     const { warnings: w } = render(datasets, bad, presets);
     expect(w).toEqual(
       expect.arrayContaining([
-        'Assignment of "Poaceae" to group "grasses": no such group in dataset "demo-bryophytes" or the spec; ignored.',
+        'Assignment of "Poaceae" to group "grasses": no such group in dataset "demo-bryophytes"; ignored.',
         'Variable "Calliergon giganteum" is merged more than once in dataset "demo-bryophytes".',
         'Order list of dataset "demo-bryophytes": unknown variable "Nope".',
       ]),

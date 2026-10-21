@@ -1,5 +1,5 @@
-// Header band — SPEC.md §6. Rotated taxon labels anchored at column centres, and group header
-// brackets above them. Laid out once for all panels so every label shares one font size.
+// Header band — SPEC.md §6. Rotated taxon labels anchored at column centres, and group headers
+// (a line spanning the group's columns, name centred above) above them. Laid out once for all panels so every label shares one font size.
 // Coordinates in mm relative to the plot's top-left corner; the header band is at y < 0.
 
 import type { HeaderSpec } from "../model/spec.js";
@@ -13,6 +13,10 @@ export interface HeaderColumn {
   /** Display name; may contain *italic* markup. */
   label: string;
   group?: string;
+  /** Display name of `group` (automatic group headers). */
+  groupName?: string;
+  /** Index of the panel the column belongs to; automatic group headers never span panels. */
+  panel?: number;
   x: number;
   width: number;
 }
@@ -145,7 +149,7 @@ export interface GroupSpan {
   x1: number;
 }
 
-/** Height of the group header row (bracket + label). */
+/** Height of the group header row (line + label). */
 export function groupRowHeight(theme: Theme): number {
   return theme.bracketGap + 0.5 + theme.fontSize;
 }
@@ -186,8 +190,29 @@ export function groupSpans(
       spans.push({ label: k === 0 ? label : "", x0: cols[i]!.x, x1: cols[j]!.x + cols[j]!.width });
     });
   }
+  warnOverlaps(spans, theme, warn);
+  return spans;
+}
 
-  // Never overlap silently: brackets or labels on the shared row.
+/**
+ * Automatic group headers: one per run of adjacent columns of the same group within one panel,
+ * labelled with the group name. Ungrouped columns get none; empty groups have no columns, so none.
+ */
+export function autoGroupSpans(cols: readonly HeaderColumn[], theme: Theme, warn: (m: string) => void): GroupSpan[] {
+  const spans: GroupSpan[] = [];
+  cols.forEach((c, i) => {
+    if (c.group === undefined) return;
+    const prev = cols[i - 1];
+    const last = spans[spans.length - 1];
+    if (last && prev && prev.group === c.group && prev.panel === c.panel) last.x1 = c.x + c.width;
+    else spans.push({ label: c.groupName ?? c.group, x0: c.x, x1: c.x + c.width });
+  });
+  warnOverlaps(spans, theme, warn);
+  return spans;
+}
+
+function warnOverlaps(spans: readonly GroupSpan[], theme: Theme, warn: (m: string) => void): void {
+  // Never overlap silently: lines or labels on the shared row.
   const extent = (s: GroupSpan): [number, number] => {
     const half = estimateTextWidth(s.label, theme.fontSize) / 2;
     const c = (s.x0 + s.x1) / 2;
@@ -203,7 +228,6 @@ export function groupSpans(
       }
     }
   }
-  return spans;
 }
 
 /** Horizontal extent of the group header row (brackets and centred labels). */
@@ -219,13 +243,18 @@ export function groupSpansExtent(spans: readonly GroupSpan[], theme: Theme): { l
   return { left, right };
 }
 
-/** Draws brackets whose line sits `bracketGap` above `top` (the top of the label band). */
-export function renderGroupHeaders(g: SvgGroup, spans: readonly GroupSpan[], top: number, theme: Theme): void {
+/**
+ * Draws each header's line `bracketGap` above `top` (the top of the label band) with the label
+ * centred above it. `line`: plain line, line with end ticks ("bracket"), or label only ("none").
+ */
+export function renderGroupHeaders(g: SvgGroup, spans: readonly GroupSpan[], top: number, theme: Theme, line: "line" | "bracket" | "none" = "bracket"): void {
   const y = top - theme.bracketGap;
-  const t = theme.bracketTick;
+  const t = line === "bracket" ? theme.bracketTick : 0;
   for (const s of spans) {
-    const d = new PathBuilder().moveTo(s.x0, y + t).lineTo(s.x0, y).lineTo(s.x1, y).lineTo(s.x1, y + t);
-    g.path(d, { class: "bracket", fill: "none", stroke: theme.stroke, "stroke-width": theme.lineWidth });
+    if (line !== "none") {
+      const d = t > 0 ? new PathBuilder().moveTo(s.x0, y + t).lineTo(s.x0, y).lineTo(s.x1, y).lineTo(s.x1, y + t) : new PathBuilder().moveTo(s.x0, y).lineTo(s.x1, y);
+      g.path(d, { class: line, fill: "none", stroke: theme.stroke, "stroke-width": theme.lineWidth });
+    }
     if (s.label) g.text((s.x0 + s.x1) / 2, y - 0.5, s.label, { class: "group-header", "text-anchor": "middle" });
   }
 }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyGroups, groupOrder } from "../src/model/groups.js";
-import { resolveSpec } from "../src/model/resolve.js";
-import type { Preset, Spec } from "../src/model/spec.js";
+import type { Spec } from "../src/model/spec.js";
 import type { Dataset } from "../src/model/types.js";
 import { prepareDatasets, render } from "../src/pipeline.js";
 
@@ -64,46 +63,49 @@ describe("applyGroups", () => {
     );
     expect(out.variables.map((v) => v.group)).toEqual(["trees", "herbs", "bryophytes", "spores"]);
     expect(warnings).toEqual([
-      'Assignment of "Polytrichum" to group "mosses": no such group in dataset "d" or the spec; ignored.',
+      'Assignment of "Polytrichum" to group "mosses": no such group in dataset "d"; ignored.',
       'Assignment of "Nope" in dataset "d": no such variable (merged variables take their group from the merge transform); ignored.',
     ]);
   });
+
+  it("drops data groups the spec does not list once they are empty (a deleted group stays deleted)", () => {
+    // All spores moved out; "spores" not listed → gone. Listed "aquatics" stays although empty.
+    const out = applyGroups(ds, [{ id: "bryophytes", name: "Bryophytes" }, { id: "aquatics", name: "Aquatics" }], { Sphagnum: "bryophytes", Polytrichum: "bryophytes" }, () => undefined);
+    expect(out.groups.map((g) => g.id)).toEqual(["trees", "herbs", "bryophytes", "aquatics"]);
+  });
 });
 
-describe("resolution core → preset → spec for groups", () => {
-  const preset: Preset = {
-    presetVersion: 1,
-    name: "p",
-    groups: [
-      { id: "trees", name: "Trees", colour: "#2f6b3a", order: 1 },
-      { id: "herbs", name: "Herbs", colour: "#c9a227", order: 3 },
-    ],
-  };
-
-  it("spec groups overlay preset groups by field; spec-only groups are appended", () => {
-    const spec: Spec = { specVersion: 3, preset: "p", panels: [], groups: [{ id: "herbs", name: "Grasses & herbs" }, { id: "bryophytes", name: "Bryophytes", order: 2 }] };
-    expect(resolveSpec(spec, [preset]).spec.groups).toEqual([
-      { id: "trees", name: "Trees", colour: "#2f6b3a", order: 1 },
-      { id: "herbs", name: "Grasses & herbs", colour: "#c9a227", order: 3 },
-      { id: "bryophytes", name: "Bryophytes", order: 2 },
-    ]);
-  });
-
-  it("columns follow the resolved group order; new taxa missing from the order list still appear", () => {
+describe("groups per dataset (datasets[].groups)", () => {
+  it("columns follow the dataset's group order; new taxa missing from the order list still appear", () => {
     const spec: Spec = {
-      specVersion: 3,
-      preset: "p",
-      groups: [{ id: "bryophytes", name: "Bryophytes", order: 2 }],
-      datasets: [{ dataset: "d", assignments: { Sphagnum: "bryophytes", Polytrichum: "bryophytes" }, order: ["Polytrichum"] }],
+      specVersion: 5,
+      datasets: [
+        {
+          dataset: "d",
+          groups: [{ id: "bryophytes", name: "Bryophytes", order: 1.5 }, { id: "herbs", name: "Herbs", colour: "#c9a227" }],
+          assignments: { Sphagnum: "bryophytes", Polytrichum: "bryophytes" },
+          order: ["Polytrichum"],
+        },
+      ],
       panels: [{ type: "taxonCurves", dataset: "d" }],
     };
-    const { svg, warnings } = render([ds], spec, [preset]);
+    const { svg, warnings } = render([ds], spec);
     expect(warnings).toEqual([]);
     const columns = [...svg.matchAll(/id="panel-0-taxonCurves-([^"]+)" class="column"/g)].map((m) => m[1]);
-    // trees (1), bryophytes (2: Polytrichum listed, Sphagnum follows), herbs (3)
+    // trees (1), bryophytes (1.5: Polytrichum listed, Sphagnum follows), herbs (2); spores is empty → dropped
     expect(columns).toEqual(["Pinus", "Polytrichum", "Sphagnum", "Poaceae"]);
-    // Group colour and name come from the effective groups.
-    const prepared = prepareDatasets([ds], spec, [preset]).datasets[0]!;
-    expect(prepared.groups.find((g) => g.id === "herbs")).toEqual({ id: "herbs", name: "Herbs", colour: "#c9a227", order: 3 });
+    const prepared = prepareDatasets([ds], spec).datasets[0]!;
+    expect(prepared.groups.find((g) => g.id === "herbs")).toEqual({ id: "herbs", name: "Herbs", colour: "#c9a227", order: 2 });
+    expect(prepared.groups.map((g) => g.id)).toEqual(["trees", "herbs", "bryophytes"]);
+    // Default group headers use the dataset's group names.
+    expect([...svg.matchAll(/class="group-header"[^>]*>([^<]+)</g)].map((m) => m[1])).toEqual(["trees", "Bryophytes", "Herbs"]);
+  });
+
+  it("groups of one dataset do not leak into another", () => {
+    const other: Dataset = { ...ds, id: "e", name: "e" };
+    const spec: Spec = { specVersion: 5, datasets: [{ dataset: "d", groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
+    const [d, e] = prepareDatasets([ds, other], spec).datasets;
+    expect(d!.groups.some((g) => g.id === "bryophytes")).toBe(true);
+    expect(e!.groups.some((g) => g.id === "bryophytes")).toBe(false);
   });
 });

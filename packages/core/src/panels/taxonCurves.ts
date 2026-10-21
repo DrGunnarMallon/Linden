@@ -198,11 +198,7 @@ function fillColour(ctx: PanelContext, col: TaxonColumn): string {
   if (col.style.fill !== "group") return col.style.fill;
   const g = col.variable.group;
   if (g === undefined) return ctx.theme.defaultFill;
-  return (
-    ctx.groups.find((x) => x.id === g)?.colour ??
-    ctx.data?.dataset.groups.find((x) => x.id === g)?.colour ??
-    ctx.theme.defaultFill
-  );
+  return ctx.data?.dataset.groups.find((x) => x.id === g)?.colour ?? ctx.theme.defaultFill;
 }
 
 interface Point {

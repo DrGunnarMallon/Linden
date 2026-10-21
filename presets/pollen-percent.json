@@ -1,17 +1,8 @@
 {
   "presetVersion": 1,
   "name": "pollen-percent",
-  "description": "Pollen percentage diagram: terrestrial sum, silhouettes, x10 exaggeration, common scale.",
-  "groups": [
-    { "id": "trees", "name": "Trees", "colour": "#2f6b3a", "order": 1 },
-    { "id": "shrubs", "name": "Shrubs", "colour": "#7a9a3c", "order": 2 },
-    { "id": "herbs", "name": "Herbs", "colour": "#c9a227", "order": 3 },
-    { "id": "aquatics", "name": "Aquatics", "colour": "#3a78a8", "order": 4 },
-    { "id": "spores", "name": "Spores", "colour": "#8a6a9a", "order": 5 }
-  ],
-  "sums": { "terrestrial": { "includeGroups": ["trees", "shrubs", "herbs"] } },
-  "outsideSum": { "groups": ["aquatics", "spores"], "basis": "sumPlusGroup" },
-  "transforms": [{ "type": "percent", "sum": "terrestrial" }],
+  "description": "Pollen percentage diagram: silhouettes, x10 exaggeration, common scale, + below 0.5 %. Groups and the pollen sum are defined per dataset in the spec.",
+  "transforms": [{ "type": "percent" }],
   "panelDefaults": {
     "taxonCurves": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4, "plusBelow": 0.5 }
   }

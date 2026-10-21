@@ -1,0 +1,154 @@
+// UI hints for the graphical spec editor — SPEC.md §11. Plain metadata next to the schema (no UI code):
+// labels, help, units, sections, advanced flags and field order, keyed by path pattern (see schemaForm.ts).
+// Anything without a hint still gets a control with a label made from its key.
+
+import { describeSchema, type FormHint, type FormHints, type FormNode, type FormSection } from "./schemaForm.js";
+import { SpecSchema } from "./spec.js";
+
+/** Sections of the form, top to bottom. Top-level keys not listed here get a section of their own. */
+export const SPEC_FORM_SECTIONS: FormSection[] = [
+  { id: "preset", title: "Preset", fields: ["preset"] },
+  { id: "page", title: "Page", fields: ["page", "title", "style"] },
+  { id: "yAxis", title: "Y axis", fields: ["yAxis"] },
+  { id: "headers", title: "Headers", fields: ["headerBand", "groupHeaders", "headers"] },
+  { id: "datasets", title: "Datasets & transforms", fields: ["datasets"] },
+  { id: "panels", title: "Panels", fields: ["panels"] },
+  { id: "overlays", title: "Overlays", fields: ["overlays"] },
+];
+
+const mm = { unit: "mm", step: 0.5 } as const;
+const pt = { unit: "pt", step: 0.25 } as const;
+const colour = { help: "CSS colour, e.g. #2f6b3a." } as const;
+
+const selectionOrder: FormHint = {
+  label: "Order",
+  help: "Column order within each group: a rule, or an explicit list of variable ids (listed ones first).",
+  unionLabels: ["Rule", "Explicit list"],
+  optionLabels: { data: "Data order", alphabetical: "Alphabetical", weightedAverageDepth: "Weighted average depth", firstOccurrence: "First occurrence" },
+};
+
+const SPEC_HINTS: Record<string, FormHint> = {
+  specVersion: { hidden: true },
+  preset: { label: "Preset", widget: "preset", help: "Styling and behaviour defaults; explicit values in the spec win." },
+
+  page: { label: "Page setup", order: ["width", "height", "font", "units"] },
+  "page.width": { ...mm, label: "Width" },
+  "page.height": { ...mm, label: "Height" },
+  "page.units": { advanced: true },
+  "page.font": { label: "Base font", help: "Base for all text unless the figure style says otherwise." },
+  "page.font.size": pt,
+
+  title: { label: "Title", order: ["text", "subtitle", "align", "size"] },
+  "title.text": { label: "Title", help: "*italic* markup allowed." },
+  "title.subtitle": { help: "*italic* markup allowed." },
+  "title.align": { optionLabels: { left: "Left", centre: "Centre" } },
+  "title.size": { ...pt, advanced: true },
+
+  style: { label: "Figure style", order: ["background", "fonts", "colours", "lineWidths", "tickLength"] },
+  "style.background": { ...colour, nullLabel: "Transparent" },
+  "style.fonts": { advanced: true },
+  "style.fonts.title.size": pt,
+  "style.fonts.labels": { help: "Taxon labels, group headers, axis titles, zone labels." },
+  "style.fonts.labels.size": pt,
+  "style.fonts.ticks.size": pt,
+  "style.colours": { advanced: true },
+  "style.colours.axis": colour,
+  "style.colours.text": colour,
+  "style.lineWidths": { advanced: true },
+  "style.lineWidths.axis": { unit: "mm", step: 0.05 },
+  "style.lineWidths.curve": { unit: "mm", step: 0.05 },
+  "style.tickLength": { ...mm, advanced: true },
+
+  yAxis: { order: ["primary", "secondary", "reverse", "range", "ticks", "titles"] },
+  "yAxis.primary": { optionLabels: { depth: "Depth", age: "Age" } },
+  "yAxis.secondary": { label: "Secondary axis", optionLabels: { depth: "Depth", age: "Age" } },
+  "yAxis.reverse": { label: "Increase downwards" },
+  "yAxis.range": { nullLabel: "Data extent", help: "Top and bottom of the axis in axis units." },
+  "yAxis.range[0]": { label: "From" },
+  "yAxis.range[1]": { label: "To" },
+  "yAxis.ticks.major": { help: "Interval in axis units." },
+  "yAxis.ticks.minor": { help: "Interval in axis units." },
+  "yAxis.titles": { help: "Default from the dataset units; empty = no title." },
+
+  headerBand: { label: "Taxon labels", order: ["angle", "minFontSize", "height"] },
+  "headerBand.angle": { unit: "°", step: 5 },
+  "headerBand.minFontSize": { ...pt, label: "Min font size", help: "Labels shrink down to this size before the band grows." },
+  "headerBand.height": { ...mm, nullLabel: "Fit labels", advanced: true },
+  groupHeaders: { label: "Group headers" },
+  "groupHeaders.line": { optionLabels: { line: "Line", bracket: "Bracket", none: "None" } },
+  headers: { label: "Explicit headers", itemLabel: "header", itemTitle: ["label"], help: "Replace the automatic group headers." },
+  "headers[].spans": { help: "Columns whose group or variable id is listed." },
+  "headers[].spans.groups": { itemLabel: "group" },
+  "headers[].spans.ids": { label: "Variable ids", itemLabel: "id" },
+
+  datasets: { label: "Datasets", itemLabel: "dataset", itemTitle: ["dataset"] },
+  "datasets[]": { order: ["dataset", "transforms", "sums", "outsideSum", "groups", "assignments", "order", "scales"] },
+  "datasets[].dataset": { label: "Dataset", widget: "dataset" },
+  "datasets[].transforms": { itemLabel: "transform", itemTitle: ["type"], help: "Applied in order; merges before percent." },
+  "datasets[].transforms[]": { optionLabels: { percent: "Percent", merge: "Merge", scaleMap: "Scale map" } },
+  "datasets[].transforms[].sum": { help: "Named sum; empty = all count variables." },
+  "datasets[].transforms[].from": { itemLabel: "variable" },
+  "datasets[].transforms[].keepSources": { advanced: true },
+  "datasets[].transforms[].scale": { unionLabels: ["One scale", "First matching of"] },
+  "datasets[].transforms[].kinds": { itemLabel: "kind", advanced: true },
+  "datasets[].transforms[].variables": { itemLabel: "variable", advanced: true },
+  "datasets[].transforms[].map": { label: "Inline map", advanced: true },
+  "datasets[].transforms[].map{}": { nullLabel: "Not assessed" },
+  "datasets[].sums": { help: "Named sums for the percent transform." },
+  "datasets[].sums{}.includeGroups": { itemLabel: "group" },
+  "datasets[].sums{}.includeVariables": { itemLabel: "variable" },
+  "datasets[].outsideSum": { label: "Outside the sum", advanced: true },
+  "datasets[].outsideSum.basis": { optionLabels: { sum: "% of sum", sumPlusGroup: "% of sum + group" } },
+  "datasets[].groups": { itemLabel: "group", itemTitle: ["name", "id"], advanced: true, help: "Easier to edit in the variable list." },
+  "datasets[].groups[].colour": colour,
+  "datasets[].assignments": { advanced: true, help: "Variable id → group id." },
+  "datasets[].order": { label: "Column order", itemLabel: "variable", advanced: true },
+  "datasets[].scales": { label: "Ordinal scales", advanced: true, help: "Named scales: code → plotted value." },
+  "datasets[].scales{}{}": { nullLabel: "Not assessed" },
+
+  panels: { itemLabel: "panel", itemTitle: ["type", "dataset"] },
+  "panels[]": { optionLabels: { yAxis: "Y axis", taxonCurves: "Taxon curves" }, order: ["type", "dataset", "variables", "style", "width", "overrides"] },
+  "panels[].dataset": { widget: "dataset" },
+  "panels[].width": { ...mm, advanced: true },
+  "panels[].variables": { label: "Variables", order: ["groups", "ids", "minMax", "order", "kinds"] },
+  "panels[].variables.groups": { itemLabel: "group", help: "Groups and ids are combined; neither = all variables." },
+  "panels[].variables.ids": { itemLabel: "id" },
+  "panels[].variables.kinds": { itemLabel: "kind", advanced: true },
+  "panels[].variables.minMax": { label: "Min. maximum", help: "Show a variable only if its maximum reaches this value." },
+  "panels[].variables.order": selectionOrder,
+  "panels[].style": { order: ["mode", "fill", "exaggeration", "commonScale", "minWidth", "plusBelow", "presence", "xTicks", "xTitle", "groupGap"] },
+  "panels[].style.mode": { optionLabels: { silhouette: "Silhouette", bars: "Bars", line: "Line", linePoints: "Line + points" } },
+  "panels[].style.fill": { help: "\"group\" = group colour, or a CSS colour." },
+  "panels[].style.exaggeration": { label: "Exaggeration (×)", help: "Lighter curve at ×n behind the main one; 0 = off." },
+  "panels[].style.commonScale": { help: "One x-scale for all columns (percentage diagrams)." },
+  "panels[].style.minWidth": { ...mm, label: "Min. column width" },
+  "panels[].style.plusBelow": { label: "\"+\" below", help: "Draw \"+\" for non-zero values below this; 0 = off." },
+  "panels[].style.groupGap": { ...mm, advanced: true },
+  "panels[].style.presence": { optionLabels: { dot: "Dot", bar: "Bar" }, advanced: true },
+  "panels[].style.xTicks": { label: "x-axis ticks", advanced: true },
+  "panels[].style.xTicks.step": { nullLabel: "Automatic", help: "Tick interval in data units." },
+  "panels[].style.xTicks.minSpacing": mm,
+  "panels[].style.xTicks.unitSuffix": { label: "Unit on last label" },
+  "panels[].style.xTitle": { label: "x-axis title", advanced: true },
+  "panels[].style.xTitle.text": { help: "Default from kind and unit; empty = none." },
+  "panels[].style.xTitle.show": { optionLabels: { panel: "Once per panel", column: "Every column", none: "None" } },
+  "panels[].overrides": { label: "Per-variable overrides", advanced: true, help: "Variable id → style; use sparingly." },
+
+  overlays: { itemLabel: "overlay", itemTitle: ["type"] },
+  "overlays[]": { optionLabels: { zones: "Zones" } },
+  "overlays[].manual": { label: "Boundaries", itemLabel: "boundary", itemTitle: ["depth", "label"] },
+};
+
+/** Hints for the spec form; overrides reuse the panel style hints. */
+export const SPEC_FORM_HINTS: FormHints = {
+  hints: SPEC_HINTS,
+  aliases: { "panels[].overrides{}": "panels[].style" },
+};
+
+let cached: FormNode | undefined;
+
+/** The spec schema as a form description (memoised). */
+export function specForm(): FormNode {
+  cached ??= describeSchema(SpecSchema, SPEC_FORM_HINTS);
+  return cached;
+}

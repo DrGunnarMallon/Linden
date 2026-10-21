@@ -3,7 +3,22 @@
 import { create } from "zustand";
 
 export type Zoom = "fit" | number;
-export type InspectorTab = "diagram" | "json";
+/** The inspector's spec editor: generated form or raw JSON. Remembered in localStorage. */
+export type InspectorTab = "form" | "json";
+
+export const INSPECTOR_STORAGE_KEY = "linden.inspector";
+
+export function parseInspectorTab(value: string | null): InspectorTab {
+  return value === "json" ? "json" : "form";
+}
+
+function readInspectorTab(): InspectorTab {
+  try {
+    return parseInspectorTab(localStorage.getItem(INSPECTOR_STORAGE_KEY));
+  } catch {
+    return "form";
+  }
+}
 
 export const MIN_ZOOM = 0.1;
 export const MAX_ZOOM = 8;
@@ -38,11 +53,18 @@ export const useView = create<ViewState>()((set, get) => ({
   scale: 1,
   leftOpen: true,
   rightOpen: true,
-  inspectorTab: "json",
+  inspectorTab: readInspectorTab(),
   setZoom: (zoom) => set({ zoom: zoom === "fit" ? zoom : clampZoom(zoom) }),
   zoomBy: (dir) => set({ zoom: stepZoom(get().scale, dir) }),
   setScale: (scale) => set({ scale }),
   toggleLeft: () => set({ leftOpen: !get().leftOpen }),
   toggleRight: () => set({ rightOpen: !get().rightOpen }),
-  showInspector: (tab) => set({ rightOpen: true, inspectorTab: tab }),
+  showInspector: (tab) => {
+    try {
+      localStorage.setItem(INSPECTOR_STORAGE_KEY, tab);
+    } catch {
+      // Private mode etc.: the choice just isn't remembered.
+    }
+    set({ rightOpen: true, inspectorTab: tab });
+  },
 }));

@@ -1,85 +1,39 @@
-import { resolveSpec } from "@linden/core";
 import { Braces, SlidersHorizontal } from "lucide-react";
-import { useMemo, type ReactNode } from "react";
+import { SpecForm } from "./form/SpecForm";
 import { SpecEditor } from "./SpecEditor";
-import { matchPagePreset, PAGE_PRESETS } from "./specEdit";
 import { useStore } from "./store";
-import { CollapsibleSection, NumberInput, Select, Tabs, TabsContent, TabsList, TabsTrigger } from "./ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "./ui";
 import { useView, type InspectorTab } from "./view";
 
-const NO_PRESET = "__none__"; // Radix Select cannot use "" as a value
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid grid-cols-[72px_1fr] items-center gap-2">
-      <span className="text-xs text-fg-secondary">{label}</span>
-      {children}
-    </div>
-  );
-}
-
-function DiagramProperties() {
-  const { spec, presets } = useStore();
-  const store = useStore.getState();
-  const page = useMemo(() => resolveSpec(spec, presets).spec.page, [spec, presets]);
-  const unknownPreset = spec.preset !== undefined && !presets.some((p) => p.name === spec.preset);
-  const presetOptions = [
-    { value: NO_PRESET, label: "None" },
-    ...presets.map((p) => ({ value: p.name, label: p.name, title: p.description })),
-    ...(unknownPreset ? [{ value: spec.preset!, label: `${spec.preset} (not found)` }] : []),
-  ];
-  return (
-    <div className="h-full overflow-auto">
-      <CollapsibleSection title="Preset">
-        <div className="space-y-2 px-3 pb-3">
-          <Field label="Preset">
-            <Select
-              label="Preset"
-              value={spec.preset ?? NO_PRESET}
-              onValueChange={(v) => store.setPreset(v === NO_PRESET ? undefined : v)}
-              options={presetOptions}
-            />
-          </Field>
-          {spec.preset && <p className="text-xs text-fg-muted">{presets.find((p) => p.name === spec.preset)?.description}</p>}
-        </div>
-      </CollapsibleSection>
-      <CollapsibleSection title="Page">
-        <div className="space-y-2 px-3 pb-3">
-          <Field label="Size">
-            <Select
-              label="Page size"
-              value={matchPagePreset(page)}
-              onValueChange={(v) => v !== "custom" && store.applyPagePreset(v)}
-              options={[...PAGE_PRESETS.map((p) => ({ value: p.id, label: p.label })), { value: "custom", label: "Custom" }]}
-            />
-          </Field>
-          <Field label="Width">
-            <NumberInput label="Page width" unit="mm" min={1} step={0.5} value={page.width} onCommit={(width) => store.setPageSize({ width })} />
-          </Field>
-          <Field label="Height">
-            <NumberInput label="Page height" unit="mm" min={1} step={0.5} value={page.height} onCommit={(height) => store.setPageSize({ height })} />
-          </Field>
-        </div>
-      </CollapsibleSection>
-      <p className="px-4 py-3 text-xs text-fg-muted">Panel, axis and style properties: edit them in the JSON tab for now.</p>
-    </div>
-  );
-}
-
+/**
+ * Form | JSON: two editors of the one spec in the store. Form → JSON always works; JSON → Form only
+ * when the JSON is valid (otherwise the JSON editor stays, showing its errors).
+ */
 export function Inspector() {
   const { inspectorTab, showInspector } = useView();
+  const errorCount = useStore((s) => s.specErrors.length);
+  const tab: InspectorTab = errorCount > 0 ? "json" : inspectorTab;
+  const select = (v: string) => {
+    if (v === "form" && errorCount > 0) {
+      toast("Fix the JSON first", { description: `The form needs a valid spec; the JSON has ${errorCount} error${errorCount > 1 ? "s" : ""}.`, variant: "error" });
+      return;
+    }
+    showInspector(v as InspectorTab);
+  };
   return (
-    <Tabs value={inspectorTab} onValueChange={(v) => showInspector(v as InspectorTab)} className="flex h-full flex-col">
-      <TabsList aria-label="Inspector">
-        <TabsTrigger value="diagram">
-          <SlidersHorizontal /> Diagram
-        </TabsTrigger>
-        <TabsTrigger value="json">
-          <Braces /> JSON
-        </TabsTrigger>
+    <Tabs value={tab} onValueChange={select} activationMode="manual" className="flex h-full flex-col">
+      <TabsList aria-label="Spec editor">
+        <div className="inline-flex gap-0.5 rounded-lg border border-border bg-surface-2 p-0.5">
+          <TabsTrigger value="form">
+            <SlidersHorizontal /> Form
+          </TabsTrigger>
+          <TabsTrigger value="json">
+            <Braces /> JSON
+          </TabsTrigger>
+        </div>
       </TabsList>
-      <TabsContent value="diagram">
-        <DiagramProperties />
+      <TabsContent value="form">
+        <SpecForm />
       </TabsContent>
       <TabsContent value="json">
         <SpecEditor />

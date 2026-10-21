@@ -58,12 +58,16 @@ interface State {
   past: Spec[];
   future: Spec[];
   lastTypedAt: number;
+  /** Field of the last form edit (see editSpec); undefined after any other edit. */
+  lastEditKey: string | undefined;
 
   init(): Promise<void>;
   /** Replaces the project with a bundled example (by dataset name, see bundled.ts). */
   loadExample(name: string): Promise<void>;
   setProjectName(name: string): void;
   setSpecText(text: string, opts?: { typing?: boolean }): void;
+  /** A valid spec from the graphical editor. Edits of the same `mergeKey` (field) in quick succession are one undo step. */
+  editSpec(next: Spec, mergeKey?: string): void;
   undo(): void;
   redo(): void;
   setPreset(name: string | undefined): void;
@@ -119,6 +123,9 @@ export const useStore = create<State>()((set, get) => {
       specErrors: [],
       past: mergeWithLast ? past : [...past, current].slice(-HISTORY_LIMIT),
       future: [],
+      // Typing callers set these again after committing; any other edit ends a typing burst.
+      lastTypedAt: 0,
+      lastEditKey: undefined,
     });
   };
 
@@ -152,6 +159,7 @@ export const useStore = create<State>()((set, get) => {
     past: [],
     future: [],
     lastTypedAt: 0,
+    lastEditKey: undefined,
 
     async init() {
       let saved: Project | undefined;
@@ -194,10 +202,18 @@ export const useStore = create<State>()((set, get) => {
         return;
       }
       const now = Date.now();
-      const merge = opts.typing === true && now - get().lastTypedAt < TYPING_MERGE_MS && get().past.length > 0;
-      set({ lastTypedAt: opts.typing ? now : 0 });
+      const merge = opts.typing === true && get().lastEditKey === undefined && now - get().lastTypedAt < TYPING_MERGE_MS && get().past.length > 0;
       if (sameSpec(parsed.value, get().spec)) set({ specText: text, specErrors: [] });
       else commitSpec(parsed.value, text, merge);
+      set({ lastTypedAt: opts.typing ? now : 0, lastEditKey: undefined });
+    },
+
+    editSpec(next, mergeKey) {
+      if (sameSpec(next, get().spec)) return;
+      const now = Date.now();
+      const merge = mergeKey !== undefined && mergeKey === get().lastEditKey && now - get().lastTypedAt < TYPING_MERGE_MS && get().past.length > 0;
+      commitSpec(next, undefined, merge);
+      set({ lastTypedAt: mergeKey !== undefined ? now : 0, lastEditKey: mergeKey });
     },
 
     undo() {

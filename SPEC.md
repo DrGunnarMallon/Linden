@@ -39,7 +39,7 @@ linden/
 
 ```
 core/src/
-  model/        types for Dataset, Variable, Sample, Spec
+  model/        types for Dataset, Variable, Sample, Spec; spec form description + UI hints (§11)
   io/           importers (csv, xlsx, tilia-tlx, neotoma) + spec (de)serialisation
   transforms/   percentage, concentration, influx, scale-mapping, smoothing
   analyses/     coniss, broken-stick, (later) pca, rarefaction
@@ -393,10 +393,17 @@ Importers never throw on recoverable problems: they return warnings.
 
 - Left (collapsible): data & variable list (grouping, kind, visibility, drag to reorder).
 - Centre: live SVG preview at true page size on a workspace canvas, zoomable (fit / 100% / 200%, Ctrl+scroll).
-- Right (collapsible inspector): diagram properties (preset, page size) and properties of the selected panel / variable / overlay.
+- Right (collapsible inspector): the spec editor, with a **Form | JSON** switch at the top (see "Graphical spec editor" below).
 - Top: project name and file menu (open/save project, load/save spec, examples), import, export, undo/redo (spec history), UI theme.
 - Bottom status bar: page size, zoom, spec errors, warnings (as a popover).
 - A raw spec editor (JSON with schema validation) for power users — this is the "scriptable" path in the UI.
+- **Graphical spec editor** (Form), switchable with the JSON editor. Both edit the one spec in the store; neither keeps its own copy, so switching is instant and lossless.
+  - The form is **generated from the zod spec schema**, never written per panel: `describeSchema` (`core/model/schemaForm.ts`) turns the schema into a plain `FormNode` tree, and the app renders one control per node kind — boolean → checkbox, enum → dropdown, number → number field (min/max from the schema), string → text field, array → list with add / remove / drag to reorder, record → key/value list, tuple → fields side by side, nullable → control plus a "none" checkbox (e.g. "Fit labels"), plain union → form dropdown plus its control, discriminated union (panel / transform / overlay `type`) → type dropdown plus its sub-form. New panels, transforms, overlays and fields get a form automatically; a test fails if any schema node lacks a control.
+  - **UI hints** live in core next to the schema as plain data (`core/model/specForm.ts`, no UI code), keyed by path pattern (`page.width`, `panels[].style.mode`, `datasets[].sums{}`): `label`, `help`, `unit` ("mm", "pt", "°"), `advanced`, field `order`, `hidden`, `nullLabel`, `optionLabels`, `itemLabel` / `itemTitle` (card titles) and `widget` (an app-provided control, e.g. dataset and preset pickers). Fields without hints get a label from their key. A test fails on hints for paths that no longer exist.
+  - **Sections**: Preset, Page (page, title, figure style; plus page-size presets), Y axis, Headers, Datasets & transforms, Panels (one collapsible card per panel, drag to reorder, add / remove), Overlays. A top-level spec key in no section gets a section of its own (so `analyses`, M5, appears without UI work). Advanced fields sit in a folded "Advanced" part of their object.
+  - Unset optional fields show the effective value (after preset and defaults) as a placeholder; a reset button removes the key. Form edits change only the edited value (key order kept), so form → JSON → form round-trips unchanged.
+  - Every edit goes through the store (undo/redo, live preview). Text and number fields commit 300 ms after typing stops (and on blur / Enter); a burst of typing in one field is one undo step. An edit that would make the spec invalid is not applied; its errors show at the field.
+  - Switching: Form → JSON always works. JSON → Form only when the JSON is valid; otherwise the JSON editor stays with its errors. The choice is remembered in localStorage.
 - Empty project: a welcome screen (import CSV, open project, load an example).
 - UI theme: dark (default), light or system, remembered in localStorage; it never affects the figure (§4 `style`).
 - Persist work in IndexedDB; never auto-upload.

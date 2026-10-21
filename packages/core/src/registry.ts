@@ -6,6 +6,7 @@ import { zonesOverlay } from "./overlays/zones.js";
 import { taxonCurvesPanel } from "./panels/taxonCurves.js";
 import type { Overlay, Panel } from "./panels/types.js";
 import { yAxisPanel } from "./panels/yAxis.js";
+import { mergeTransform } from "./transforms/merge.js";
 import { percentTransform } from "./transforms/percent.js";
 
 export interface Registered {
@@ -45,6 +46,7 @@ importers.register(csvImporter);
 
 export const transforms = new Registry<Transform>("transform");
 transforms.register(percentTransform);
+transforms.register(mergeTransform);
 
 export const panels = new Registry<Panel>("panel");
 panels.register(yAxisPanel);

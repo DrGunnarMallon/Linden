@@ -8,6 +8,8 @@ type JsonObject = Record<string, unknown>;
 const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   // v2 added headerBand, headers and taxonCurves style.groupGap / style.xTicks, all optional.
   1: (spec) => ({ ...spec, specVersion: 2 }),
+  // v3 added top-level groups, dataset assignments / order and the merge transform, all optional.
+  2: (spec) => ({ ...spec, specVersion: 3 }),
 };
 
 /** Migrates an older spec to SPEC_VERSION. Anything else (unknown versions, non-objects) is returned unchanged for validation to report. */

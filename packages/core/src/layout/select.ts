@@ -1,7 +1,10 @@
 // Declarative variable selection — SPEC.md §4 key rules.
-// Deterministic: every order except "data" breaks ties by variable id.
+// Columns: group order first, then the dataset's explicit `order` list within each group, then the
+// panel's order for unlisted variables (so new taxa never vanish). Deterministic: every panel order
+// except "data" breaks ties by variable id.
 
 import type { ResolvedSelection } from "../model/defaults.js";
+import { groupOrder } from "../model/groups.js";
 import type { Dataset } from "../model/types.js";
 import { stripMarkup } from "../render/svg.js";
 
@@ -54,8 +57,34 @@ function sortBy(ds: Dataset, idx: number[], key: (j: number) => number | string)
   });
 }
 
-/** Returns variable indices in display order. */
-export function selectVariables(ds: Dataset, sel: ResolvedSelection, warn: (m: string) => void): number[] {
+/** Stable sort by group (dataset group order; unknown groups next in first-seen order; ungrouped last), then by `explicit` position. */
+function arrange(ds: Dataset, idx: number[], explicit: readonly string[]): number[] {
+  const rank = new Map(groupOrder(ds).map((g, i) => [g, i]));
+  const groupRank = (j: number): number => {
+    const g = ds.variables[j]!.group;
+    if (g === undefined) return Number.POSITIVE_INFINITY;
+    if (!rank.has(g)) rank.set(g, rank.size);
+    return rank.get(g)!;
+  };
+  const pos = (j: number): number => {
+    const p = explicit.indexOf(ds.variables[j]!.id);
+    return p === -1 ? explicit.length : p;
+  };
+  const keys = new Map(ds.variables.map((_, j) => [j, [groupRank(j), pos(j)] as const]));
+  return [...idx].sort((a, b) => {
+    const [ga, pa] = keys.get(a)!;
+    const [gb, pb] = keys.get(b)!;
+    return ga - gb || pa - pb;
+  });
+}
+
+/** Returns variable indices in display order. `explicit` = the dataset's order list (within groups). */
+export function selectVariables(
+  ds: Dataset,
+  sel: ResolvedSelection,
+  warn: (m: string) => void,
+  explicit: readonly string[] = [],
+): number[] {
   const ids = new Set(sel.ids ?? []);
   const groups = new Set(sel.groups ?? []);
   const all = ids.size === 0 && groups.size === 0;
@@ -83,5 +112,5 @@ export function selectVariables(ds: Dataset, sel: ResolvedSelection, warn: (m: s
   } else if (order === "firstOccurrence") {
     idx = sortBy(ds, idx, (j) => -firstOccurrenceDepth(ds, j));
   }
-  return idx;
+  return arrange(ds, idx, explicit);
 }

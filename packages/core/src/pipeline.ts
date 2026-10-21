@@ -6,12 +6,14 @@ import { computeLayout } from "./layout/layout.js";
 import { makeYScale, type YScale } from "./layout/scales.js";
 import { selectVariables } from "./layout/select.js";
 import { makeTheme } from "./layout/theme.js";
+import { applyGroups } from "./model/groups.js";
 import { resolveSpec, type ResolvedSpec } from "./model/resolve.js";
 import type { Preset, Spec } from "./model/spec.js";
 import type { Dataset } from "./model/types.js";
 import type { PanelContext, PanelData } from "./panels/types.js";
 import { overlays, panels, transforms } from "./registry.js";
 import { svgDocument, translate } from "./render/svg.js";
+import { mergedTwice } from "./transforms/merge.js";
 
 export interface RenderResult {
   svg: string;
@@ -24,19 +26,34 @@ function applyTransforms(datasets: readonly Dataset[], rs: ResolvedSpec, warn: (
     if (byId.has(ds.id)) warn(`Duplicate dataset id "${ds.id}"; the first one is used.`);
     else byId.set(ds.id, ds);
   }
+  // Effective groups and assignments first, so sums in the transforms see them.
+  for (const [id, ds] of byId) {
+    const entry = rs.datasets.find((e) => e.dataset === id);
+    byId.set(id, applyGroups(ds, rs.groups, entry?.assignments ?? {}, warn));
+  }
   for (const entry of rs.datasets) {
     let ds = byId.get(entry.dataset);
     if (!ds) {
       warn(`Dataset "${entry.dataset}" not found.`);
       continue;
     }
+    for (const id of mergedTwice(entry.transforms)) warn(`Variable "${id}" is merged more than once in dataset "${entry.dataset}".`);
+    let percentDone = false;
     for (const t of entry.transforms) {
       if (!transforms.has(t.type)) {
         warn(`Unknown transform "${t.type}"; skipped.`);
         continue;
       }
+      if (t.type === "merge" && percentDone) {
+        warn(`merge "${t.id}" comes after a percent transform; merges must run first so merged taxa share the same sum. Merge skipped.`);
+        continue;
+      }
+      if (t.type === "percent") percentDone = true;
       const ctx = { sums: entry.sums, warn, ...(entry.outsideSum ? { outsideSum: entry.outsideSum } : {}) };
       ds = transforms.get(t.type).apply(ds, t, ctx);
+    }
+    for (const id of entry.order) {
+      if (!ds.variables.some((v) => v.id === id)) warn(`Order list of dataset "${entry.dataset}": unknown variable "${id}".`);
     }
     byId.set(ds.id, ds);
   }
@@ -74,6 +91,21 @@ function groupName(rs: ResolvedSpec, byId: Map<string, Dataset>, id: string): st
   return id;
 }
 
+/**
+ * Datasets as the diagram uses them: effective groups and assignments applied, then transforms.
+ * Same order as `datasets`; e.g. for the app's variable list.
+ */
+export function prepareDatasets(datasets: readonly Dataset[], spec: Spec, presets: readonly Preset[] = []): { datasets: Dataset[]; warnings: string[] } {
+  const warnings = new Set<string>();
+  const warn = (m: string) => {
+    warnings.add(m);
+  };
+  const resolved = resolveSpec(spec, presets);
+  const byId = applyTransforms(datasets, resolved.spec, warn);
+  const out = [...new Set(datasets.map((d) => d.id))].map((id) => byId.get(id)!);
+  return { datasets: out, warnings: [...warnings] };
+}
+
 export function render(datasets: readonly Dataset[], spec: Spec, presets: readonly Preset[] = []): RenderResult {
   // A Set keeps first-seen order and drops repeats (measure runs many times while fitting).
   const warnings = new Set<string>();
@@ -95,7 +127,8 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
       warn(`Panel dataset "${p.dataset}" not found.`);
       return undefined;
     }
-    return { dataset: ds, variables: selectVariables(ds, p.variables, warn) };
+    const order = rs.datasets.find((e) => e.dataset === p.dataset)?.order ?? [];
+    return { dataset: ds, variables: selectVariables(ds, p.variables, warn, order) };
   });
 
   const domain = yDomain(rs, data, byId, warn);

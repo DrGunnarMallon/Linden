@@ -1,0 +1,13 @@
+depth,age,*Betula*,*Pinus*,*Quercus*,*Corylus*,Poaceae,Cyperaceae,*Artemisia*,*Sphagnum*,*Scorpidium scorpioides*,*Calliergon giganteum*,*Calliergon cordifolium*
+group,,trees,trees,trees,shrubs,herbs,herbs,herbs,spores,spores,spores,spores
+kind,,count,count,count,count,count,count,count,count,count,count,count
+10,1200,120,85,40,60,55,20,0,14,0,3,2
+20,2400,130,90,45,70,48,18,0,22,0,4,1
+30,3600,110,95,52,85,40,15,1,30,2,6,0
+40,4800,95,100,60,110,35,12,0,41,5,8,0
+50,6000,80,120,48,130,30,10,2,38,9,5,1
+60,7200,140,150,20,90,25,15,5,25,12,2,3
+70,8400,190,110,5,40,60,30,12,12,6,0,6
+80,9600,210,60,0,10,110,55,30,5,2,0,9
+90,10800,90,20,0,2,180,90,65,2,0,,12
+100,11700,40,10,0,0,220,110,80,,0,,8

@@ -5,7 +5,20 @@ import { SPEC_VERSION, importers, parseSpec, render, type Dataset, type Preset, 
 import { create } from "zustand";
 import { demo, loadBundledPresets } from "./bundled";
 import { loadProject, saveProject, type Project } from "./persist";
-import { ensureDatasetInSpec, prettySpec, removeDatasetFromSpec, setVariableVisible } from "./specEdit";
+import {
+  createGroup,
+  ensureDatasetInSpec,
+  mergeVariables,
+  moveVariable,
+  prettySpec,
+  recolourGroup,
+  removeDatasetFromSpec,
+  renameGroup,
+  reorderGroups,
+  setVariableVisible,
+  unmergeVariable,
+  variableTree,
+} from "./specEdit";
 
 const HISTORY_LIMIT = 200;
 /** Valid edits in the text editor closer together than this become one undo step. */
@@ -38,6 +51,13 @@ interface State {
   setVariableVisible(datasetId: string, varId: string, visible: boolean): void;
   importFile(file: File): Promise<void>;
   removeDataset(id: string): void;
+  moveVariable(datasetId: string, varId: string, toGroup: string, toIndex: number): void;
+  reorderGroups(groupIds: string[]): void;
+  createGroup(datasetId: string, name: string): void;
+  renameGroup(id: string, name: string): void;
+  recolourGroup(id: string, colour: string): void;
+  mergeVariables(datasetId: string, ids: string[], name: string): void;
+  unmergeVariable(datasetId: string, mergedId: string): void;
 }
 
 const bundled = loadBundledPresets();
@@ -74,6 +94,12 @@ export const useStore = create<State>()((set, get) => {
       future: [],
     });
   };
+
+  /** Commits `next` as one undo step if it differs from the current spec. */
+  const edit = (next: Spec) => {
+    if (!sameSpec(next, get().spec)) commitSpec(next);
+  };
+  const rawDataset = (id: string) => get().datasets.find((d) => d.id === id);
 
   const setProject = (p: Project) => {
     rerender({ datasets: p.datasets, spec: p.spec, specText: p.specText, importWarnings: p.importWarnings, past: [], future: [] });
@@ -155,11 +181,45 @@ export const useStore = create<State>()((set, get) => {
     },
 
     setVariableVisible(datasetId, varId, visible) {
-      const { spec, presets, datasets } = get();
-      const ds = datasets.find((d) => d.id === datasetId);
-      if (!ds) return;
-      const next = setVariableVisible(spec, presets, ds, varId, visible);
-      if (!sameSpec(next, spec)) commitSpec(next);
+      const { spec, presets } = get();
+      const raw = rawDataset(datasetId);
+      if (!raw) return;
+      // Visibility is about the variables the diagram sees (merged ones included).
+      edit(setVariableVisible(spec, presets, variableTree(spec, presets, raw).prepared, varId, visible));
+    },
+
+    moveVariable(datasetId, varId, toGroup, toIndex) {
+      const raw = rawDataset(datasetId);
+      if (raw) edit(moveVariable(get().spec, get().presets, raw, varId, toGroup, toIndex));
+    },
+
+    reorderGroups(groupIds) {
+      edit(reorderGroups(get().spec, groupIds));
+    },
+
+    createGroup(datasetId, name) {
+      const raw = rawDataset(datasetId);
+      if (!raw) return;
+      const existing = variableTree(get().spec, get().presets, raw).prepared.groups;
+      edit(createGroup(get().spec, name, existing).spec);
+    },
+
+    renameGroup(id, name) {
+      edit(renameGroup(get().spec, id, name));
+    },
+
+    recolourGroup(id, colour) {
+      edit(recolourGroup(get().spec, id, colour));
+    },
+
+    mergeVariables(datasetId, ids, name) {
+      const raw = rawDataset(datasetId);
+      if (raw) edit(mergeVariables(get().spec, get().presets, raw, ids, name).spec);
+    },
+
+    unmergeVariable(datasetId, mergedId) {
+      const raw = rawDataset(datasetId);
+      if (raw) edit(unmergeVariable(get().spec, get().presets, raw, mergedId));
     },
 
     async importFile(file) {

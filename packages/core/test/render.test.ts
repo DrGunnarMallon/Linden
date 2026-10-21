@@ -39,6 +39,34 @@ describe("render — demo pollen", () => {
   });
 });
 
+describe("render — demo bryophytes (spec groups, assignments, order, merge)", () => {
+  const load = () => {
+    const datasets = importDelimited(readRepoFile("examples/demo-bryophytes.csv"), { name: "demo-bryophytes" }).datasets;
+    const spec = parseSpec(readRepoFile("examples/demo-bryophytes.spec.json"));
+    const preset = parsePreset(readRepoJson("presets/pollen-percent.json"));
+    if (!spec.ok || !preset.ok) throw new Error("fixtures invalid");
+    return render(datasets, spec.value as Spec, [preset.value as Preset]);
+  };
+  const result = load();
+
+  it("renders without warnings and deterministically", () => {
+    expect(result.warnings).toEqual([]);
+    expect(load().svg).toBe(result.svg);
+  });
+
+  it("matches the golden SVG", async () => {
+    await expect(result.svg).toMatchFileSnapshot("./__snapshots__/demo-bryophytes.svg");
+  });
+
+  it("draws a Bryophytes group of Sphagnum, Calliergon (merged) and Scorpidium, in that order, last", () => {
+    const columns = [...result.svg.matchAll(/id="panel-1-taxonCurves-([^"]+)" class="column"/g)].map((m) => m[1]);
+    expect(columns.slice(-3)).toEqual(["Sphagnum", "Calliergon", "Scorpidium_scorpioides"]);
+    expect(columns).toHaveLength(10);
+    expect(result.svg).toContain(">Bryophytes</text>");
+    expect(result.svg).not.toContain("giganteum");
+  });
+});
+
 describe("render — warnings", () => {
   it("reports a zone outside the y range and a missing dataset", () => {
     const { datasets, spec, presets } = demo();

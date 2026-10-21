@@ -3,6 +3,7 @@ import { selectVariables } from "../src/layout/select.js";
 import type { ResolvedSelection } from "../src/model/defaults.js";
 import type { Dataset } from "../src/model/types.js";
 
+// Ungrouped, so these tests see the panel orders alone (group order comes first; see below).
 // Depths 10, 20, 30 cm. Hand-checked keys per variable:
 //   id       values         max  weighted average depth          deepest non-zero
 //   Pinus    10, 0, 0       10   10                              10
@@ -17,12 +18,12 @@ const ds: Dataset = {
   depthUnit: "cm",
   samples: [10, 20, 30].map((depth) => ({ id: String(depth), depth })),
   variables: [
-    { id: "Pinus", name: "*Pinus*", kind: "percent", group: "trees" },
-    { id: "Zeta", name: "zeta", kind: "percent", group: "herbs" },
-    { id: "Corylus", name: "*Corylus*", kind: "percent", group: "shrubs" },
-    { id: "Delta", name: "Delta", kind: "percent", group: "herbs" },
-    { id: "Empty", name: "Empty", kind: "percent", group: "herbs" },
-    { id: "Beta", name: "*Beta*", kind: "percent", group: "trees" },
+    { id: "Pinus", name: "*Pinus*", kind: "percent" },
+    { id: "Zeta", name: "zeta", kind: "percent" },
+    { id: "Corylus", name: "*Corylus*", kind: "percent" },
+    { id: "Delta", name: "Delta", kind: "percent" },
+    { id: "Empty", name: "Empty", kind: "percent" },
+    { id: "Beta", name: "*Beta*", kind: "percent" },
   ],
   groups: [],
   values: [
@@ -32,9 +33,9 @@ const ds: Dataset = {
   ],
 };
 
-function ids(sel: Partial<ResolvedSelection>, d: Dataset = ds): { ids: string[]; warnings: string[] } {
+function ids(sel: Partial<ResolvedSelection>, d: Dataset = ds, explicit: string[] = []): { ids: string[]; warnings: string[] } {
   const warnings: string[] = [];
-  const idx = selectVariables(d, { minMax: 0, order: "data", ...sel }, (m) => warnings.push(m));
+  const idx = selectVariables(d, { minMax: 0, order: "data", ...sel }, (m) => warnings.push(m), explicit);
   return { ids: idx.map((j) => d.variables[j]!.id), warnings };
 }
 
@@ -44,8 +45,9 @@ describe("selection", () => {
   });
 
   it("selects by explicit ids and by group (union), warning about unknown ids", () => {
-    const r = ids({ ids: ["Corylus", "Nope"], groups: ["trees"] });
-    expect(r.ids).toEqual(["Pinus", "Corylus", "Beta"]);
+    const grouped: Dataset = { ...ds, variables: ds.variables.map((v) => (v.id === "Pinus" || v.id === "Beta" ? { ...v, group: "trees" } : v)) };
+    const r = ids({ ids: ["Corylus", "Nope"], groups: ["trees"] }, grouped);
+    expect(r.ids).toEqual(["Pinus", "Beta", "Corylus"]); // grouped first, ungrouped last
     expect(r.warnings).toEqual(['Variable "Nope" not found in dataset "d".']);
   });
 
@@ -94,5 +96,36 @@ describe("ordering", () => {
     for (const order of ["weightedAverageDepth", "firstOccurrence", "alphabetical"] as const) {
       expect(ids({ order }, shuffled).ids).toEqual(ids({ order }).ids);
     }
+  });
+});
+
+describe("group order and the dataset's explicit order", () => {
+  // Groups: herbs (order 1) before trees (order 2); Corylus ungrouped.
+  const grouped: Dataset = {
+    ...ds,
+    groups: [
+      { id: "trees", name: "Trees", order: 2 },
+      { id: "herbs", name: "Herbs", order: 1 },
+    ],
+    variables: ds.variables.map((v) => {
+      const group = { Pinus: "trees", Beta: "trees", Zeta: "herbs", Delta: "herbs", Empty: "herbs" }[v.id];
+      return group ? { ...v, group } : v;
+    }),
+  };
+
+  it("group order decides columns across groups; ungrouped last; panel order within groups", () => {
+    expect(ids({}, grouped).ids).toEqual(["Zeta", "Delta", "Empty", "Pinus", "Beta", "Corylus"]);
+    expect(ids({ order: "alphabetical" }, grouped).ids).toEqual(["Delta", "Empty", "Zeta", "Beta", "Pinus", "Corylus"]);
+  });
+
+  it("explicit order applies within each group; unlisted (e.g. new) taxa follow in the panel order", () => {
+    // "Empty" listed first, then "Beta"; "Zeta"/"Delta"/"Pinus" are not listed.
+    expect(ids({}, grouped, ["Empty", "Beta"]).ids).toEqual(["Empty", "Zeta", "Delta", "Beta", "Pinus", "Corylus"]);
+    expect(ids({ order: "weightedAverageDepth" }, grouped, ["Empty", "Beta"]).ids).toEqual(["Empty", "Zeta", "Delta", "Beta", "Pinus", "Corylus"]);
+    expect(ids({ order: "alphabetical" }, grouped, ["Zeta"]).ids).toEqual(["Zeta", "Delta", "Empty", "Beta", "Pinus", "Corylus"]);
+  });
+
+  it("an explicit list never moves a taxon out of its group", () => {
+    expect(ids({}, grouped, ["Pinus", "Zeta"]).ids).toEqual(["Zeta", "Delta", "Empty", "Pinus", "Beta", "Corylus"]);
   });
 });

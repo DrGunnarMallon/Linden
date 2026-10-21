@@ -24,7 +24,21 @@ button.link { border: none; background: none; color: #888; padding: 0 4px; }
 h3 { font-size: 13px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; }
 h4 { font-size: 12px; margin: 8px 0 2px; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
 .dataset { margin-bottom: 12px; }
-.variable { display: block; padding: 1px 0; }
+.variable { display: block; padding: 1px 0; background: #fff; }
+.variable .name { cursor: pointer; border-radius: 3px; padding: 0 2px; }
+.variable .name.selected { background: #dbe8ff; }
+.variable .expander { padding: 0 2px; }
+.variable .sources { margin-left: 34px; }
+.dataset .actions { display: flex; gap: 6px; margin: 6px 0; }
+.group { border: 1px dashed transparent; border-radius: 4px; padding: 0 4px 4px; }
+.group.drop-target { border-color: #4a7bd0; background: #f3f7ff; }
+.group h4 { display: flex; align-items: center; gap: 4px; }
+.group h4 .name { flex: 1; }
+.group h4 input[type="color"] { width: 22px; height: 16px; padding: 0; border: none; background: none; }
+.group .empty { padding: 2px 0 2px 18px; }
+.handle { cursor: grab; color: #aaa; padding: 0 4px 0 0; user-select: none; touch-action: none; }
+.dragging { opacity: 0.4; }
+.drag-overlay { background: #fff; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); font-size: 13px; }
 
 .preview { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .preview .toolbar { display: flex; gap: 6px; align-items: center; padding: 4px 10px; border-bottom: 1px solid #ddd; background: #fafafa; }

@@ -21,7 +21,7 @@ Linden is a free, client-side web app (plus a headless TypeScript core) for publ
 - **Minimal, targeted patches.** Change only what the task needs, in the existing files. Do not restructure, rename or reformat code you weren't asked to touch — the maintainer wants to keep an overview of his own codebase. If a refactor seems worthwhile, propose it in a sentence and wait.
 - Spec first: if a task contradicts `SPEC.md`, stop and say so; if the spec needs to change, edit `SPEC.md` in the same change and point it out.
 - New module = register it in `core/src/registry.ts`, export it from `core/src/index.ts`, add tests.
-- Ask before adding a new runtime dependency. Current allowed deps: `d3-scale`, `d3-shape`, `zod` (core); `react`, `react-dom`, `zustand`, `jspdf`, `svg2pdf.js`, `xlsx` (app).
+- Ask before adding a new runtime dependency. Current allowed deps: `d3-scale`, `d3-shape`, `zod` (core); `react`, `react-dom`, `zustand`, `jspdf`, `svg2pdf.js`, `xlsx`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` (app).
 - Keep functions small and typed; no `any` in `core` public APIs.
 - After a change, summarise in 2–4 lines what changed and which files — no long recap.
 

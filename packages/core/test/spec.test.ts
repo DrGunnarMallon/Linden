@@ -56,16 +56,35 @@ describe("spec migration", () => {
     const v1 = { specVersion: 1, page: { width: 100 }, panels: [{ type: "yAxis" }] };
     const r = parseSpec(JSON.stringify(v1));
     expect(r).toEqual({ ok: true, value: { specVersion: SPEC_VERSION, page: { width: 100 }, panels: [{ type: "yAxis" }] } });
-    expect(SPEC_VERSION).toBe(2);
-    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 2 });
+    expect(SPEC_VERSION).toBe(3);
+    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 3 });
     expect(v1.specVersion).toBe(1); // input not mutated
   });
 
   it("leaves current, unknown and non-object input to validation", () => {
-    const v2 = { specVersion: 2, panels: [] };
-    expect(migrateSpec(v2)).toBe(v2);
+    const v3 = { specVersion: 3, panels: [] };
+    expect(migrateSpec(v3)).toBe(v3);
     expect(migrateSpec({ specVersion: 0, panels: [] })).toEqual({ specVersion: 0, panels: [] });
     expect(migrateSpec("x")).toBe("x");
+  });
+
+  it("migrates v2 → v3 and accepts the v3 grouping fields", () => {
+    const v2 = {
+      specVersion: 2,
+      groups: [{ id: "bryophytes", name: "Bryophytes" }],
+      datasets: [{ dataset: "d", assignments: { Sphagnum: "bryophytes" }, order: ["Sphagnum"], transforms: [{ type: "merge", id: "M", name: "M", from: ["a", "b"] }] }],
+      panels: [],
+    };
+    const r = parseSpec(v2);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value).toEqual({ ...v2, specVersion: 3 });
+    expect(migrateSpec(v2)).toEqual({ ...v2, specVersion: 3 });
+  });
+
+  it("rejects a merge without sources", () => {
+    const r = parseSpec({ specVersion: 3, panels: [], datasets: [{ dataset: "d", transforms: [{ type: "merge", id: "M", name: "M", from: [] }] }] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors[0]).toMatch(/^datasets\[0\]\.transforms\[0\]\.from: /);
   });
 
   it("accepts v2-only fields in a migrated v1 file (they are all optional)", () => {

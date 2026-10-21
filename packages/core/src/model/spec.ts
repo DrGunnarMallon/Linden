@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 2;
+export const SPEC_VERSION = 3;
 
 export const SumSchema = z.strictObject({
   includeGroups: z.array(z.string()).optional(),
@@ -47,13 +47,28 @@ export const PercentTransformSchema = z.strictObject({
   sum: z.string(),
 });
 
-export const TransformSpecSchema = z.discriminatedUnion("type", [PercentTransformSchema]);
+/** Sums several variables into one, per sample. Must come before "percent". */
+export const MergeTransformSchema = z.strictObject({
+  type: z.literal("merge"),
+  id: z.string().min(1),
+  name: z.string(),
+  from: z.array(z.string()).min(1),
+  /** Group of the merged variable; default = group of the first source. */
+  group: z.string().optional(),
+  keepSources: z.boolean().optional(),
+});
+
+export const TransformSpecSchema = z.discriminatedUnion("type", [PercentTransformSchema, MergeTransformSchema]);
 
 export const DatasetEntrySchema = z.strictObject({
   dataset: z.string(),
   transforms: z.array(TransformSpecSchema).optional(),
   sums: z.record(z.string(), SumSchema).optional(),
   outsideSum: OutsideSumSchema.optional(),
+  /** variable id → group id; overrides the dataset's group (applied before transforms). */
+  assignments: z.record(z.string(), z.string()).optional(),
+  /** Explicit column order within each group; unlisted variables follow in the panel's order. */
+  order: z.array(z.string()).optional(),
 });
 
 export const SelectionSchema = z.strictObject({
@@ -111,6 +126,15 @@ export const ZonesOverlaySchema = z.strictObject({
 
 export const OverlaySchema = z.discriminatedUnion("type", [ZonesOverlaySchema]);
 
+/** Spec-level group: defines a new group or renames / recolours / reorders an existing one. */
+export const SpecGroupSchema = z.strictObject({
+  id: z.string().min(1),
+  name: z.string().optional(),
+  colour: z.string().optional(),
+  /** Lower first; columns follow group order. */
+  order: z.number().optional(),
+});
+
 /** Taxon label band above the columns. */
 export const HeaderBandSchema = z.strictObject({
   /** Label angle in degrees from horizontal. */
@@ -136,6 +160,7 @@ export const SpecSchema = z.strictObject({
   preset: z.string().optional(),
   page: PageSchema.optional(),
   yAxis: YAxisSchema.optional(),
+  groups: z.array(SpecGroupSchema).optional(),
   datasets: z.array(DatasetEntrySchema).optional(),
   panels: z.array(PanelSchema),
   overlays: z.array(OverlaySchema).optional(),
@@ -175,6 +200,8 @@ export type YAxisSpec = z.infer<typeof YAxisSchema>;
 export type DatasetEntry = z.infer<typeof DatasetEntrySchema>;
 export type TransformSpec = z.infer<typeof TransformSpecSchema>;
 export type PercentTransformParams = z.infer<typeof PercentTransformSchema>;
+export type MergeTransformParams = z.infer<typeof MergeTransformSchema>;
+export type SpecGroup = z.infer<typeof SpecGroupSchema>;
 export type Selection = z.infer<typeof SelectionSchema>;
 export type TaxonCurvesStyle = z.infer<typeof TaxonCurvesStyleSchema>;
 export type XTicks = z.infer<typeof XTicksSchema>;

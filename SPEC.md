@@ -116,7 +116,7 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
 
 ```jsonc
 {
-  "specVersion": 2,
+  "specVersion": 3,
   "page": { "width": 180, "height": 240, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "headerBand": { "angle": 60, "minFontSize": 5, "height": null },   // taxon labels; height null = fit
   "yAxis": {
@@ -126,10 +126,18 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
     "range": null,                    // null = data extent
     "ticks": { "major": 50, "minor": 10 }
   },
+  "groups": [                                          // define / rename / recolour / order groups
+    { "id": "bryophytes", "name": "Bryophytes", "colour": "#6b7f2a", "order": 6 },
+    { "id": "herbs", "name": "Herbs (upland)" }
+  ],
   "datasets": [
     {
       "dataset": "pollen",
+      "assignments": { "Sphagnum": "bryophytes" },       // variable id → group id
+      "order": ["Sphagnum", "Calliergon"],                // explicit order within each group
       "transforms": [
+        { "type": "merge", "id": "Calliergon", "name": "*Calliergon*",
+          "from": ["Calliergon giganteum", "Calliergon cordifolium"], "group": "bryophytes" },
         { "type": "percent", "sum": "terrestrial" }
       ],
       "sums": {
@@ -164,16 +172,19 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
 ```
 
 Key rules:
+- **Groups.** The dataset's groups (e.g. a CSV group row) are only defaults. Effective groups = dataset groups, overlaid field by field by preset `groups`, then by spec `groups` (same id); groups that exist only in the preset or spec are added, even when empty (so users can create e.g. "Bryophytes"). `order` decides group order (lower first; groups without one come last, in spec order).
+- **Assignments** (`datasets[].assignments`: variable id → group id) override a variable's group. Groups and assignments are applied **before transforms**, so they also change sum membership (moving a taxon out of a sum group takes it out of the sum). An assignment to a group that does not exist, or of an unknown variable, is ignored with a warning; merged variables take their group from the merge transform.
+- **Column order**: group order first; within each group the dataset's explicit `order` list (variable ids), then every unlisted variable in the panel's `variables.order` — new taxa never disappear silently. Ungrouped variables come last. An unknown id in `order` is a warning.
 - **Variable selection** is declarative: by explicit ids, by groups (union of both; neither = all), by threshold (`minMax`: include if max ≥ x), plus ordering:
   - `data` — dataset column order;
   - `alphabetical` — display name without markup, case-insensitive;
   - `weightedAverageDepth` — abundance-weighted mean depth of non-zero values, shallowest first;
   - `firstOccurrence` — depth of the deepest (oldest) non-zero value, i.e. stratigraphic first appearance, deepest first;
   - explicit list of ids — listed variables first in list order, the rest after.
-  Variables with no non-zero value go last. All orders except `data` break ties by variable id (code-unit comparison, locale-independent).
+  Variables with no non-zero value go last. These panel orders apply within groups (see column order). All orders except `data` break ties by variable id (code-unit comparison, locale-independent).
 - **Per-variable overrides** are allowed (`overrides: { "Pinus": { "exaggeration": 0 } }`) but discouraged. Panel-level layout keys (`groupGap`) cannot be overridden; overrides for ids not in the dataset produce a warning.
 - **Group headers** (`headers`): a bracket with a label above exactly the columns whose group is in `spans.groups` or whose id is in `spans.ids`, across all panels. `label` defaults to the spanned group names joined by " & ". If the matching columns are not adjacent, one bracket is drawn per run (label on the first) and a warning is emitted; overlapping headers warn. `style.groupGap` (mm) adds space between adjacent columns of different groups.
-- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks` (all optional, so v1 → v2 only bumps the number).
+- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks`; v3 added top-level `groups`, `datasets[].assignments` / `order` and the `merge` transform (all optional, so each migration only bumps the number).
 - **Presets** provide defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named sums replace whole (a spec sum with the same name as a preset sum wins entirely); `outsideSum` comes from the dataset entry, else from the preset.
 - **Dataset entries** may carry `outsideSum: { "groups": [...], "basis": "sum" | "sumPlusGroup" }` (same shape as in presets).
 - **Zones overlay**: `{ "type": "zones", "manual": [{ "depth": 65, "label": "P1/P2" }] }` draws boundaries at given depths (M1). Zones from an analysis (`from`, `n`, `labels`) follow in M3.
@@ -182,8 +193,10 @@ Key rules:
 ## 5. Pipeline
 
 ```
-Importer → Dataset(s) → Transforms → Analyses → Layout → Panels → SVG → Exporter
+Importer → Dataset(s) → Groups & assignments → Transforms → Analyses → Layout → Panels → SVG → Exporter
 ```
+
+`prepareDatasets(datasets, spec, presets)` exposes the datasets after groups, assignments and transforms (what the panels see), e.g. for the app's variable list.
 
 All stages are pure functions of their inputs. Results are memoised by input hash so the UI stays fast.
 
@@ -249,6 +262,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 | `concentration` | via exotic marker spikes (Lycopodium/microspheres) or volume/mass |
 | `influx`        | concentration × accumulation rate (needs ages) |
 | `scaleMap`      | map ordinal classes to plotted widths (macrofossils, DAFOR) |
+| `merge`         | `{ id, name, from: [ids], group?, keepSources: false }` — sums the sources per sample into one variable placed where the first source was; null + number = number, all null = null, 0 stays 0. Sources of different kinds are refused (warning); different units warn. Must come before `percent` (a merge after a percent transform is skipped with a warning), so merged taxa are percentages of the same sum. A variable used by two merges is a warning. |
 | `log` / `sqrt`  | for analyses or display |
 
 `percent` rules: only `kind: "count"` variables take part (others pass through unchanged); converted variables become `kind: "percent"`, `unit: "%"`. Variables outside the sum are % of the sum unless their group is in `outsideSum` with basis `sumPlusGroup`. `null` stays `null`; a sample whose sum is 0, or has no assessed sum members, gives `null` for all converted variables plus a warning.

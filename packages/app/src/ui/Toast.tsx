@@ -37,7 +37,7 @@ export function Toaster() {
         <T.Root
           key={t.id}
           onOpenChange={(open) => !open && remove(t.id)}
-          className={cn("animate-slide-in flex w-80 items-start gap-2.5 rounded-lg border border-border bg-surface-2 p-3 shadow-overlay")}
+          className={cn("animate-slide-in flex w-80 items-start gap-2.5 rounded-lg border border-border bg-surface-raised p-3 shadow-overlay")}
         >
           <span className="mt-0.5">{icons[t.variant]}</span>
           <div className="min-w-0 flex-1">

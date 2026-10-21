@@ -35,7 +35,7 @@ export function Select({ value, onValueChange, options, label, className, disabl
         <S.Content
           position="popper"
           sideOffset={4}
-          className="animate-pop-in z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface-2 p-1 shadow-overlay"
+          className="animate-pop-in z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface-raised p-1 shadow-overlay"
         >
           <S.Viewport>
             {options.map((o) => (

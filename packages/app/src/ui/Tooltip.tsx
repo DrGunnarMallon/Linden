@@ -19,7 +19,7 @@ export function Tooltip(props: { content: ReactNode; shortcut?: string; side?: "
           side={props.side ?? "bottom"}
           sideOffset={6}
           collisionPadding={8}
-          className="animate-pop-in z-50 flex max-w-72 items-center gap-2 rounded-md border border-border bg-surface-2 px-2 py-1 text-xs text-fg shadow-overlay"
+          className="animate-pop-in z-50 flex max-w-72 items-center gap-2 rounded-md border border-border bg-surface-raised px-2 py-1 text-xs text-fg shadow-overlay"
         >
           {props.content}
           {props.shortcut && <Kbd>{props.shortcut}</Kbd>}

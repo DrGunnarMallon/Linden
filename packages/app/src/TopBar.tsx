@@ -71,7 +71,7 @@ function ProjectName() {
             requestAnimationFrame(() => (e.target as HTMLInputElement).blur());
           }
         }}
-        className="col-start-1 row-start-1 h-7 w-full max-w-80 min-w-16 rounded-md border border-transparent bg-transparent px-1.5 text-sm font-medium text-fg transition-colors duration-150 hover:border-border-strong focus-visible:border-focus focus-visible:bg-surface-2 focus-visible:outline-none"
+        className="col-start-1 row-start-1 h-7 w-full max-w-80 min-w-16 rounded-md border border-transparent bg-transparent px-1.5 text-sm font-medium text-fg transition-colors duration-150 hover:border-border-strong focus-visible:border-focus focus-visible:bg-surface-raised focus-visible:outline-none"
       />
     </span>
   );

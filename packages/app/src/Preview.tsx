@@ -28,7 +28,7 @@ function ZoomToolbar() {
     </Tooltip>
   );
   return (
-    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border border-border bg-surface-2 p-1 shadow-overlay">
+    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border border-border bg-surface-raised p-1 shadow-overlay">
       <IconButton label="Zoom out" shortcut={SHORTCUTS.zoomOut} icon={<Minus />} size="sm" tooltipSide="top" onClick={() => zoomBy(-1)} />
       <span className="w-12 text-center text-xs text-fg-secondary tabular-nums" aria-live="polite">
         {Math.round(scale * 100)}%

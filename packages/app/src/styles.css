@@ -6,30 +6,33 @@
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0a0b0d; /* app background, canvas */
-  --surface-1: #111214; /* bars, sidebars */
-  --surface-2: #17181b; /* cards, inputs, menus */
-  --surface-3: #202125; /* hover, pressed */
-  --border: #25272c;
-  --border-strong: #363940;
-  --text: #ececee;
-  --text-secondary: #a8abb2;
-  --text-muted: #8a8e96;
-  --accent: #24775f; /* primary button fill: white text 5.5:1 */
-  --accent-hover: #2a8a6e;
+  /* Dark grey; elevation = lighter surface (canvas < bg < panel < raised < hover), not shadows. */
+  --bg: #25262a; /* app background */
+  --surface-1: #25262a; /* bars, sidebars */
+  --surface-2: #2c2d32; /* panels, cards */
+  --surface-raised: #34363b; /* popovers, menus, tooltips, inputs, buttons */
+  --surface-3: #3b3d43; /* hover, pressed */
+  --border: #3a3c42;
+  --border-strong: #4a4d54;
+  --text: #ececef;
+  --text-secondary: #b9bcc3;
+  --text-muted: #a5a9b2; /* ≥ 4.5:1 up to the hover surface (the suggested #959aa3 is 3.8:1 there) */
+  --disabled-opacity: 0.6; /* disabled controls fade to ≈ #808389: ≥ 3:1 on bg, panel and raised */
+  --accent: #24775f; /* primary button fill: white text 5.4:1 */
+  --accent-hover: #1f6b55;
   --accent-text: #5fc7a5; /* accent as text/icon on dark surfaces */
   --accent-subtle: rgb(95 199 165 / 0.14); /* selection background */
   --on-accent: #ffffff;
   --danger: #c4363e;
-  --danger-text: #f0777c;
-  --danger-subtle: rgb(240 119 124 / 0.12);
+  --danger-text: #f7969a;
+  --danger-subtle: rgb(247 150 154 / 0.12);
   --warning-text: #e6b157;
   --warning-subtle: rgb(230 177 87 / 0.12);
   --focus: #5fc7a5;
-  --canvas: #0a0b0d;
-  --canvas-dot: #24262b;
-  --page-shadow: 0 0 0 1px rgb(255 255 255 / 0.05), 0 12px 40px rgb(0 0 0 / 0.55);
-  --overlay-shadow: 0 0 0 1px rgb(0 0 0 / 0.2), 0 8px 24px rgb(0 0 0 / 0.45);
+  --canvas: #1f2023;
+  --canvas-dot: #35373d;
+  --page-shadow: 0 0 0 1px rgb(0 0 0 / 0.45), 0 6px 24px rgb(0 0 0 / 0.3);
+  --overlay-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
 }
 
 [data-theme="light"] {
@@ -37,12 +40,14 @@
   --bg: #f1f1ef;
   --surface-1: #fafaf9;
   --surface-2: #ffffff;
+  --surface-raised: #ffffff;
   --surface-3: #ececea;
   --border: #e2e2df;
   --border-strong: #cfcfcb;
   --text: #17181a;
   --text-secondary: #4d5057;
   --text-muted: #63676e;
+  --disabled-opacity: 0.45;
   --accent: #1d735b;
   --accent-hover: #186450;
   --accent-text: #186450;
@@ -64,6 +69,7 @@
   --color-bg: var(--bg);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
+  --color-surface-raised: var(--surface-raised);
   --color-surface-3: var(--surface-3);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);

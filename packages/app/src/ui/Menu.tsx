@@ -8,10 +8,10 @@ export const MenuTrigger = M.Trigger;
 export const MenuSub = M.Sub;
 export const MenuRadioGroup = M.RadioGroup;
 
-const panel = "animate-pop-in z-50 min-w-48 rounded-lg border border-border bg-surface-2 p-1 shadow-overlay";
+const panel = "animate-pop-in z-50 min-w-48 rounded-lg border border-border bg-surface-raised p-1 shadow-overlay";
 const item =
   "relative flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-sm text-fg outline-none select-none " +
-  "data-[highlighted]:bg-surface-3 data-[disabled]:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-fg-secondary";
+  "data-[highlighted]:bg-surface-3 data-[disabled]:opacity-(--disabled-opacity) [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-fg-secondary";
 
 export function MenuContent({ className, align = "start", ...props }: ComponentProps<typeof M.Content>) {
   return (

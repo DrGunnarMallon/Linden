@@ -14,7 +14,7 @@ export function SpecEditor() {
         value={specText}
         onChange={(e) => setSpecText(e.target.value, { typing: true })}
         className={cn(
-          "min-h-0 flex-1 resize-none rounded-md border bg-surface-2 p-2.5 font-mono text-xs leading-relaxed text-fg [tab-size:2]",
+          "min-h-0 flex-1 resize-none rounded-md border bg-surface-raised p-2.5 font-mono text-xs leading-relaxed text-fg [tab-size:2]",
           "transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2",
           specErrors.length ? "border-danger-text focus-visible:ring-danger-text/30" : "border-border-strong focus-visible:border-focus focus-visible:ring-focus/30",
         )}

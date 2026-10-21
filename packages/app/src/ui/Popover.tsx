@@ -11,7 +11,7 @@ export function PopoverContent({ className, ...props }: ComponentProps<typeof P.
       <P.Content
         sideOffset={6}
         collisionPadding={8}
-        className={cn("animate-pop-in z-50 rounded-lg border border-border bg-surface-2 shadow-overlay focus-visible:outline-none", className)}
+        className={cn("animate-pop-in z-50 rounded-lg border border-border bg-surface-raised shadow-overlay focus-visible:outline-none", className)}
         {...props}
       />
     </P.Portal>

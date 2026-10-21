@@ -80,7 +80,7 @@ function SortableGroup(props: { node: GroupNode; locked: boolean; highlight: boo
       )}
       style={{ transform: CSS.Translate.toString(s.transform), transition: s.transition }}
     >
-      <div className={cn("group/row flex h-7 items-center gap-1.5 pr-1", node.members.length === 0 && "opacity-60")}>
+      <div className="group/row flex h-7 items-center gap-1.5 pr-1">
         {node.id !== undefined ? (
           <span ref={s.setActivatorNodeRef} className={handleClass} aria-label="Drag to reorder groups" {...s.attributes} {...s.listeners}>
             <GripVertical />
@@ -244,7 +244,7 @@ function DatasetBlock({ ds }: { ds: Dataset }) {
                 header={
                   <>
                     {g.id !== undefined && <ColourInput value={g.colour} disabled={locked} onCommit={(c) => store.recolourGroup(ds.id, g.id!, c)} />}
-                    <span className="min-w-0 flex-1 truncate text-2xs font-semibold tracking-wide text-fg-secondary uppercase">{g.name}</span>
+                    <span className={cn("min-w-0 flex-1 truncate text-2xs font-semibold tracking-wide uppercase", g.members.length ? "text-fg-secondary" : "text-fg-muted")}>{g.name}</span>
                     {g.id !== undefined && (
                       <span className="flex opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 focus-within:opacity-100">
                         <IconButton
@@ -349,7 +349,7 @@ function DatasetBlock({ ds }: { ds: Dataset }) {
           </SortableContext>
           <DragOverlay>
             {activeLabel !== undefined ? (
-              <div className="flex h-7 items-center gap-1.5 rounded-md border border-border-strong bg-surface-2 px-2 text-sm shadow-overlay">
+              <div className="flex h-7 items-center gap-1.5 rounded-md border border-border-strong bg-surface-raised px-2 text-sm shadow-overlay">
                 <GripVertical className="size-3.5 text-fg-muted" />
                 <TaxonName name={activeLabel} />
               </div>

@@ -18,8 +18,8 @@ export function Checkbox({ checked, onCheckedChange, className, ...props }: Chec
       checked={checked}
       onCheckedChange={(c) => onCheckedChange(c === true)}
       className={cn(
-        "inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-border-strong bg-surface-2 transition-colors duration-150",
-        "hover:border-fg-muted data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:text-on-accent disabled:opacity-45",
+        "inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-border-strong bg-surface-raised transition-colors duration-150",
+        "hover:border-fg-muted data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:text-on-accent disabled:opacity-(--disabled-opacity)",
         className,
       )}
       {...props}

@@ -3,7 +3,7 @@
 
 import { SPEC_VERSION, importers, parseProject, parseSpec, render, resolveSpec, serializeProject, type Dataset, type Preset, type Spec } from "@linden/core";
 import { create } from "zustand";
-import { demo, loadBundledPresets } from "./bundled";
+import { examples, loadBundledPresets } from "./bundled";
 import { download } from "./download";
 import { exporters } from "./export";
 import { fontSubstitutionWarning } from "./export/fonts";
@@ -32,9 +32,17 @@ const HISTORY_LIMIT = 200;
 const TYPING_MERGE_MS = 1000;
 
 const EMPTY_SPEC: Spec = { specVersion: SPEC_VERSION, panels: [] };
+const DEFAULT_NAME = "Untitled diagram";
+
+/** "My core: 2024" → "my-core-2024"; used for download file names. */
+export function fileBase(projectName: string): string {
+  const slug = projectName.trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
+  return slug || "diagram";
+}
 
 interface State {
   ready: boolean;
+  projectName: string;
   datasets: Dataset[];
   spec: Spec;
   specText: string;
@@ -52,13 +60,16 @@ interface State {
   lastTypedAt: number;
 
   init(): Promise<void>;
-  loadDemo(): Promise<void>;
+  /** Replaces the project with a bundled example (by dataset name, see bundled.ts). */
+  loadExample(name: string): Promise<void>;
+  setProjectName(name: string): void;
   setSpecText(text: string, opts?: { typing?: boolean }): void;
   undo(): void;
   redo(): void;
   setPreset(name: string | undefined): void;
   setVariableVisible(datasetId: string, varId: string, visible: boolean): void;
-  importFile(file: File): Promise<void>;
+  /** Resolves to the number of datasets imported (0 = nothing usable; see importWarnings). */
+  importFile(file: File): Promise<number>;
   removeDataset(id: string): void;
   moveVariable(datasetId: string, varId: string, toGroup: string, toIndex: number): void;
   reorderGroups(datasetId: string, groupIds: string[]): void;
@@ -70,9 +81,10 @@ interface State {
   unmergeVariable(datasetId: string, mergedId: string): void;
   setPageSize(size: { width?: number; height?: number }): void;
   applyPagePreset(presetId: string): void;
-  exportDiagram(type: "svg" | "pdf" | "png", png?: PngOptions): Promise<void>;
+  /** Resolves to the downloaded file name, or undefined if nothing was exported (see exportWarnings). */
+  exportDiagram(type: "svg" | "pdf" | "png", png?: PngOptions): Promise<string | undefined>;
   saveProjectBundle(): void;
-  openProjectBundle(file: File): Promise<void>;
+  openProjectBundle(file: File): Promise<boolean>;
 }
 
 const bundled = loadBundledPresets();
@@ -117,13 +129,14 @@ export const useStore = create<State>()((set, get) => {
   const rawDataset = (id: string) => get().datasets.find((d) => d.id === id);
 
   const setProject = (p: Project) => {
-    rerender({ datasets: p.datasets, spec: p.spec, specText: p.specText, importWarnings: p.importWarnings, past: [], future: [] });
+    rerender({ projectName: p.name ?? DEFAULT_NAME, datasets: p.datasets, spec: p.spec, specText: p.specText, importWarnings: p.importWarnings, past: [], future: [] });
     const parsed = parseSpec(p.specText);
     set({ specErrors: parsed.ok ? [] : parsed.errors });
   };
 
   return {
     ready: false,
+    projectName: DEFAULT_NAME,
     datasets: [],
     spec: EMPTY_SPEC,
     specText: prettySpec(EMPTY_SPEC),
@@ -150,21 +163,28 @@ export const useStore = create<State>()((set, get) => {
       const spec = saved ? parseSpec(saved.spec) : undefined;
       // A project saved with an older spec version is migrated; show the migrated spec in the editor.
       const migrated = saved && spec?.ok && saved.spec.specVersion !== SPEC_VERSION;
+      // First launch (or an unreadable save) starts empty: the app shows its welcome screen.
       if (saved && spec?.ok) setProject({ ...saved, spec: spec.value, specText: migrated ? prettySpec(spec.value) : saved.specText });
-      else await get().loadDemo();
       set({ ready: true });
       startAutosave();
     },
 
-    async loadDemo() {
-      const { datasets, warnings } = await importers.get("csv").import(demo.csv, { name: demo.name });
-      const parsed = parseSpec(demo.specText);
+    async loadExample(name) {
+      const example = examples.find((e) => e.name === name);
+      if (!example) return;
+      const { datasets, warnings } = await importers.get("csv").import(example.csv, { name: example.name });
+      const parsed = parseSpec(example.specText);
       setProject({
+        name: `${example.label} example`,
         datasets,
         spec: parsed.ok ? parsed.value : EMPTY_SPEC,
-        specText: demo.specText,
-        importWarnings: warnings.map((w) => `${demo.name}.csv: ${w}`),
+        specText: example.specText,
+        importWarnings: warnings.map((w) => `${example.name}.csv: ${w}`),
       });
+    },
+
+    setProjectName(name) {
+      set({ projectName: name.trim() || DEFAULT_NAME });
     },
 
     setSpecText(text, opts = {}) {
@@ -256,42 +276,48 @@ export const useStore = create<State>()((set, get) => {
     },
 
     async exportDiagram(type, png) {
-      const { svg, spec, presets } = get();
-      if (!svg || get().exporting) return;
+      const { svg, spec, presets, projectName } = get();
+      if (!svg || get().exporting) return undefined;
       const fontWarning = type === "svg" ? null : fontSubstitutionWarning(resolveSpec(spec, presets).spec.page.font.family);
       set({ exporting: true, exportWarnings: fontWarning ? [fontWarning] : [] });
       try {
         const out = await exporters.get(type).export(svg, png);
         const mime = { svg: "image/svg+xml", pdf: "application/pdf", png: "image/png" }[type];
-        download(type === "png" ? `diagram-${png?.dpi ?? 600}dpi.png` : `diagram.${type}`, out, mime);
+        const filename = type === "png" ? `${fileBase(projectName)}-${png?.dpi ?? 600}dpi.png` : `${fileBase(projectName)}.${type}`;
+        download(filename, out, mime);
+        return filename;
       } catch (e) {
         set({ exportWarnings: [...get().exportWarnings, `${type.toUpperCase()} export failed: ${(e as Error).message}`] });
+        return undefined;
       } finally {
         set({ exporting: false });
       }
     },
 
     saveProjectBundle() {
-      const { spec, datasets } = get();
-      download("diagram.linden.json", serializeProject({ spec, datasets }), "application/json");
+      const { spec, datasets, projectName } = get();
+      download(`${fileBase(projectName)}.linden.json`, serializeProject({ spec, datasets }), "application/json");
     },
 
     async openProjectBundle(file) {
       const parsed = parseProject(await file.text());
       if (!parsed.ok) {
         set({ importWarnings: parsed.errors.map((e) => `${file.name}: ${e}`) });
-        return;
+        return false;
       }
-      setProject({ datasets: parsed.value.datasets, spec: parsed.value.spec, specText: prettySpec(parsed.value.spec), importWarnings: [] });
+      setProject({ name: file.name.replace(/(\.linden)?\.json$/i, ""), datasets: parsed.value.datasets, spec: parsed.value.spec, specText: prettySpec(parsed.value.spec), importWarnings: [] });
+      return true;
     },
 
     async importFile(file) {
       const importer = importers.types().map((t) => importers.get(t)).find((imp) => imp.accepts({ name: file.name, mime: file.type }));
       if (!importer) {
         set({ importWarnings: [`${file.name}: no importer accepts this file type.`] });
-        return;
+        return 0;
       }
       const name = file.name.replace(/\.[^.]+$/, "");
+      // The first import into an empty project names it after the file.
+      if (get().datasets.length === 0 && get().projectName === DEFAULT_NAME) set({ projectName: name });
       const { datasets: imported, warnings } = await importer.import(await file.arrayBuffer(), { name });
       const ids = new Set(imported.map((d) => d.id));
       rerender({
@@ -300,6 +326,7 @@ export const useStore = create<State>()((set, get) => {
       });
       const spec = imported.reduce((s, d) => ensureDatasetInSpec(s, d), get().spec);
       if (!sameSpec(spec, get().spec)) commitSpec(spec);
+      return imported.length;
     },
 
     removeDataset(id) {
@@ -318,17 +345,17 @@ function startAutosave(): void {
   autosaveStarted = true;
   let timer: ReturnType<typeof setTimeout> | undefined;
   useStore.subscribe((s, prev) => {
-    if (s.datasets === prev.datasets && s.spec === prev.spec && s.specText === prev.specText && s.importWarnings === prev.importWarnings) return;
+    if (s.datasets === prev.datasets && s.spec === prev.spec && s.specText === prev.specText && s.importWarnings === prev.importWarnings && s.projectName === prev.projectName) return;
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const { datasets, spec, specText, importWarnings } = useStore.getState();
-      saveProject({ datasets, spec, specText, importWarnings }).then(
+      const { projectName: name, datasets, spec, specText, importWarnings } = useStore.getState();
+      saveProject({ name, datasets, spec, specText, importWarnings }).then(
         () => useStore.setState({ storageWarnings: [] }),
         (e: unknown) => useStore.setState({ storageWarnings: [`Could not save the project in browser storage: ${(e as Error).message}`] }),
       );
     }, 500);
   });
-  // Save once right away so a first-launch demo is persisted too.
-  const { datasets, spec, specText, importWarnings } = useStore.getState();
-  void saveProject({ datasets, spec, specText, importWarnings }).catch(() => undefined);
+  // Save once right away so a migrated project is persisted too.
+  const { projectName: name, datasets, spec, specText, importWarnings } = useStore.getState();
+  void saveProject({ name, datasets, spec, specText, importWarnings }).catch(() => undefined);
 }

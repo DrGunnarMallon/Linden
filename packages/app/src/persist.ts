@@ -3,6 +3,8 @@
 import type { Dataset, Spec } from "@linden/core";
 
 export interface Project {
+  /** Project name shown in the top bar and used for download file names. */
+  name?: string;
   datasets: Dataset[];
   /** Last valid spec (what is rendered). */
   spec: Spec;

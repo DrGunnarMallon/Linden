@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="data:," />
     <title>Linden</title>
+    <!-- Apply the stored theme before first paint (no flash); see src/theme.ts. -->
+    <script>
+      try {
+        var t = localStorage.getItem("linden.theme");
+        var dark = t === "dark" || (t !== "light" && !matchMedia("(prefers-color-scheme: light)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -13,9 +13,12 @@ import {
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Dataset, Variable } from "@linden/core";
+import { ChevronRight, FolderPlus, GripVertical, Merge, Pencil, Trash, Upload, X } from "lucide-react";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { importData } from "./actions";
 import { variableTree, variableVisibility, type GroupNode } from "./specEdit";
 import { useStore } from "./store";
+import { Badge, Button, Checkbox, cn, CollapsibleSection, IconButton, Tooltip } from "./ui";
 
 /** "*Alnus*-type" → <i>Alnus</i>-type */
 function TaxonName({ name }: { name: string }) {
@@ -41,12 +44,28 @@ function ColourInput({ value, onCommit, disabled }: { value: string | undefined;
     return () => el.removeEventListener("change", onChange);
   }, []);
   const hex = value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#808080";
-  return <input ref={ref} key={hex} type="color" defaultValue={hex} disabled={disabled} title="Group colour" />;
+  return (
+    <Tooltip content="Group colour">
+      <input
+        ref={ref}
+        key={hex}
+        type="color"
+        defaultValue={hex}
+        disabled={disabled}
+        aria-label="Group colour"
+        className="size-3.5 shrink-0 cursor-pointer appearance-none overflow-hidden rounded-[3px] border border-border-strong p-0 disabled:cursor-default [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
+      />
+    </Tooltip>
+  );
 }
 
 // Drag ids: "g:<group id>" for groups, "v:<variable id>" for variables.
 const gid = (id: string | undefined) => `g:${id ?? ""}`;
 const vid = (id: string) => `v:${id}`;
+
+const handleClass =
+  "flex w-4 shrink-0 cursor-grab touch-none items-center justify-center rounded text-fg-muted opacity-0 transition-opacity duration-150 select-none " +
+  "group-hover/row:opacity-100 focus-visible:opacity-100 active:cursor-grabbing [&_svg]:size-3.5";
 
 function SortableGroup(props: { node: GroupNode; locked: boolean; highlight: boolean; header: ReactNode; children: ReactNode }) {
   const { node, locked } = props;
@@ -54,35 +73,44 @@ function SortableGroup(props: { node: GroupNode; locked: boolean; highlight: boo
   return (
     <div
       ref={s.setNodeRef}
-      className={`group${node.members.length === 0 ? " empty-group" : ""}${props.highlight ? " drop-target" : ""}${s.isDragging ? " dragging" : ""}`}
+      className={cn(
+        "mb-1 rounded-md border border-dashed border-transparent pb-1 transition-colors duration-150",
+        props.highlight && "border-accent-text bg-accent-subtle",
+        s.isDragging && "opacity-40",
+      )}
       style={{ transform: CSS.Translate.toString(s.transform), transition: s.transition }}
     >
-      <h4>
-        {node.id !== undefined && (
-          <span ref={s.setActivatorNodeRef} className="handle" title="Drag to reorder groups" {...s.attributes} {...s.listeners}>
-            ⠿
+      <div className={cn("group/row flex h-7 items-center gap-1.5 pr-1", node.members.length === 0 && "opacity-60")}>
+        {node.id !== undefined ? (
+          <span ref={s.setActivatorNodeRef} className={handleClass} aria-label="Drag to reorder groups" {...s.attributes} {...s.listeners}>
+            <GripVertical />
           </span>
+        ) : (
+          <span className="w-4 shrink-0" />
         )}
         {props.header}
-      </h4>
+      </div>
       {props.children}
-      {node.members.length === 0 && <div className="muted empty">Drop taxa here</div>}
+      {node.members.length === 0 && <div className="py-1 pl-10 text-xs text-fg-muted italic">Drop taxa here</div>}
     </div>
   );
 }
 
-function SortableVariable(props: { v: Variable; locked: boolean; children: ReactNode }) {
+function SortableVariable(props: { v: Variable; locked: boolean; children: ReactNode; below?: ReactNode }) {
   const s = useSortable({ id: vid(props.v.id), disabled: props.locked });
   return (
     <div
       ref={s.setNodeRef}
-      className={`variable${s.isDragging ? " dragging" : ""}`}
+      className={cn(s.isDragging && "opacity-40")}
       style={{ transform: CSS.Translate.toString(s.transform), transition: s.transition }}
     >
-      <span ref={s.setActivatorNodeRef} className="handle" title="Drag to reorder or move to another group" {...s.attributes} {...s.listeners}>
-        ⠿
-      </span>
-      {props.children}
+      <div className="group/row flex h-7 items-center gap-1.5 rounded-md pr-1 transition-colors duration-150 hover:bg-surface-3">
+        <span ref={s.setActivatorNodeRef} className={handleClass} aria-label="Drag to reorder or move to another group" {...s.attributes} {...s.listeners}>
+          <GripVertical />
+        </span>
+        {props.children}
+      </div>
+      {props.below}
     </div>
   );
 }
@@ -151,157 +179,208 @@ function DatasetBlock({ ds }: { ds: Dataset }) {
     : tree.groups.find((g) => gid(g.id) === active)?.name;
 
   return (
-    <section className="dataset">
-      <h3>
-        {ds.name}
-        <button
-          className="link"
-          title="Remove this dataset and its panels"
-          onClick={() => {
-            if (confirm(`Remove dataset "${ds.name}" and its panels?`)) store.removeDataset(ds.id);
-          }}
-        >
-          ×
-        </button>
-      </h3>
-      <div className="muted">
-        {ds.samples.length} samples · {ds.variables.length} variables · depth in {ds.depthUnit}
-      </div>
-      <div className="actions">
-        <button
-          disabled={locked}
-          onClick={() => {
-            const name = prompt("Name of the new group:");
-            if (name?.trim()) store.createGroup(ds.id, name.trim());
-          }}
-        >
-          New group
-        </button>
-        <button
-          disabled={locked || sel.length < 2}
-          title={sel.length < 2 ? "Select two or more taxa (Ctrl/Cmd-click the names)" : undefined}
-          onClick={() => {
-            const first = tree.prepared.variables.find((v) => v.id === sel[0]);
-            const name = prompt(`Merge ${sel.length} taxa into (name; *italic* allowed):`, first?.name ?? "");
-            if (name?.trim()) {
-              store.mergeVariables(ds.id, sel, name.trim());
-              setSelected([]);
-            }
-          }}
-        >
-          Merge into…
-        </button>
-      </div>
-
-      <DndContext
-        sensors={sensors}
-        collisionDetection={collisions}
-        onDragStart={(e) => setActive(String(e.active.id))}
-        onDragOver={(e) => setOverGroup(e.over && String(e.active.id).startsWith("v:") ? target(String(e.over.id)).group?.id : undefined)}
-        onDragEnd={onDragEnd}
-        onDragCancel={() => {
-          setActive(null);
-          setOverGroup(undefined);
-        }}
-      >
-        <SortableContext items={tree.groups.map((g) => gid(g.id))} strategy={verticalListSortingStrategy}>
-          {tree.groups.map((g) => (
-            <SortableGroup
-              key={gid(g.id)}
-              node={g}
-              locked={locked}
-              highlight={overGroup !== undefined && overGroup === g.id && groupOf(active?.slice(2) ?? "")?.id !== g.id}
-              header={
-                <>
-                  <span className="name">{g.name}</span>
-                  {g.id !== undefined && (
-                    <>
-                      <button
-                        className="link"
-                        disabled={locked}
-                        onClick={() => {
-                          const name = prompt("Rename group:", g.name);
-                          if (name?.trim() && name.trim() !== g.name) store.renameGroup(ds.id, g.id!, name.trim());
-                        }}
-                      >
-                        rename
-                      </button>
-                      <ColourInput value={g.colour} disabled={locked} onCommit={(c) => store.recolourGroup(ds.id, g.id!, c)} />
-                      {g.members.length === 0 && (
-                        <button className="link" disabled={locked} title="Empty groups are not drawn in the diagram" onClick={() => store.deleteGroup(ds.id, g.id!)}>
-                          delete
-                        </button>
-                      )}
-                    </>
-                  )}
-                </>
+    <CollapsibleSection
+      title={ds.name}
+      actions={
+        <>
+          <IconButton
+            label="New group"
+            icon={<FolderPlus />}
+            size="sm"
+            disabled={locked}
+            onClick={() => {
+              const name = prompt("Name of the new group:");
+              if (name?.trim()) store.createGroup(ds.id, name.trim());
+            }}
+          />
+          <IconButton
+            label={sel.length < 2 ? "Merge taxa (select two or more: Ctrl/Cmd-click the names)" : `Merge ${sel.length} taxa into…`}
+            icon={<Merge />}
+            size="sm"
+            disabled={locked || sel.length < 2}
+            onClick={() => {
+              const first = tree.prepared.variables.find((v) => v.id === sel[0]);
+              const name = prompt(`Merge ${sel.length} taxa into (name; *italic* allowed):`, first?.name ?? "");
+              if (name?.trim()) {
+                store.mergeVariables(ds.id, sel, name.trim());
+                setSelected([]);
               }
-            >
-              <SortableContext items={g.members.map((v) => vid(v.id))} strategy={verticalListSortingStrategy}>
-                {g.members.map((v) => {
-                  const vis = visibility.get(v.id);
-                  const disabled = locked || (vis?.visible === true && !vis.canHide);
-                  const sources = tree.merges.get(v.id);
-                  const open = expanded.has(v.id);
-                  return (
-                    <SortableVariable key={v.id} v={v} locked={locked}>
-                      <input
-                        type="checkbox"
-                        checked={vis?.visible ?? false}
-                        disabled={disabled}
-                        title={locked ? "Fix the spec errors first" : disabled ? "A panel needs at least one variable" : "Show in the diagram"}
-                        onChange={(e) => store.setVariableVisible(ds.id, v.id, e.target.checked)}
-                      />
-                      {sources && (
-                        <button
-                          className="link expander"
-                          title={open ? "Hide sources" : "Show merged sources"}
-                          onClick={() => setExpanded(new Set(open ? [...expanded].filter((x) => x !== v.id) : [...expanded, v.id]))}
-                        >
-                          {open ? "▾" : "▸"}
-                        </button>
-                      )}
-                      <span
-                        className={`name${sel.includes(v.id) ? " selected" : ""}`}
-                        title={`${v.id} · ${v.kind} — click to select, Ctrl/Cmd-click to add to the selection`}
-                        onClick={(e) => toggleSelect(v.id, e.ctrlKey || e.metaKey || e.shiftKey)}
-                      >
-                        <TaxonName name={v.name} />
+            }}
+          />
+          <IconButton
+            label="Remove dataset and its panels"
+            icon={<X />}
+            size="sm"
+            onClick={() => {
+              if (confirm(`Remove dataset "${ds.name}" and its panels?`)) store.removeDataset(ds.id);
+            }}
+          />
+        </>
+      }
+    >
+      <div className="px-2 pb-3">
+        <p className="mb-2 px-1 text-2xs text-fg-muted tabular-nums">
+          {ds.samples.length} samples · {ds.variables.length} variables · depth in {ds.depthUnit}
+        </p>
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={collisions}
+          onDragStart={(e) => setActive(String(e.active.id))}
+          onDragOver={(e) => setOverGroup(e.over && String(e.active.id).startsWith("v:") ? target(String(e.over.id)).group?.id : undefined)}
+          onDragEnd={onDragEnd}
+          onDragCancel={() => {
+            setActive(null);
+            setOverGroup(undefined);
+          }}
+        >
+          <SortableContext items={tree.groups.map((g) => gid(g.id))} strategy={verticalListSortingStrategy}>
+            {tree.groups.map((g) => (
+              <SortableGroup
+                key={gid(g.id)}
+                node={g}
+                locked={locked}
+                highlight={overGroup !== undefined && overGroup === g.id && groupOf(active?.slice(2) ?? "")?.id !== g.id}
+                header={
+                  <>
+                    {g.id !== undefined && <ColourInput value={g.colour} disabled={locked} onCommit={(c) => store.recolourGroup(ds.id, g.id!, c)} />}
+                    <span className="min-w-0 flex-1 truncate text-2xs font-semibold tracking-wide text-fg-secondary uppercase">{g.name}</span>
+                    {g.id !== undefined && (
+                      <span className="flex opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 focus-within:opacity-100">
+                        <IconButton
+                          label="Rename group"
+                          icon={<Pencil />}
+                          size="sm"
+                          className="size-6 [&_svg]:size-3.5"
+                          disabled={locked}
+                          onClick={() => {
+                            const name = prompt("Rename group:", g.name);
+                            if (name?.trim() && name.trim() !== g.name) store.renameGroup(ds.id, g.id!, name.trim());
+                          }}
+                        />
+                        {g.members.length === 0 && (
+                          <IconButton
+                            label="Delete empty group (empty groups are not drawn)"
+                            icon={<Trash />}
+                            size="sm"
+                            className="size-6 [&_svg]:size-3.5"
+                            disabled={locked}
+                            onClick={() => store.deleteGroup(ds.id, g.id!)}
+                          />
+                        )}
                       </span>
-                      {sources && <span className="muted"> merged</span>}
-                      {sources && open && (
-                        <div className="sources">
-                          {sources.map((s) => (
-                            <div key={s.id} className="muted">
-                              <TaxonName name={s.name} />
+                    )}
+                    <Badge>{g.members.length}</Badge>
+                  </>
+                }
+              >
+                <SortableContext items={g.members.map((v) => vid(v.id))} strategy={verticalListSortingStrategy}>
+                  {g.members.map((v) => {
+                    const vis = visibility.get(v.id);
+                    const disabled = locked || (vis?.visible === true && !vis.canHide);
+                    const sources = tree.merges.get(v.id);
+                    const open = expanded.has(v.id);
+                    return (
+                      <SortableVariable
+                        key={v.id}
+                        v={v}
+                        locked={locked}
+                        below={
+                          sources &&
+                          open && (
+                            <div className="mb-1 ml-[46px] border-l border-border pl-2.5">
+                              {sources.map((s) => (
+                                <div key={s.id} className="py-0.5 text-xs text-fg-secondary">
+                                  <TaxonName name={s.name} />
+                                </div>
+                              ))}
+                              <Button variant="ghost" size="sm" className="-ml-2.5 h-6" disabled={locked} onClick={() => store.unmergeVariable(ds.id, v.id)}>
+                                Unmerge
+                              </Button>
                             </div>
-                          ))}
-                          <button className="link" disabled={locked} onClick={() => store.unmergeVariable(ds.id, v.id)}>
-                            unmerge
+                          )
+                        }
+                      >
+                        <Checkbox
+                          checked={vis?.visible ?? false}
+                          disabled={disabled}
+                          aria-label={`Show ${v.name.replace(/\*/g, "")} in the diagram`}
+                          title={locked ? "Fix the spec errors first" : disabled ? "A panel needs at least one variable" : "Show in the diagram"}
+                          onCheckedChange={(c) => store.setVariableVisible(ds.id, v.id, c)}
+                        />
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={sel.includes(v.id)}
+                          className={cn(
+                            "min-w-0 flex-1 cursor-pointer truncate rounded px-1 text-sm transition-colors duration-150",
+                            sel.includes(v.id) ? "bg-accent-subtle text-accent-text" : "text-fg",
+                          )}
+                          title={`${v.id} · ${v.kind} — click to select, Ctrl/Cmd-click to add to the selection`}
+                          onClick={(e) => toggleSelect(v.id, e.ctrlKey || e.metaKey || e.shiftKey)}
+                          onKeyDown={(e) => {
+                            if (e.key !== "Enter" && e.key !== " ") return;
+                            e.preventDefault();
+                            toggleSelect(v.id, e.ctrlKey || e.metaKey || e.shiftKey);
+                          }}
+                        >
+                          <TaxonName name={v.name} />
+                        </span>
+                        {sources && (
+                          <button
+                            type="button"
+                            className="flex items-center gap-0.5 rounded"
+                            aria-expanded={open}
+                            title={open ? "Hide merged sources" : "Show merged sources"}
+                            onClick={() => setExpanded(new Set(open ? [...expanded].filter((x) => x !== v.id) : [...expanded, v.id]))}
+                          >
+                            <Badge variant="accent">
+                              merged
+                              <ChevronRight className={cn("transition-transform duration-150", open && "rotate-90")} />
+                            </Badge>
                           </button>
-                        </div>
-                      )}
-                    </SortableVariable>
-                  );
-                })}
-              </SortableContext>
-            </SortableGroup>
-          ))}
-        </SortableContext>
-        <DragOverlay>{activeLabel !== undefined ? <div className="drag-overlay"><TaxonName name={activeLabel} /></div> : null}</DragOverlay>
-      </DndContext>
-    </section>
+                        )}
+                      </SortableVariable>
+                    );
+                  })}
+                </SortableContext>
+              </SortableGroup>
+            ))}
+          </SortableContext>
+          <DragOverlay>
+            {activeLabel !== undefined ? (
+              <div className="flex h-7 items-center gap-1.5 rounded-md border border-border-strong bg-surface-2 px-2 text-sm shadow-overlay">
+                <GripVertical className="size-3.5 text-fg-muted" />
+                <TaxonName name={activeLabel} />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+    </CollapsibleSection>
   );
 }
 
 export function VariableList() {
   const datasets = useStore((s) => s.datasets);
-  if (datasets.length === 0) return <p className="muted">No data. Use “Import CSV…” above.</p>;
   return (
-    <>
-      {datasets.map((ds) => (
-        <DatasetBlock key={ds.id} ds={ds} />
-      ))}
-    </>
+    <div className="flex h-full flex-col">
+      <div className="flex h-10 shrink-0 items-center justify-between border-b border-border pr-2 pl-3">
+        <h2 className="text-xs font-semibold">Data</h2>
+        <IconButton label="Import CSV" icon={<Upload />} size="sm" onClick={() => void importData()} />
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto">
+        {datasets.length === 0 ? (
+          <div className="p-4 text-xs text-fg-muted">
+            <p>No data yet.</p>
+            <Button variant="secondary" size="sm" className="mt-3" onClick={() => void importData()}>
+              <Upload /> Import CSV
+            </Button>
+          </div>
+        ) : (
+          datasets.map((ds) => <DatasetBlock key={ds.id} ds={ds} />)
+        )}
+      </div>
+    </div>
   );
 }

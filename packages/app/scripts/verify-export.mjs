@@ -62,7 +62,9 @@ try {
   const page = await context.newPage();
   page.on("dialog", (d) => void d.accept());
   await page.goto(`http://localhost:${PORT}/`);
-  await page.waitForSelector(".page svg");
+  // First launch shows the welcome screen; load the pollen example from there.
+  await page.getByRole("button", { name: /^Pollen/ }).click();
+  await page.waitForSelector(".figure-page svg");
 
   const save = async (click, name) => {
     const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 120_000 }), click()]);
@@ -70,12 +72,30 @@ try {
     await dl.saveAs(path.pathname);
     return readFileSync(path);
   };
-  const exportButton = (label) => page.locator(".top .export button", { hasText: new RegExp(`^${label}$`) });
-  const pageSelect = page.locator(".preview .toolbar select");
+  /** Opens the top bar's Export menu and picks an item (by its name, e.g. "SVG" or "300 dpi"). */
+  const exportMenu = async (item, role = "menuitem") => {
+    await page.getByRole("button", { name: /Export/ }).click();
+    await page.getByRole(role, { name: new RegExp(`^${item}`) }).click();
+    await page.keyboard.press("Escape").catch(() => undefined);
+  };
+  const exportButton = (label) => ({
+    click: async () => {
+      await page.getByRole("button", { name: /Export/ }).click();
+      await page.getByRole("menuitem", { name: new RegExp(`^${label}\\s+(vector|\\d)`) }).click();
+    },
+  });
+  const pageLabels = { double: "Double column (180 mm)", single: "Single column (85 mm)", a4Landscape: "A4 landscape (297 × 210 mm)" };
+  const pageSelect = {
+    selectOption: async (preset) => {
+      await page.getByRole("tab", { name: "Diagram" }).click();
+      await page.getByRole("combobox", { name: "Page size" }).click();
+      await page.getByRole("option", { name: pageLabels[preset], exact: true }).click();
+    },
+  };
 
   for (const [preset, w, h, tag] of [["double", 180, 120, "demo"], ["single", 85, 120, "demo-single-column"], ["a4Landscape", 297, 210, "demo-a4-landscape"]]) {
     await pageSelect.selectOption(preset);
-    await page.waitForFunction(([w, h]) => document.querySelector(".page svg")?.getAttribute("width") === `${w}mm` && document.querySelector(".page svg")?.getAttribute("height") === `${h}mm`, [w, h]);
+    await page.waitForFunction(([w, h]) => document.querySelector(".figure-page svg")?.getAttribute("width") === `${w}mm` && document.querySelector(".figure-page svg")?.getAttribute("height") === `${h}mm`, [w, h]);
     console.log(`\n${tag}: ${w} × ${h} mm`);
 
     const svg = (await save(() => exportButton("SVG").click(), `${tag}.svg`)).toString("utf8");
@@ -91,7 +111,7 @@ try {
     check((pdf.raw.match(/\/FontFile2 /g) ?? []).length === 2 && !/\/BaseFont \/(Helvetica|Times|Courier)/.test(pdf.raw), "PDF embeds Liberation Sans regular + italic, no standard fonts");
 
     for (const dpi of tag === "demo" ? [300, 600, 1200] : [300]) {
-      await page.locator(".top .export select").selectOption(String(dpi));
+      await exportMenu(`${dpi} dpi`, "menuitemradio");
       const png = readPng(await save(() => exportButton("PNG").click(), `${tag}-${dpi}dpi.png`));
       check(png.width === expectedPx(w, dpi) && png.height === expectedPx(h, dpi), `PNG ${dpi} dpi: ${png.width} × ${png.height} px (expected ${expectedPx(w, dpi)} × ${expectedPx(h, dpi)})`);
       check(Number(png.dpi) === dpi, `PNG records ${png.dpi} dpi (pHYs)`);
@@ -100,13 +120,13 @@ try {
   }
 
   console.log("\ntransparent PNG");
-  await page.locator(".top .export input[type=checkbox]").uncheck();
-  await page.locator(".top .export select").selectOption("300");
+  await exportMenu("PNG white background");
+  await exportMenu("300 dpi", "menuitemradio");
   const clear = readPng(await save(() => exportButton("PNG").click(), "demo-a4-landscape-300dpi-transparent.png"));
   check(clear.pixel0[3] === 0, `transparent background (pixel 0 alpha = ${clear.pixel0[3]})`);
 
   console.log("\nproject bundle");
-  const bundleText = (await save(() => page.getByRole("button", { name: "Save project" }).click(), "demo.linden.json")).toString("utf8");
+  const bundleText = (await save(() => page.getByRole("button", { name: "Project menu" }).click().then(() => page.getByRole("menuitem", { name: "Save project" }).click()), "demo.linden.json")).toString("utf8");
   const bundle = parseProject(bundleText);
   check(bundle.ok, "bundle parses");
   if (bundle.ok) {
@@ -116,10 +136,10 @@ try {
     const fresh = await (await browser.newContext()).newPage();
     fresh.on("dialog", (d) => void d.accept());
     await fresh.goto(`http://localhost:${PORT}/`);
-    await fresh.waitForSelector(".page svg");
-    await fresh.locator('input[type=file][accept^=".linden.json"]').setInputFiles(new URL("demo.linden.json", out).pathname);
-    await fresh.waitForFunction(() => document.querySelector(".page svg")?.getAttribute("width") === "297mm");
-    const reopened = await fresh.locator(".page").innerHTML();
+    const [chooser] = await Promise.all([fresh.waitForEvent("filechooser"), fresh.getByRole("button", { name: "Open project" }).click()]);
+    await chooser.setFiles(new URL("demo.linden.json", out).pathname);
+    await fresh.waitForFunction(() => document.querySelector(".figure-page svg")?.getAttribute("width") === "297mm");
+    const reopened = await fresh.locator(".figure-page").innerHTML();
     check(reopened.includes(specHash(bundle.value.spec)), "re-opened bundle renders the same spec (same hash in the preview)");
   }
 

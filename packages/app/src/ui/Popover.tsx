@@ -1,0 +1,19 @@
+import { Popover as P } from "radix-ui";
+import type { ComponentProps } from "react";
+import { cn } from "./cn";
+
+export const Popover = P.Root;
+export const PopoverTrigger = P.Trigger;
+
+export function PopoverContent({ className, ...props }: ComponentProps<typeof P.Content>) {
+  return (
+    <P.Portal>
+      <P.Content
+        sideOffset={6}
+        collisionPadding={8}
+        className={cn("animate-pop-in z-50 rounded-lg border border-border bg-surface-2 shadow-overlay focus-visible:outline-none", className)}
+        {...props}
+      />
+    </P.Portal>
+  );
+}

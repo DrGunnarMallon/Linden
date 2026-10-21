@@ -391,11 +391,14 @@ Importers never throw on recoverable problems: they return warnings.
 
 ## 11. App (UI) outline
 
-- Left: data & variable list (grouping, kind, visibility, drag to reorder).
-- Centre: live SVG preview at true page size, zoomable.
-- Right: properties of the selected panel / variable / overlay.
-- Top: import, presets, export, undo/redo (spec history).
+- Left (collapsible): data & variable list (grouping, kind, visibility, drag to reorder).
+- Centre: live SVG preview at true page size on a workspace canvas, zoomable (fit / 100% / 200%, Ctrl+scroll).
+- Right (collapsible inspector): diagram properties (preset, page size) and properties of the selected panel / variable / overlay.
+- Top: project name and file menu (open/save project, load/save spec, examples), import, export, undo/redo (spec history), UI theme.
+- Bottom status bar: page size, zoom, spec errors, warnings (as a popover).
 - A raw spec editor (JSON with schema validation) for power users — this is the "scriptable" path in the UI.
+- Empty project: a welcome screen (import CSV, open project, load an example).
+- UI theme: dark (default), light or system, remembered in localStorage; it never affects the figure (§4 `style`).
 - Persist work in IndexedDB; never auto-upload.
 
 ## 12. Testing & validation

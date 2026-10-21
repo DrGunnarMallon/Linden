@@ -75,6 +75,16 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
     expect(r.spec.yAxis).toEqual({ primary: "depth", reverse: true, range: null });
   });
 
+  it("headerBand: core → preset → spec; nested xTicks merge per key", () => {
+    const withBand: Preset = { ...pollen, headerBand: { angle: 90, minFontSize: 4 } };
+    const r = resolveSpec(spec({ ...base, headerBand: { angle: 45 }, panels: [] }), [withBand]);
+    expect(r.spec.headerBand).toEqual({ angle: 45, minFontSize: 4, height: null });
+    expect(resolveSpec(spec({ specVersion: 2, panels: [] })).spec.headerBand).toEqual(coreDefaults.headerBand);
+    const p = curves(spec({ ...base, panels: [{ type: "taxonCurves", dataset: "d", style: { xTicks: { minSpacing: 10 } } }] }));
+    expect(p.style.xTicks).toEqual({ step: null, minSpacing: 10 });
+    expect(p.style.groupGap).toBe(2);
+  });
+
   it("dataset sums: spec replaces a preset sum of the same name; outsideSum comes from the preset", () => {
     const r = resolveSpec(
       spec({

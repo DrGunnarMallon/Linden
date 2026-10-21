@@ -1,6 +1,7 @@
 // Spec / preset (de)serialisation with readable validation errors — see SPEC.md §4.
 
 import { z } from "zod/v4";
+import { migrateSpec } from "../model/migrate.js";
 import { PresetSchema, SpecSchema, type Preset, type Spec } from "../model/spec.js";
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };
@@ -15,7 +16,7 @@ function formatPath(path: readonly PropertyKey[]): string {
   return out === "" ? "(root)" : out;
 }
 
-function parseWith<T>(schema: z.ZodType<T>, json: unknown): ParseResult<T> {
+function parseWith<T>(schema: z.ZodType<T>, json: unknown, migrate: (x: unknown) => unknown = (x) => x): ParseResult<T> {
   let input = json;
   if (typeof json === "string") {
     try {
@@ -24,7 +25,7 @@ function parseWith<T>(schema: z.ZodType<T>, json: unknown): ParseResult<T> {
       return { ok: false, errors: [`Invalid JSON: ${(e as Error).message}`] };
     }
   }
-  const result = schema.safeParse(input);
+  const result = schema.safeParse(migrate(input));
   if (result.success) return { ok: true, value: result.data };
   return {
     ok: false,
@@ -32,9 +33,9 @@ function parseWith<T>(schema: z.ZodType<T>, json: unknown): ParseResult<T> {
   };
 }
 
-/** Accepts a JSON string or an already-parsed object. */
+/** Accepts a JSON string or an already-parsed object. Older spec versions are migrated first. */
 export function parseSpec(json: unknown): ParseResult<Spec> {
-  return parseWith(SpecSchema, json);
+  return parseWith(SpecSchema, json, migrateSpec);
 }
 
 export function parsePreset(json: unknown): ParseResult<Preset> {

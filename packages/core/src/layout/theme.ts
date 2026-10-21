@@ -2,6 +2,7 @@
 
 import type { ResolvedPage } from "../model/defaults.js";
 import { stripMarkup } from "../render/svg.js";
+import { textWidthEm } from "./metrics.js";
 
 export interface Theme {
   margin: { top: number; right: number; bottom: number; left: number };
@@ -19,11 +20,17 @@ export interface Theme {
   naturalXScale: number;
   /** Column width for panels without a common scale. */
   independentColumnWidth: number;
-  /** Header label angle in degrees from horizontal. */
-  headerAngle: number;
+  /** Gap between the plot top and the taxon labels. */
   headerGap: number;
-  /** Tick step for percentage columns. */
-  percentTickStep: number;
+  /** Font-size step (pt) when shrinking header labels. */
+  headerFontStep: number;
+  /** Perpendicular space a rotated label needs, in em. */
+  labelThickness: number;
+  /** Group header bracket: end tick length and gap to the labels below. */
+  bracketTick: number;
+  bracketGap: number;
+  /** Minimum clear space between tick labels. */
+  tickLabelPad: number;
   barThickness: number;
   exaggerationOpacity: number;
   defaultFill: string;
@@ -50,9 +57,12 @@ export function makeTheme(page: ResolvedPage): Theme {
     panelGap: 2,
     naturalXScale: 0.4,
     independentColumnWidth: 15,
-    headerAngle: 90,
     headerGap: 1,
-    percentTickStep: 20,
+    headerFontStep: 0.25,
+    labelThickness: 1,
+    bracketTick: 0.8,
+    bracketGap: 1,
+    tickLabelPad: 0.5,
     barThickness: 0.6,
     exaggerationOpacity: 0.35,
     defaultFill: "#808080",
@@ -63,9 +73,9 @@ export function makeTheme(page: ResolvedPage): Theme {
   };
 }
 
-/** No font metrics without a DOM: average Arial/Helvetica glyph ≈ 0.55 em. */
+/** No DOM: width from the approximate Helvetica/Arial metrics table in metrics.ts. Markup is ignored. */
 export function estimateTextWidth(text: string, fontSize: number): number {
-  return stripMarkup(text).length * 0.55 * fontSize;
+  return textWidthEm(stripMarkup(text)) * fontSize;
 }
 
 export function footerHeight(theme: Theme): number {

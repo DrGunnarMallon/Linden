@@ -1,10 +1,11 @@
 // Preset resolution — SPEC.md §4: core defaults → preset → spec → per-variable override.
 // Presets are plain (already parsed) objects passed in; core never reads files.
 
-import { coreDefaults, type ResolvedPage, type ResolvedSelection, type ResolvedTaxonCurvesStyle, type ResolvedYAxis } from "./defaults.js";
+import { coreDefaults, type ResolvedHeaderBand, type ResolvedPage, type ResolvedSelection, type ResolvedTaxonCurvesStyle, type ResolvedYAxis } from "./defaults.js";
 import type {
   DatasetEntry,
   GroupSpec,
+  HeaderSpec,
   OverlaySpec,
   PanelSpec,
   Preset,
@@ -27,7 +28,7 @@ export interface ResolvedTaxonCurvesPanel {
   dataset: string;
   variables: ResolvedSelection;
   style: ResolvedTaxonCurvesStyle;
-  overrides: Record<string, TaxonCurvesStyle>;
+  overrides: Record<string, Omit<TaxonCurvesStyle, "groupGap">>;
   width?: number;
 }
 
@@ -43,6 +44,8 @@ export interface ResolvedSpec {
   datasets: ResolvedDatasetEntry[];
   panels: ResolvedPanel[];
   overlays: OverlaySpec[];
+  headerBand: ResolvedHeaderBand;
+  headers: HeaderSpec[];
 }
 
 type PlainObject = Record<string, unknown>;
@@ -116,6 +119,8 @@ export function resolveSpec(spec: Spec, presets: readonly Preset[] = []): { spec
     datasets: (spec.datasets ?? []).map((d) => resolveDatasetEntry(d, preset)),
     panels: spec.panels.map((p) => resolvePanel(p, preset)),
     overlays: spec.overlays ?? [],
+    headerBand: mergeLayers(coreDefaults.headerBand, preset?.headerBand, spec.headerBand),
+    headers: spec.headers ?? [],
   };
   if (spec.preset !== undefined) resolved.preset = spec.preset;
   return { spec: resolved, warnings };

@@ -2,13 +2,14 @@
 // Common scale: column width = max(minWidth, max value × xScale); the curve always uses xScale,
 // so minWidth widens the column but never distorts the scale.
 
-import { niceStep, formatNumber, ticksAt } from "../layout/scales.js";
+import { clean, formatNumber, ticksAt } from "../layout/scales.js";
 import { estimateTextWidth } from "../layout/theme.js";
 import type { ResolvedTaxonCurvesStyle } from "../model/defaults.js";
 import { resolveVariableStyle, type ResolvedTaxonCurvesPanel } from "../model/resolve.js";
 import type { Variable } from "../model/types.js";
 import { columnMax } from "../layout/select.js";
 import { PathBuilder, rotate, translate, type SvgGroup } from "../render/svg.js";
+import type { HeaderColumn } from "../layout/header.js";
 import type { Panel, PanelContext } from "./types.js";
 
 export interface TaxonColumn {
@@ -47,6 +48,8 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
   let x = 0;
   for (const j of data.variables) {
     const variable = data.dataset.variables[j]!;
+    const prev = cols[cols.length - 1];
+    if (prev && prev.variable.group !== variable.group) x += spec.style.groupGap;
     const style = resolveVariableStyle(spec, variable.id);
     const max = columnMax(data.dataset, j);
     const { width, scale } = columnGeometry(max, style, ctx.xScale, ctx.theme.independentColumnWidth);
@@ -56,10 +59,33 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
   return cols;
 }
 
-function headerExtent(ctx: PanelContext, label: string): number {
-  const a = (ctx.theme.headerAngle * Math.PI) / 180;
-  const w = estimateTextWidth(label, ctx.theme.fontSize);
-  return w * Math.sin(a) + ctx.theme.fontSize * Math.abs(Math.cos(a));
+/** Smallest 1, 2 or 5 × 10^k step (data units) that is at least `minSpacing` mm long at `scale` mm per unit. */
+export function autoTickStep(scale: number, minSpacing: number): number {
+  const raw = minSpacing / scale;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const f = [1, 2, 5].find((m) => m * mag >= raw * (1 - 1e-9)) ?? 10;
+  return clean(f * mag);
+}
+
+/**
+ * Tick positions (data units) and which of them get a label. Labels are placed left to right and
+ * skipped when they would touch the previous label or reach the next column's "0", so narrow
+ * columns keep only one. `room` = free space right of the column.
+ */
+export function columnTicks(col: TaxonColumn, room: number, tickFontSize: number, pad: number): { value: number; label: boolean }[] {
+  if (!(col.scale > 0)) return [];
+  const extent = col.width / col.scale;
+  const step = col.style.xTicks.step ?? autoTickStep(col.scale, col.style.xTicks.minSpacing);
+  const values = extent / step <= 100 ? ticksAt(0, extent, step) : [0];
+  const half = (v: number) => estimateTextWidth(formatNumber(v), tickFontSize) / 2;
+  const rightLimit = col.width + room - half(0) - pad;
+  let lastRight = Number.NEGATIVE_INFINITY;
+  return values.map((value, i) => {
+    const x = value * col.scale;
+    const label = i === 0 || (x - half(value) >= lastRight + pad && x + half(value) <= rightLimit);
+    if (label) lastRight = x + half(value);
+    return { value, label };
+  });
 }
 
 function fillColour(ctx: PanelContext, col: TaxonColumn): string {
@@ -118,7 +144,7 @@ function drawShape(
   g.path(d, attrs);
 }
 
-function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn): void {
+function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, room: number): void {
   const { theme, y } = ctx;
   const h = y.height;
   const fill = fillColour(ctx, col);
@@ -164,26 +190,28 @@ function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn): void {
   // x axis in the footer band.
   const xg = g.group({ class: "x-axis" });
   xg.line(0, h, col.width, h, line);
-  if (col.scale > 0) {
-    const extent = col.width / col.scale;
-    const step = col.variable.kind === "percent" ? theme.percentTickStep : niceStep(Math.max(col.max, extent), 3);
-    const ticks = extent / step <= 100 ? ticksAt(0, extent, step) : [0];
-    for (const v of ticks) {
-      const x = v * col.scale;
-      xg.line(x, h, x, h + theme.tickLength, line);
-      xg.text(x, h + theme.tickLength + 0.5 + theme.tickFontSize * 0.8, formatNumber(v), {
+  for (const t of columnTicks(col, room, theme.tickFontSize, theme.tickLabelPad)) {
+    const x = t.value * col.scale;
+    xg.line(x, h, x, h + theme.tickLength, line);
+    if (t.label) {
+      xg.text(x, h + theme.tickLength + 0.5 + theme.tickFontSize * 0.8, formatNumber(t.value), {
         "font-size": theme.tickFontSize,
         "text-anchor": "middle",
       });
     }
   }
 
-  // Name in the header band, rotated, anchored at the column centre.
-  const a = (theme.headerAngle * Math.PI) / 180;
-  const off = 0.35 * theme.fontSize;
+  // Name in the header band, rotated, anchored at the column centre; size and angle are shared by all panels.
+  const { fontSize, angle } = ctx.header;
+  const a = (angle * Math.PI) / 180;
+  const off = 0.35 * fontSize;
   const lx = col.width / 2 + off * Math.sin(a);
   const ly = -theme.headerGap + off * Math.cos(a);
-  g.text(lx, ly, col.variable.name, { class: "label", transform: rotate(-theme.headerAngle, lx, ly) });
+  g.text(lx, ly, col.variable.name, {
+    class: "label",
+    transform: rotate(-angle, lx, ly),
+    "font-size": fontSize === theme.fontSize ? undefined : fontSize,
+  });
 }
 
 function slug(id: string): string {
@@ -196,17 +224,32 @@ export const taxonCurvesPanel: Panel = {
   measure(ctx) {
     const spec = panelSpec(ctx);
     if (spec?.width !== undefined) ctx.warn("taxonCurves: \"width\" is ignored; widths follow the common x-scale.");
+    const ds = ctx.data?.dataset;
+    for (const id of Object.keys(spec?.overrides ?? {})) {
+      if (ds && !ds.variables.some((v) => v.id === id)) ctx.warn(`taxonCurves: override for "${id}", which is not in dataset "${ds.id}".`);
+    }
     const cols = taxonColumns(ctx);
-    if (ctx.data && cols.length === 0) ctx.warn(`taxonCurves: no variables selected from dataset "${ctx.data.dataset.id}".`);
-    const width = cols.reduce((w, c) => w + c.width, 0) + ctx.theme.columnGap * Math.max(0, cols.length - 1);
-    const headerHeight = cols.reduce((m, c) => Math.max(m, headerExtent(ctx, c.variable.name)), 0);
-    return { width, headerHeight: cols.length ? headerHeight + ctx.theme.headerGap : 0 };
+    if (ds && cols.length === 0) ctx.warn(`taxonCurves: no variables selected from dataset "${ds.id}".`);
+    const last = cols[cols.length - 1];
+    // Labels live in the shared header band (layout/header.ts), not in this panel's header height.
+    return { width: last ? last.x + last.width : 0, headerHeight: 0 };
+  },
+
+  columns(ctx) {
+    return taxonColumns(ctx).map((c) => {
+      const col: HeaderColumn = { id: c.variable.id, label: c.variable.name, x: c.x, width: c.width };
+      if (c.variable.group !== undefined) col.group = c.variable.group;
+      return col;
+    });
   },
 
   render(ctx, g) {
-    for (const col of taxonColumns(ctx)) {
+    const cols = taxonColumns(ctx);
+    cols.forEach((col, i) => {
+      const next = cols[i + 1];
+      const room = next ? next.x - col.x - col.width : ctx.theme.columnGap;
       const cg = g.group({ id: `${ctx.id}-${slug(col.variable.id)}`, class: "column", transform: translate(col.x, 0) });
-      renderColumn(ctx, cg, col);
-    }
+      renderColumn(ctx, cg, col, room);
+    });
   },
 };

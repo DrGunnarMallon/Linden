@@ -4,7 +4,8 @@ import { interpolate, makeYScale, niceStep, ticksAt } from "../src/layout/scales
 import { makeTheme } from "../src/layout/theme.js";
 import { coreDefaults, type ResolvedTaxonCurvesStyle } from "../src/model/defaults.js";
 import type { Dataset } from "../src/model/types.js";
-import { columnGeometry } from "../src/panels/taxonCurves.js";
+import { parseSpec } from "../src/io/spec.js";
+import { autoTickStep, columnGeometry, columnTicks, type TaxonColumn } from "../src/panels/taxonCurves.js";
 import { render } from "../src/pipeline.js";
 
 const style = (s: Partial<ResolvedTaxonCurvesStyle> = {}): ResolvedTaxonCurvesStyle => ({ ...coreDefaults.taxonCurves, ...s });
@@ -94,10 +95,80 @@ describe("fitting the page", () => {
       groups: [],
       values: [Array.from({ length: n }, (_, j) => (j % 2 ? 60 : 30)), Array(n).fill(0)],
     };
-    const { svg, warnings } = render([ds], { specVersion: 1, panels: [{ type: "taxonCurves", dataset: "wide" }] });
+    const { svg, warnings } = render([ds], { specVersion: 2, panels: [{ type: "taxonCurves", dataset: "wide" }] });
     expect(warnings).toEqual([expect.stringContaining("x-scale reduced")]);
     const widths = [...svg.matchAll(/class="x-axis">\s*<line x1="0" y1="[^"]+" x2="([^"]+)"/g)].map((m) => Number(m[1]));
     expect(widths).toHaveLength(n);
     expect(widths[1]! / widths[0]!).toBeCloseTo(2, 2);
+  });
+});
+
+describe("per-column x axes", () => {
+  const tickFont = makeTheme(coreDefaults.page).tickFontSize; // 7 pt × 0.85
+  const col = (max: number, width: number, s: Partial<ResolvedTaxonCurvesStyle> = {}): TaxonColumn => ({
+    index: 0,
+    variable: { id: "v", name: "v", kind: "percent" },
+    style: style(s),
+    max,
+    x: 0,
+    width,
+    scale: 0.4,
+  });
+  const labelled = (ticks: { value: number; label: boolean }[]) => ticks.filter((t) => t.label).map((t) => t.value);
+
+  it("automatic step: smallest 1–2–5 step at least minSpacing mm long", () => {
+    expect(autoTickStep(0.4, 6)).toBe(20); // 10 % = 4 mm too tight, 20 % = 8 mm
+    expect(autoTickStep(0.2, 6)).toBe(50);
+    expect(autoTickStep(0.4, 8)).toBe(20); // exactly 8 mm
+    expect(autoTickStep(1, 6)).toBe(10);
+    expect(autoTickStep(0.004, 6)).toBe(2000);
+  });
+
+  it("wide column: ticks every 20 %, labels unless they would reach the next column's 0", () => {
+    const ticks = columnTicks(col(60, 24), 1, tickFont, 0.5);
+    expect(ticks.map((t) => t.value)).toEqual([0, 20, 40, 60]);
+    expect(labelled(ticks)).toEqual([0, 20, 40]); // "60" at the column edge would touch the next "0"
+    expect(labelled(columnTicks(col(60, 24), 5, tickFont, 0.5))).toEqual([0, 20, 40, 60]); // more room after
+  });
+
+  it("narrow columns get a single label", () => {
+    expect(labelled(columnTicks(col(10, 4), 1, tickFont, 0.5))).toEqual([0]);
+    const two = columnTicks(col(22.5, 9), 1, tickFont, 0.5);
+    expect(two.map((t) => t.value)).toEqual([0, 20]);
+    expect(labelled(two)).toEqual([0]);
+  });
+
+  it("explicit step and minSpacing from the spec", () => {
+    expect(columnTicks(col(30, 12, { xTicks: { step: 10, minSpacing: 6 } }), 1, tickFont, 0.5).map((t) => t.value)).toEqual([0, 10, 20, 30]);
+    expect(columnTicks(col(60, 24, { xTicks: { step: null, minSpacing: 16 } }), 1, tickFont, 0.5).map((t) => t.value)).toEqual([0, 50]);
+  });
+});
+
+describe("per-variable overrides", () => {
+  const ds: Dataset = {
+    id: "o",
+    name: "o",
+    depthUnit: "cm",
+    samples: [{ id: "1", depth: 1 }, { id: "2", depth: 2 }],
+    variables: ["a", "b"].map((id) => ({ id, name: id, kind: "percent" as const })),
+    groups: [],
+    values: [[10, 10], [5, 5]],
+  };
+
+  it("switch exaggeration off for one taxon only; unknown ids warn", () => {
+    const { svg, warnings } = render([ds], {
+      specVersion: 2,
+      panels: [{ type: "taxonCurves", dataset: "o", style: { exaggeration: 10 }, overrides: { a: { exaggeration: 0 }, zz: { mode: "bars" } } }],
+    });
+    const [, a, b] = svg.split('class="column"');
+    expect(a).not.toContain('class="exaggeration"');
+    expect(b).toContain('class="exaggeration"');
+    expect(warnings).toEqual(['taxonCurves: override for "zz", which is not in dataset "o".']);
+  });
+
+  it("panel-level layout keys cannot be overridden per variable", () => {
+    const r = parseSpec({ specVersion: 2, panels: [{ type: "taxonCurves", dataset: "o", overrides: { a: { groupGap: 1 } } }] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors[0]).toMatch(/^panels\[0\]\.overrides\.a: /);
   });
 });

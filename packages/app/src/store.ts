@@ -1,7 +1,7 @@
 // App state. The spec is the single source of truth: the editor text, the variable checkboxes
 // and the preset picker all produce new Spec values via commitSpec, which feeds undo/redo.
 
-import { importers, parseSpec, render, type Dataset, type Preset, type Spec } from "@linden/core";
+import { SPEC_VERSION, importers, parseSpec, render, type Dataset, type Preset, type Spec } from "@linden/core";
 import { create } from "zustand";
 import { demo, loadBundledPresets } from "./bundled";
 import { loadProject, saveProject, type Project } from "./persist";
@@ -11,7 +11,7 @@ const HISTORY_LIMIT = 200;
 /** Valid edits in the text editor closer together than this become one undo step. */
 const TYPING_MERGE_MS = 1000;
 
-const EMPTY_SPEC: Spec = { specVersion: 1, panels: [] };
+const EMPTY_SPEC: Spec = { specVersion: SPEC_VERSION, panels: [] };
 
 interface State {
   ready: boolean;

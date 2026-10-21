@@ -59,13 +59,17 @@ function attrString(attrs: Attrs): string {
     .join("");
 }
 
-/** "*Alnus*-type" → <tspan font-style="italic">Alnus</tspan>-type. Unpaired "*" stays literal. */
+/**
+ * "*Alnus*-type" → <tspan font-style="italic">Alnus</tspan>-type. A "-type" / " type" suffix is
+ * upright even when written inside the asterisks ("*Alnus-type*"). Unpaired "*" stays literal.
+ */
 export function markupToSvg(text: string): string {
   let out = "";
   let last = 0;
   for (const m of text.matchAll(/\*([^*]+)\*/g)) {
     out += escapeXml(text.slice(last, m.index));
-    out += `<tspan font-style="italic">${escapeXml(m[1]!)}</tspan>`;
+    const [, italic, suffix = ""] = /^(.+?)([- ]type)?$/.exec(m[1]!)!;
+    out += `<tspan font-style="italic">${escapeXml(italic!)}</tspan>${escapeXml(suffix)}`;
     last = m.index + m[0].length;
   }
   return out + escapeXml(text.slice(last));

@@ -1,5 +1,6 @@
 // Panel and overlay interfaces — see SPEC.md §5.1.
 
+import type { HeaderColumn } from "../layout/header.js";
 import type { YScale } from "../layout/scales.js";
 import type { Theme } from "../layout/theme.js";
 import type { ResolvedPage, ResolvedYAxis } from "../model/defaults.js";
@@ -29,6 +30,8 @@ export interface PanelContext {
   theme: Theme;
   /** Group display metadata (colours) from the resolved spec. */
   groups: GroupSpec[];
+  /** Taxon label font size (mm) and angle, shared by all panels; final only in render(). */
+  header: { fontSize: number; angle: number };
   analyses: Record<string, unknown>;
   warn(message: string): void;
 }
@@ -44,6 +47,8 @@ export interface Panel {
   measure(ctx: PanelContext): PanelMeasure;
   /** Draws into a group whose origin is the panel's top-left plot corner (header at y < 0). */
   render(ctx: PanelContext, g: SvgGroup): void;
+  /** Labelled columns (x relative to the panel) for the shared header band; omit if none. */
+  columns?(ctx: PanelContext): HeaderColumn[];
 }
 
 export interface OverlayContext {

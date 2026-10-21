@@ -116,8 +116,9 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
 
 ```jsonc
 {
-  "specVersion": 1,
+  "specVersion": 2,
   "page": { "width": 180, "height": 240, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "headerBand": { "angle": 60, "minFontSize": 5, "height": null },   // taxon labels; height null = fit
   "yAxis": {
     "primary": "depth",               // "depth" | "age"
     "secondary": "age",               // optional second axis column
@@ -145,7 +146,9 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
     { "type": "taxonCurves",
       "dataset": "pollen",
       "variables": { "groups": ["trees", "shrubs"], "minMax": 2, "order": "data" },
-      "style": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4 } },
+      "style": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4,
+                 "groupGap": 2, "xTicks": { "step": null, "minSpacing": 6 } },
+      "overrides": { "Pinus": { "exaggeration": 0 } } },
     { "type": "summary", "dataset": "pollen", "groups": ["trees", "shrubs", "herbs"], "width": 25 },
     { "type": "dendrogram", "analysis": "zones", "width": 15 }
   ],
@@ -153,15 +156,24 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
     { "type": "zones", "from": "analysis:zones", "n": 4, "labels": ["P1", "P2", "P3", "P4"] }
   ],
   "headers": [
-    { "label": "Trees & shrubs", "spans": { "groups": ["trees", "shrubs"] } }
+    { "label": "Trees & shrubs", "spans": { "groups": ["trees", "shrubs"] } },
+    { "spans": { "groups": ["herbs"] } }               // label defaults to the group name(s)
   ],
   "preset": "pollen-percent"
 }
 ```
 
 Key rules:
-- **Variable selection** is declarative: by explicit ids, by groups, by threshold (`minMax`: include if max ≥ x), plus ordering (`data`, `alphabetical`, `weightedAverageDepth`, `firstOccurrence`, explicit list).
-- **Per-variable overrides** are allowed (`overrides: { "Pinus": { "exaggeration": 0 } }`) but discouraged.
+- **Variable selection** is declarative: by explicit ids, by groups (union of both; neither = all), by threshold (`minMax`: include if max ≥ x), plus ordering:
+  - `data` — dataset column order;
+  - `alphabetical` — display name without markup, case-insensitive;
+  - `weightedAverageDepth` — abundance-weighted mean depth of non-zero values, shallowest first;
+  - `firstOccurrence` — depth of the deepest (oldest) non-zero value, i.e. stratigraphic first appearance, deepest first;
+  - explicit list of ids — listed variables first in list order, the rest after.
+  Variables with no non-zero value go last. All orders except `data` break ties by variable id (code-unit comparison, locale-independent).
+- **Per-variable overrides** are allowed (`overrides: { "Pinus": { "exaggeration": 0 } }`) but discouraged. Panel-level layout keys (`groupGap`) cannot be overridden; overrides for ids not in the dataset produce a warning.
+- **Group headers** (`headers`): a bracket with a label above exactly the columns whose group is in `spans.groups` or whose id is in `spans.ids`, across all panels. `label` defaults to the spanned group names joined by " & ". If the matching columns are not adjacent, one bracket is drawn per run (label on the first) and a warning is emitted; overlapping headers warn. `style.groupGap` (mm) adds space between adjacent columns of different groups.
+- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks` (all optional, so v1 → v2 only bumps the number).
 - **Presets** provide defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named sums replace whole (a spec sum with the same name as a preset sum wins entirely); `outsideSum` comes from the dataset entry, else from the preset.
 - **Dataset entries** may carry `outsideSum: { "groups": [...], "basis": "sum" | "sumPlusGroup" }` (same shape as in presets).
 - **Zones overlay**: `{ "type": "zones", "manual": [{ "depth": 65, "label": "P1/P2" }] }` draws boundaries at given depths (M1). Zones from an analysis (`from`, `n`, `labels`) follow in M3.
@@ -201,6 +213,8 @@ interface Panel {
   measure(ctx: PanelContext): { width: number; headerHeight: number };
   /** Draw into an SVG group whose origin is the panel's top-left plot corner. */
   render(ctx: PanelContext, g: SvgGroup): void;
+  /** Labelled columns (x relative to the panel) for the shared header band (§6). Optional. */
+  columns?(ctx: PanelContext): { id: string; label: string; group?: string; x: number; width: number }[];
 }
 
 interface PanelContext {
@@ -213,6 +227,7 @@ interface PanelContext {
   page: PageMetrics;
   theme: Theme;
   groups: GroupSpec[];       // group colours/names from the resolved spec
+  header: { fontSize: number; angle: number }; // shared taxon-label font size (mm) and angle; final in render()
   analyses: Record<string, unknown>;
   warn(message: string): void;
 }
@@ -246,11 +261,13 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 
 ## 6. Layout engine
 
-- Coordinates in mm. Page = plot area + header band (taxon labels) + footer band (x-axis scales). The SVG viewBox is in mm; `page.font.size` is in points (converted to mm). No DOM: text widths are estimated (≈ 0.55 em per character).
+- Coordinates in mm. Page = plot area + header band (taxon labels) + footer band (x-axis scales). The SVG viewBox is in mm; `page.font.size` is in points (converted to mm) and is the base size for all text. No DOM: text widths come from a deterministic per-character metrics table for Helvetica/Arial (`layout/metrics.ts`, unknown characters ≈ 0.556 em); the app may later substitute real measurement behind the same function.
 - `measure()` must not depend on the plot height; it may grow with `xScale`. Layout fits the single `xScale` (natural 0.4 mm per unit) by bisection.
 - Columns are laid out left to right in panel order. Each taxon column's width is proportional to its maximum value **when `commonScale` is true** (the standard convention for percentage diagrams: 10% is the same width in every column). `minWidth` stops rare taxa from vanishing.
 - If total natural width exceeds page width: first shrink the global x-scale factor (preserving common scale), then report a warning. Never silently break the common scale.
-- Header labels: rotated (default 60°–90°), anchored at column centre, with automatic font-size reduction down to a minimum before warning.
+- Header labels: rotated (`headerBand.angle`, default 60°), anchored at column centre. One header band is laid out for all panels (from their `columns()`), so every taxon label has the same font size. Adjacent labels collide when their perpendicular distance (pitch × sin θ) is under 1 em while they overlap along the text (pitch × cos θ < label length). Resolution order: reduce the font in 0.25 pt steps from `page.font.size` down to `headerBand.minFontSize`; then grow the band beyond `headerBand.height` (if set; warns); labels that still overlap produce a warning — never silently. The right end of the labels is reserved in the x-scale fit, so labels never run off the page.
+- Group headers sit in a row above the taxon labels (§4 `headers`).
+- Per-column x axes: tick step = `style.xTicks.step`, or automatically the smallest 1–2–5 × 10ⁿ step at least `xTicks.minSpacing` mm long at the column's scale (with a common scale, the same step in every column — e.g. 20 % at 0.4 mm/%). Tick labels are placed left to right and skipped if they would touch the previous label or the next column's "0", so narrow columns keep a single label.
 - One shared y-scale for all panels; secondary axis (age) drawn by interpolation from sample depth–age pairs, never by re-scaling.
 - Zone overlays draw across all panels; zone labels sit in a narrow column right of the last panel.
 - The secondary age axis uses the first spec dataset with sample ages; ages must not decrease with depth, and ticks are never extrapolated beyond the dated range.
@@ -287,7 +304,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 Any new proxy should be expressible by a preset alone. If it needs code, it needs a new transform or panel — generic, not proxy-named.
 
 ### 7.4 Typography
-- Taxon names support `*italic*` markup and `type` suffixes (e.g. `*Quercus*`, `Poaceae`, `*Alnus*-type`).
+- Taxon names support `*italic*` markup and `type` suffixes (e.g. `*Quercus*`, `Poaceae`, `*Alnus*-type`). A `-type` / ` type` suffix is always upright, even when written inside the asterisks (`*Alnus-type*`).
 - Default font: a widely available sans (Arial/Helvetica fallback). Fonts embedded in PDF export.
 
 ## 8. Presets

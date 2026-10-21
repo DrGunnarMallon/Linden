@@ -25,6 +25,13 @@ describe("svg builder", () => {
     expect(markupToSvg("5*")).toBe("5*");
   });
 
+  it("keeps a -type suffix upright even inside the italic markup", () => {
+    expect(markupToSvg("*Alnus-type*")).toBe('<tspan font-style="italic">Alnus</tspan>-type');
+    expect(markupToSvg("*Plantago lanceolata* type")).toBe('<tspan font-style="italic">Plantago lanceolata</tspan> type');
+    expect(markupToSvg("*Plantago lanceolata type*")).toBe('<tspan font-style="italic">Plantago lanceolata</tspan> type');
+    expect(markupToSvg("*Prototype*")).toBe('<tspan font-style="italic">Prototype</tspan>');
+  });
+
   it("builds paths and nested groups", () => {
     const d = new PathBuilder().moveTo(0, 0).lineTo(1.005, 2.333).close();
     expect(String(d)).toBe("M0,0L1,2.33Z");

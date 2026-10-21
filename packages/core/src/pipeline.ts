@@ -1,6 +1,7 @@
 // Full pipeline — SPEC.md §5: resolve → transforms → selection → layout → panels → SVG.
 // Pure: same inputs → identical SVG string. Problems become warnings.
 
+import { groupRowHeight, groupSpans, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
 import { computeLayout } from "./layout/layout.js";
 import { makeYScale, type YScale } from "./layout/scales.js";
 import { selectVariables } from "./layout/select.js";
@@ -62,6 +63,17 @@ function yDomain(rs: ResolvedSpec, data: (PanelData | undefined)[], byId: Map<st
   return [Math.min(...depths), Math.max(...depths)];
 }
 
+/** Display name of a group: resolved spec (preset) first, then the datasets in spec order. */
+function groupName(rs: ResolvedSpec, byId: Map<string, Dataset>, id: string): string {
+  const fromSpec = rs.groups.find((g) => g.id === id)?.name;
+  if (fromSpec !== undefined) return fromSpec;
+  for (const ds of byId.values()) {
+    const g = ds.groups.find((x) => x.id === id);
+    if (g) return g.name;
+  }
+  return id;
+}
+
 export function render(datasets: readonly Dataset[], spec: Spec, presets: readonly Preset[] = []): RenderResult {
   // A Set keeps first-seen order and drops repeats (measure runs many times while fitting).
   const warnings = new Set<string>();
@@ -87,7 +99,8 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   });
 
   const domain = yDomain(rs, data, byId, warn);
-  const ctxFor = (i: number, xScale: number, y: YScale): PanelContext => ({
+  const provisionalHeader = { fontSize: theme.fontSize, angle: rs.headerBand.angle };
+  const ctxFor = (i: number, xScale: number, y: YScale, header = provisionalHeader): PanelContext => ({
     id: `panel-${i}-${rs.panels[i]!.type}`,
     spec: rs.panels[i]!,
     data: data[i],
@@ -97,6 +110,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     page: rs.page,
     theme,
     groups: rs.groups,
+    header,
     analyses: {},
     warn,
   });
@@ -108,22 +122,60 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     (m, o, i) => Math.max(m, overlays.get(o.type).measure(overlayCtx(i, provisionalY, 0)).width),
     0,
   );
+
+  // Shared header band: every panel's labelled columns, x from the plot's left edge.
+  const columnsAt = (xScale: number): HeaderColumn[] => {
+    const out: HeaderColumn[] = [];
+    let x = 0;
+    rs.panels.forEach((p, i) => {
+      const panel = panels.get(p.type);
+      const ctx = ctxFor(i, xScale, provisionalY);
+      for (const c of panel.columns?.(ctx) ?? []) out.push({ ...c, x: x + c.x });
+      x += panel.measure(ctx).width + theme.panelGap;
+    });
+    return out;
+  };
+  const labelOptions = {
+    angle: rs.headerBand.angle,
+    fontSize: rs.page.font.size,
+    minFontSize: rs.headerBand.minFontSize,
+    height: rs.headerBand.height,
+    step: theme.headerFontStep,
+    thickness: theme.labelThickness,
+  };
+  const groupRow = rs.headers.length > 0 ? groupRowHeight(theme) : 0;
+  const headerAt = (xScale: number) => {
+    const cols = columnsAt(xScale);
+    const labels = layoutLabels(cols, labelOptions);
+    const height = cols.length > 0 ? theme.headerGap + labels.height + groupRow : groupRow;
+    return { cols, labels, height, right: labels.right };
+  };
+
   const layout = computeLayout(
     rs.page,
     theme,
     rs.panels.map((p, i) => (xScale: number) => panels.get(p.type).measure(ctxFor(i, xScale, provisionalY))),
     extraRight,
+    headerAt,
   );
   layout.warnings.forEach(warn);
+  const header = headerAt(layout.xScale);
+  header.labels.warnings.forEach(warn);
+  const spans = groupSpans(rs.headers, header.cols, (id) => groupName(rs, byId, id), theme, warn);
+  const labelStyle = { fontSize: header.labels.fontSize, angle: header.labels.angle };
 
   const y = makeYScale(domain, layout.plot.height, rs.yAxis.reverse);
   const svg = svgDocument(rs.page.width, rs.page.height, (root) => {
     const body = root.group({ "font-family": theme.fontFamily, "font-size": theme.fontSize });
     rs.panels.forEach((p, i) => {
-      const ctx = ctxFor(i, layout.xScale, y);
+      const ctx = ctxFor(i, layout.xScale, y, labelStyle);
       const g = body.group({ id: ctx.id, transform: translate(layout.panels[i]!.x, layout.plot.y) });
       panels.get(p.type).render(ctx, g);
     });
+    if (spans.length > 0) {
+      const g = body.group({ id: "headers", transform: translate(layout.plot.x, layout.plot.y) });
+      renderGroupHeaders(g, spans, -(header.height - groupRow), theme);
+    }
     rs.overlays.forEach((o, i) => {
       const g = body.group({ id: `overlay-${i}-${o.type}`, transform: translate(layout.plot.x, layout.plot.y) });
       overlays.get(o.type).render(overlayCtx(i, y, layout.panelsWidth), g);

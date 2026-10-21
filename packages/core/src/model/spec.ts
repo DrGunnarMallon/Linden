@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 1;
+export const SPEC_VERSION = 2;
 
 export const SumSchema = z.strictObject({
   includeGroups: z.array(z.string()).optional(),
@@ -65,6 +65,14 @@ export const SelectionSchema = z.strictObject({
     .optional(),
 });
 
+/** Per-column x-axis ticks. */
+export const XTicksSchema = z.strictObject({
+  /** Tick interval in data units; null = smallest 1–2–5 step at least `minSpacing` mm wide. */
+  step: z.number().positive().nullable().optional(),
+  /** Minimum distance between ticks in mm (automatic step only). */
+  minSpacing: z.number().positive().optional(),
+});
+
 export const TaxonCurvesStyleSchema = z.strictObject({
   mode: z.enum(["silhouette", "bars", "line", "linePoints"]).optional(),
   /** "group" = group colour, otherwise a CSS colour. */
@@ -74,6 +82,9 @@ export const TaxonCurvesStyleSchema = z.strictObject({
   minWidth: z.number().min(0).optional(),
   /** Draw "+" for non-zero values below this; 0 = off. */
   plusBelow: z.number().min(0).optional(),
+  /** Extra space in mm between adjacent columns of different groups. */
+  groupGap: z.number().min(0).optional(),
+  xTicks: XTicksSchema.optional(),
 });
 
 export const YAxisPanelSchema = z.strictObject({
@@ -86,7 +97,8 @@ export const TaxonCurvesPanelSchema = z.strictObject({
   dataset: z.string(),
   variables: SelectionSchema.optional(),
   style: TaxonCurvesStyleSchema.optional(),
-  overrides: z.record(z.string(), TaxonCurvesStyleSchema).optional(),
+  /** Per-variable style overrides (panel-level layout keys excluded). */
+  overrides: z.record(z.string(), TaxonCurvesStyleSchema.omit({ groupGap: true })).optional(),
   width: z.number().positive().optional(),
 });
 
@@ -99,6 +111,26 @@ export const ZonesOverlaySchema = z.strictObject({
 
 export const OverlaySchema = z.discriminatedUnion("type", [ZonesOverlaySchema]);
 
+/** Taxon label band above the columns. */
+export const HeaderBandSchema = z.strictObject({
+  /** Label angle in degrees from horizontal. */
+  angle: z.number().min(10).max(90).optional(),
+  /** Smallest label font size (pt) before the band grows. */
+  minFontSize: z.number().positive().optional(),
+  /** Label band height in mm; null = fit the labels. */
+  height: z.number().positive().nullable().optional(),
+});
+
+/** Group header: a bracket with a label spanning the matching columns. */
+export const HeaderSchema = z.strictObject({
+  /** Defaults to the names of the spanned groups. */
+  label: z.string().optional(),
+  spans: z.strictObject({
+    groups: z.array(z.string()).optional(),
+    ids: z.array(z.string()).optional(),
+  }),
+});
+
 export const SpecSchema = z.strictObject({
   specVersion: z.literal(SPEC_VERSION),
   preset: z.string().optional(),
@@ -107,6 +139,8 @@ export const SpecSchema = z.strictObject({
   datasets: z.array(DatasetEntrySchema).optional(),
   panels: z.array(PanelSchema),
   overlays: z.array(OverlaySchema).optional(),
+  headerBand: HeaderBandSchema.optional(),
+  headers: z.array(HeaderSchema).optional(),
 });
 
 export const GroupSpecSchema = z.strictObject({
@@ -122,6 +156,7 @@ export const PresetSchema = z.strictObject({
   description: z.string().optional(),
   page: PageSchema.optional(),
   yAxis: YAxisSchema.optional(),
+  headerBand: HeaderBandSchema.optional(),
   groups: z.array(GroupSpecSchema).optional(),
   sums: z.record(z.string(), SumSchema).optional(),
   outsideSum: OutsideSumSchema.optional(),
@@ -142,6 +177,9 @@ export type TransformSpec = z.infer<typeof TransformSpecSchema>;
 export type PercentTransformParams = z.infer<typeof PercentTransformSchema>;
 export type Selection = z.infer<typeof SelectionSchema>;
 export type TaxonCurvesStyle = z.infer<typeof TaxonCurvesStyleSchema>;
+export type XTicks = z.infer<typeof XTicksSchema>;
+export type HeaderBandSpec = z.infer<typeof HeaderBandSchema>;
+export type HeaderSpec = z.infer<typeof HeaderSchema>;
 export type PanelSpec = z.infer<typeof PanelSchema>;
 export type YAxisPanelSpec = z.infer<typeof YAxisPanelSchema>;
 export type TaxonCurvesPanelSpec = z.infer<typeof TaxonCurvesPanelSchema>;

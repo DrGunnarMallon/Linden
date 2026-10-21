@@ -63,24 +63,32 @@ export function fitXScale(
   };
 }
 
-/** `measures[i](xScale)` measures panel i; `extraRight` is reserved right of the panels (overlay labels). */
+/** Shared header band at a given x-scale: total height and the right end of the labels (from the plot's left edge). */
+export type HeaderMeasure = (xScale: number) => { height: number; right: number };
+
+/**
+ * `measures[i](xScale)` measures panel i; `extraRight` is reserved right of the panels (overlay labels).
+ * Header labels may reach further right than that; the fit makes room for them too.
+ */
 export function computeLayout(
   page: ResolvedPage,
   theme: Theme,
   measures: readonly ((xScale: number) => PanelMeasure)[],
   extraRight = 0,
+  header?: HeaderMeasure,
 ): LayoutResult {
   const warnings: string[] = [];
   const { margin } = theme;
   const gaps = theme.panelGap * Math.max(0, measures.length - 1);
-  const available = page.width - margin.left - margin.right - extraRight;
-  const totalAt = (f: number) => measures.reduce((s, m) => s + m(f).width, gaps);
+  const available = page.width - margin.left - margin.right;
+  const totalAt = (f: number) =>
+    Math.max(measures.reduce((s, m) => s + m(f).width, gaps) + extraRight, header ? header(f).right : 0);
 
   const fit = fitXScale(totalAt, available, theme.naturalXScale);
   if (fit.warning) warnings.push(fit.warning);
 
   const ms = measures.map((m) => m(fit.xScale));
-  const headerHeight = ms.reduce((h, m) => Math.max(h, m.headerHeight), 0);
+  const headerHeight = ms.reduce((h, m) => Math.max(h, m.headerHeight), header ? header(fit.xScale).height : 0);
   const footer = footerHeight(theme);
   let height = page.height - margin.top - margin.bottom - headerHeight - footer;
   if (height < 10) {
@@ -99,7 +107,7 @@ export function computeLayout(
     xScale: fit.xScale,
     headerHeight,
     footerHeight: footer,
-    plot: { x: margin.left, y: margin.top + headerHeight, width: available, height },
+    plot: { x: margin.left, y: margin.top + headerHeight, width: available - extraRight, height },
     panels,
     panelsWidth: ms.reduce((s, m) => s + m.width, gaps),
     warnings,

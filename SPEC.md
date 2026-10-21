@@ -1,0 +1,354 @@
+# Linden — Specification
+
+> Working name: **Linden** (*Tilia* is the linden/lime tree — a nod to Eric Grimm's program). Rename freely.
+
+A free, browser-based, scriptable tool for drawing publication-quality stratigraphic diagrams of palaeoecological and palaeoenvironmental data: pollen, spores, non-pollen palynomorphs, plant macrofossils, testate amoebae, diatoms, chironomids, charcoal, geochemistry, physical properties, and inferred reconstructions.
+
+This document is the source of truth for architecture. Code follows the spec; if the spec is wrong, update the spec first, then the code.
+
+---
+
+## 1. Principles
+
+1. **Proxy-agnostic core.** Nothing in `core` knows what pollen is. Proxy conventions (pollen sums, macrofossil abundance scales, diatom groupings) live in **presets** — plain JSON files — never in code paths.
+2. **Declarative.** A diagram is fully described by `data + spec`. The UI only edits the spec. The same `data + spec` always produces the same SVG, byte-for-byte.
+3. **Modular by registry.** Importers, transforms, analyses, panels and exporters are plugins registered by `type` string. Adding a feature means adding a module, not editing the engine.
+4. **Vector-first, physical units.** Layout is computed in millimetres on a defined page. SVG is the native output; PDF and PNG are derived from it.
+5. **Client-side only.** No server, no upload of user data. Hostable as static files (e.g. GitHub Pages).
+6. **Reproducible and citable.** The spec is a versioned JSON file users can save next to their data and archive with a paper.
+7. **Headless-capable.** `core` has no DOM or React dependency, so the same code can later power a CLI and a Python wrapper.
+
+## 2. Repository layout
+
+```
+linden/
+  SPEC.md            ← this file
+  CLAUDE.md          ← working rules for Claude Code
+  package.json       ← npm workspaces root
+  tsconfig.base.json
+  packages/
+    core/            ← pure TS: model, transforms, analyses, layout, panels, SVG
+    app/             ← React UI (Vite); depends on core
+    cli/             ← (later) Node CLI: linden render data.csv spec.json -o fig.svg
+  presets/           ← proxy presets (JSON)
+  examples/          ← example datasets + specs used in docs and tests
+```
+
+`core` internal layout:
+
+```
+core/src/
+  model/        types for Dataset, Variable, Sample, Spec
+  io/           importers (csv, xlsx, tilia-tlx, neotoma) + spec (de)serialisation
+  transforms/   percentage, concentration, influx, scale-mapping, smoothing
+  analyses/     coniss, broken-stick, (later) pca, rarefaction
+  layout/       page, columns, scales, label placement
+  panels/       one file per panel type
+  render/       SVG builder (string-based, no DOM)
+  export/       svg, pdf, png (pdf/png may need browser APIs → kept behind interfaces)
+  registry.ts   plugin registries
+  index.ts      public API
+```
+
+## 3. Data model
+
+Data are a samples × variables table plus metadata. Every variable carries a **measurement kind** so that transforms and panels can behave correctly without knowing the proxy.
+
+```ts
+type MeasurementKind =
+  | "count"          // raw counts (pollen grains, tests, valves, seeds, head capsules)
+  | "percent"        // already-expressed percentages
+  | "concentration"  // per volume or per mass (e.g. grains/cm³)
+  | "influx"         // per area per year
+  | "abundanceClass" // ordinal scale, e.g. macrofossils 1–5, DAFOR
+  | "presence"       // 0/1 or "+"
+  | "volumePercent"  // e.g. macrofossil QLCMA % volume estimates
+  | "continuous";    // LOI, magnetic susceptibility, δ13C, inferred WTD/pH/temperature
+
+interface Variable {
+  id: string;              // stable key, unique within dataset (column header by default)
+  name: string;            // display name, may contain italics markup (see §7.4)
+  kind: MeasurementKind;
+  unit?: string;
+  group?: string;          // refers to Group.id
+  meta?: Record<string, unknown>; // e.g. ecological group code from Tilia, Neotoma taxon id
+}
+
+interface Group {
+  id: string;
+  name: string;            // "Trees & shrubs", "Testate amoebae — Hyalospheniidae", ...
+  colour?: string;
+  order: number;
+}
+
+interface Sample {
+  id: string;
+  depth: number;           // primary y; unit given by dataset.depthUnit
+  age?: number;            // optional, from chronology
+  ageError?: [number, number];
+  label?: string;
+}
+
+interface Dataset {
+  id: string;
+  name: string;
+  depthUnit: "cm" | "m" | "mm";
+  ageUnit?: "cal BP" | "BP" | "CE/BCE" | "b2k";
+  samples: Sample[];
+  variables: Variable[];
+  groups: Group[];
+  values: (number | null)[][]; // [sampleIndex][variableIndex]; null = not counted / missing
+  extra?: {                    // optional side tables
+    lithology?: LithologyUnit[];
+    dates?: DatingPoint[];     // radiocarbon / other dates for display
+    spikes?: SpikeInfo[];      // Lycopodium etc. per sample for concentration
+  };
+}
+```
+
+Zero and `null` are different: zero means "looked, found none"; `null` means "not assessed". Panels must render them differently (gap vs. zero line).
+
+Multiple datasets (e.g. pollen + macrofossils + LOI from the same core) are combined in one diagram by sharing a y-axis (§5).
+
+## 4. The diagram spec
+
+The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schema). It has a `specVersion` so old files keep working via migrations.
+
+```jsonc
+{
+  "specVersion": 1,
+  "page": { "width": 180, "height": 240, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": {
+    "primary": "depth",               // "depth" | "age"
+    "secondary": "age",               // optional second axis column
+    "reverse": true,                  // depth increasing downwards
+    "range": null,                    // null = data extent
+    "ticks": { "major": 50, "minor": 10 }
+  },
+  "datasets": [
+    {
+      "dataset": "pollen",
+      "transforms": [
+        { "type": "percent", "sum": "terrestrial" }
+      ],
+      "sums": {
+        "terrestrial": { "includeGroups": ["trees", "shrubs", "herbs"] }
+      }
+    }
+  ],
+  "analyses": [
+    { "id": "zones", "type": "coniss", "input": { "dataset": "pollen", "groups": ["trees", "shrubs", "herbs"] }, "transform": "sqrt" }
+  ],
+  "panels": [
+    { "type": "lithology", "width": 8 },
+    { "type": "dates", "width": 6 },
+    { "type": "taxonCurves",
+      "dataset": "pollen",
+      "variables": { "groups": ["trees", "shrubs"], "minMax": 2, "order": "data" },
+      "style": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4 } },
+    { "type": "summary", "dataset": "pollen", "groups": ["trees", "shrubs", "herbs"], "width": 25 },
+    { "type": "dendrogram", "analysis": "zones", "width": 15 }
+  ],
+  "overlays": [
+    { "type": "zones", "from": "analysis:zones", "n": 4, "labels": ["P1", "P2", "P3", "P4"] }
+  ],
+  "headers": [
+    { "label": "Trees & shrubs", "spans": { "groups": ["trees", "shrubs"] } }
+  ],
+  "preset": "pollen-percent"
+}
+```
+
+Key rules:
+- **Variable selection** is declarative: by explicit ids, by groups, by threshold (`minMax`: include if max ≥ x), plus ordering (`data`, `alphabetical`, `weightedAverageDepth`, `firstOccurrence`, explicit list).
+- **Per-variable overrides** are allowed (`overrides: { "Pinus": { "exaggeration": 0 } }`) but discouraged.
+- **Presets** provide defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named sums replace whole (a spec sum with the same name as a preset sum wins entirely); `outsideSum` comes from the dataset entry, else from the preset.
+- **Dataset entries** may carry `outsideSum: { "groups": [...], "basis": "sum" | "sumPlusGroup" }` (same shape as in presets).
+- **Zones overlay**: `{ "type": "zones", "manual": [{ "depth": 65, "label": "P1/P2" }] }` draws boundaries at given depths (M1). Zones from an analysis (`from`, `n`, `labels`) follow in M3.
+- Spec objects are strict: unknown keys are validation errors (catches typos). `parseSpec` returns readable errors with paths, e.g. `panels[1].style.mode: …`.
+
+## 5. Pipeline
+
+```
+Importer → Dataset(s) → Transforms → Analyses → Layout → Panels → SVG → Exporter
+```
+
+All stages are pure functions of their inputs. Results are memoised by input hash so the UI stays fast.
+
+### 5.1 Interfaces
+
+```ts
+interface Importer {
+  type: string;                        // "csv", "xlsx", "tilia-tlx", "neotoma"
+  accepts(file: { name: string; mime?: string }): boolean;
+  import(input: ArrayBuffer | string, options?: unknown): Promise<ImportResult>;
+}
+interface ImportResult { datasets: Dataset[]; warnings: string[]; suggestedSpec?: Partial<Spec>; }
+
+interface Transform {
+  type: string;                        // "percent", "concentration", "influx", "scaleMap", ...
+  apply(ds: Dataset, params: unknown, ctx: TransformContext): Dataset; // returns a NEW dataset
+}
+
+interface Analysis<R = unknown> {
+  type: string;                        // "coniss", "brokenStick", ...
+  run(input: number[][], params: unknown): R;   // heavy ones run in a Web Worker in app
+}
+
+interface Panel {
+  type: string;
+  /** Natural width in mm given data and style; layout may scale it. */
+  measure(ctx: PanelContext): { width: number; headerHeight: number };
+  /** Draw into an SVG group whose origin is the panel's top-left plot corner. */
+  render(ctx: PanelContext, g: SvgGroup): void;
+}
+
+interface PanelContext {
+  id: string;                // SVG id of the panel group, prefix for child ids
+  spec: ResolvedPanelSpec;
+  data: ResolvedData;        // transformed values, selected variables
+  y: YScale;                 // shared y scale (mm ↔ depth/age)
+  yAxis: ResolvedYAxis;      // ticks, secondary axis
+  xScale: number;            // global common x-scale, mm per data unit (after shrinking)
+  page: PageMetrics;
+  theme: Theme;
+  groups: GroupSpec[];       // group colours/names from the resolved spec
+  analyses: Record<string, unknown>;
+  warn(message: string): void;
+}
+
+interface Overlay {          // drawn across all panels, after them
+  type: string;              // "zones"
+  measure(ctx: OverlayContext): { width: number };   // extra width right of the panels (labels)
+  render(ctx: OverlayContext, g: SvgGroup): void;
+}
+
+interface Exporter { type: string; export(svg: string, opts: unknown): Promise<Blob | string>; }
+```
+
+### 5.2 Transforms (initial set)
+
+| type            | purpose |
+|-----------------|---------|
+| `percent`       | counts → % of a named sum; sum defined by `includeGroups` / `includeVariables` / `includeAll`; excluded groups expressed as % of (sum + group) — a preset choice, not hard-coded |
+| `concentration` | via exotic marker spikes (Lycopodium/microspheres) or volume/mass |
+| `influx`        | concentration × accumulation rate (needs ages) |
+| `scaleMap`      | map ordinal classes to plotted widths (macrofossils, DAFOR) |
+| `log` / `sqrt`  | for analyses or display |
+
+`percent` rules: only `kind: "count"` variables take part (others pass through unchanged); converted variables become `kind: "percent"`, `unit: "%"`. Variables outside the sum are % of the sum unless their group is in `outsideSum` with basis `sumPlusGroup`. `null` stays `null`; a sample whose sum is 0, or has no assessed sum members, gives `null` for all converted variables plus a warning.
+
+### 5.3 Analyses
+
+- **CONISS** (Grimm 1987): constrained incremental sum of squares on chosen variables, with optional sqrt/chord transform. Returns the merge tree and dispersion per merge.
+- **Broken-stick** (Bennett 1996): suggested number of significant zones.
+- Later: PCA/DCA axis scores as a `continuous` variable, rarefaction, CONISS on combined proxies.
+
+## 6. Layout engine
+
+- Coordinates in mm. Page = plot area + header band (taxon labels) + footer band (x-axis scales). The SVG viewBox is in mm; `page.font.size` is in points (converted to mm). No DOM: text widths are estimated (≈ 0.55 em per character).
+- `measure()` must not depend on the plot height; it may grow with `xScale`. Layout fits the single `xScale` (natural 0.4 mm per unit) by bisection.
+- Columns are laid out left to right in panel order. Each taxon column's width is proportional to its maximum value **when `commonScale` is true** (the standard convention for percentage diagrams: 10% is the same width in every column). `minWidth` stops rare taxa from vanishing.
+- If total natural width exceeds page width: first shrink the global x-scale factor (preserving common scale), then report a warning. Never silently break the common scale.
+- Header labels: rotated (default 60°–90°), anchored at column centre, with automatic font-size reduction down to a minimum before warning.
+- One shared y-scale for all panels; secondary axis (age) drawn by interpolation from sample depth–age pairs, never by re-scaling.
+- Zone overlays draw across all panels; zone labels sit in a narrow column right of the last panel.
+- The secondary age axis uses the first spec dataset with sample ages; ages must not decrease with depth, and ticks are never extrapolated beyond the dated range.
+- SVG output is deterministic: coordinates rounded to 0.01 mm, attributes in a fixed canonical order.
+
+## 7. Panels (catalogue)
+
+### 7.1 MVP
+- `yAxis` — depth and/or age axis with ticks and label.
+- `taxonCurves` — one column per variable. Modes: `silhouette` (filled), `bars`, `line`, `linePoints`. Options: exaggeration curve (×n, lighter fill), zero line, `null` gaps, x-axis ticks per column, `+` marker for values below a threshold (e.g. < 0.5%).
+- `zones` overlay — horizontal lines + labels.
+
+### 7.2 Next
+- `summary` — cumulative group curve (e.g. AP/NAP, trees/shrubs/herbs).
+- `dendrogram` — from a CONISS result, x = total sum of squares.
+- `lithology` — Troels-Smith or simple hatch patterns from `extra.lithology`.
+- `dates` — markers for dated levels with labels.
+- `continuous` — LOI, magnetic susceptibility, inferred WTD/pH, with optional error envelope.
+- `abundanceSymbols` — macrofossil ordinal classes as bars or symbols of graded size.
+- `text` — sample labels, count sums.
+
+### 7.3 Proxy coverage check
+
+| proxy | typical kind | panels |
+|---|---|---|
+| Pollen, spores, NPPs | count → percent / concentration / influx | taxonCurves, summary, dendrogram |
+| Testate amoebae | count → percent; inferred WTD | taxonCurves, continuous (with error) |
+| Diatoms | count → percent; inferred pH/TP | taxonCurves (many taxa: ordering + thresholds matter), continuous |
+| Plant macrofossils | count per volume, abundanceClass, volumePercent, presence | taxonCurves (bars), abundanceSymbols |
+| Chironomids | count (head capsules) → percent; inferred temp | taxonCurves, continuous |
+| Charcoal | concentration / influx | taxonCurves (bars), continuous |
+| Geochemistry / physical | continuous | continuous |
+
+Any new proxy should be expressible by a preset alone. If it needs code, it needs a new transform or panel — generic, not proxy-named.
+
+### 7.4 Typography
+- Taxon names support `*italic*` markup and `type` suffixes (e.g. `*Quercus*`, `Poaceae`, `*Alnus*-type`).
+- Default font: a widely available sans (Arial/Helvetica fallback). Fonts embedded in PDF export.
+
+## 8. Presets
+
+JSON files in `/presets`, same shape as a partial spec plus metadata:
+
+- `pollen-percent` — terrestrial sum, groups trees/shrubs/herbs/aquatics/spores, exaggeration ×10, silhouettes, summary panel.
+- `testate-percent` — % of total tests, bars, optional WTD panel.
+- `diatom-percent` — % of total valves, `minMax` threshold 2%, weighted-average-depth ordering.
+- `macrofossil-counts` — bars, no common scale, abundance classes supported.
+- `geochem` — continuous line panels.
+
+Users can save their own presets.
+
+## 9. Importers
+
+| priority | type | notes |
+|---|---|---|
+| MVP | `csv` / `tsv` | wide format: first columns depth[, age], then one column per variable. Optional header rows starting with `group` and/or `kind` (or sidecar JSON, later) for groups/kinds. Delimiter `,` / tab / `;` auto-detected; `;` files may use decimal commas. Variable id = header without `*` markup; name = header. Empty cell → `null`, missing kind → `count`. |
+| MVP | `xlsx` | same layout; via SheetJS. |
+| 2 | `tilia-tlx` | Tilia XML: variables, ecological groups, units, chronology, lithology. Map Tilia ecological group codes (TRSH, UPHE, AQVP, VACR, …) to Groups. |
+| 3 | `neotoma` | download dataset by ID via the Neotoma API. |
+| later | long format | sample, variable, value rows. |
+
+Importers never throw on recoverable problems: they return warnings.
+
+## 10. Export
+
+- **SVG** (native): clean, grouped (`<g id="panel-…">`), text as text (editable in Inkscape/Illustrator).
+- **PDF**: svg2pdf.js + jsPDF, fonts embedded, exact page size.
+- **PNG/TIFF**: raster at chosen dpi (default 600).
+- **Project bundle**: `.linden.json` = spec + embedded data, for sharing and archiving.
+
+## 11. App (UI) outline
+
+- Left: data & variable list (grouping, kind, visibility, drag to reorder).
+- Centre: live SVG preview at true page size, zoomable.
+- Right: properties of the selected panel / variable / overlay.
+- Top: import, presets, export, undo/redo (spec history).
+- A raw spec editor (JSON with schema validation) for power users — this is the "scriptable" path in the UI.
+- Persist work in IndexedDB; never auto-upload.
+
+## 12. Testing & validation
+
+- Unit tests (Vitest) for transforms and analyses with hand-computed fixtures.
+- **CONISS**: validate against a reference implementation's output on a public dataset (e.g. rioja's Abernethy Forest data), merge order and dispersions within tolerance.
+- **Golden SVG tests**: `examples/*` render to SVG and are compared against committed snapshots; intentional changes update snapshots in the same commit.
+- Determinism test: rendering twice gives identical output.
+
+## 13. Roadmap
+
+- **M0 — skeleton**: workspaces, core builds, app shell renders a hard-coded SVG.
+- **M1 — MVP diagram**: CSV import, percent transform, `yAxis` + `taxonCurves` (silhouette/bars), manual zones, SVG export, spec save/load.
+- **M2 — publication**: exaggeration, common scale + min width, header labels and group headers, PDF/PNG export, presets for pollen/testate/diatoms/macrofossils.
+- **M3 — analysis**: CONISS + dendrogram + broken-stick, summary panel, continuous panel, age axis.
+- **M4 — interoperability**: Tilia `.tlx` import, xlsx, multiple datasets on one diagram, lithology and dates panels.
+- **M5 — headless**: CLI, Python wrapper, documentation site with gallery.
+
+## 14. Non-goals (for now)
+
+- Age–depth modelling (users bring ages from Bacon/rbacon/clam/OxCal).
+- Transfer-function calibration (users bring reconstructed values; we plot them).
+- Database management / Neotoma upload.
+- Collaborative editing, accounts, servers.

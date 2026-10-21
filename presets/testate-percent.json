@@ -1,0 +1,10 @@
+{
+  "presetVersion": 1,
+  "name": "testate-percent",
+  "description": "Testate amoebae: % of total tests, bars, optional inferred water-table depth panel.",
+  "sums": { "total": { "includeAll": true } },
+  "panelDefaults": {
+    "taxonCurves": { "mode": "bars", "commonScale": true, "minWidth": 4, "exaggeration": 0 },
+    "continuous": { "mode": "linePoints", "errorEnvelope": true }
+  }
+}

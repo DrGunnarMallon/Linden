@@ -1,0 +1,25 @@
+{
+  "specVersion": 1,
+  "preset": "pollen-percent",
+  "page": { "width": 180, "height": 120, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": { "primary": "depth", "secondary": "age", "reverse": true, "ticks": { "major": 20, "minor": 10 } },
+  "datasets": [
+    {
+      "dataset": "demo-pollen",
+      "transforms": [{ "type": "percent", "sum": "terrestrial" }],
+      "sums": { "terrestrial": { "includeGroups": ["trees", "shrubs", "herbs"] } }
+    }
+  ],
+  "panels": [
+    { "type": "yAxis" },
+    {
+      "type": "taxonCurves",
+      "dataset": "demo-pollen",
+      "variables": { "groups": ["trees", "shrubs", "herbs", "spores"], "order": "data" },
+      "style": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4 }
+    }
+  ],
+  "overlays": [
+    { "type": "zones", "manual": [{ "depth": 65, "label": "P1/P2" }] }
+  ]
+}

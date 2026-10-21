@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="120mm" viewBox="0 0 180 120">
+  <g font-family="Arial" font-size="2.47">
+    <g id="panel-0-yAxis" transform="translate(5,19.58)">
+      <g class="axis-primary" transform="translate(0,0)">
+        <text x="1.98" y="45.66" transform="rotate(-90,1.98,45.66)" text-anchor="middle">Depth (cm)</text>
+        <line x1="8.53" y1="0" x2="8.53" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.93" y1="0" x2="8.53" y2="0" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.93" y1="20.29" x2="8.53" y2="20.29" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.93" y1="40.59" x2="8.53" y2="40.59" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.93" y1="60.88" x2="8.53" y2="60.88" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.93" y1="81.17" x2="8.53" y2="81.17" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.53" y1="10.15" x2="8.53" y2="10.15" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.93" y="10.88" font-size="2.1" text-anchor="end">20</text>
+        <line x1="7.53" y1="30.44" x2="8.53" y2="30.44" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.93" y="31.17" font-size="2.1" text-anchor="end">40</text>
+        <line x1="7.53" y1="50.73" x2="8.53" y2="50.73" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.93" y="51.47" font-size="2.1" text-anchor="end">60</text>
+        <line x1="7.53" y1="71.03" x2="8.53" y2="71.03" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.93" y="71.76" font-size="2.1" text-anchor="end">80</text>
+        <line x1="7.53" y1="91.32" x2="8.53" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.93" y="92.05" font-size="2.1" text-anchor="end">100</text>
+      </g>
+      <g class="axis-secondary" transform="translate(10.53,0)">
+        <text x="1.98" y="45.66" transform="rotate(-90,1.98,45.66)" text-anchor="middle">Age</text>
+        <line x1="10.84" y1="0" x2="10.84" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.84" y1="6.76" x2="10.84" y2="6.76" stroke="#000000" stroke-width="0.15"/>
+        <text x="9.24" y="7.5" font-size="2.1" text-anchor="end">2000</text>
+        <line x1="9.84" y1="23.68" x2="10.84" y2="23.68" stroke="#000000" stroke-width="0.15"/>
+        <text x="9.24" y="24.41" font-size="2.1" text-anchor="end">4000</text>
+        <line x1="9.84" y1="40.59" x2="10.84" y2="40.59" stroke="#000000" stroke-width="0.15"/>
+        <text x="9.24" y="41.32" font-size="2.1" text-anchor="end">6000</text>
+        <line x1="9.84" y1="57.5" x2="10.84" y2="57.5" stroke="#000000" stroke-width="0.15"/>
+        <text x="9.24" y="58.23" font-size="2.1" text-anchor="end">8000</text>
+        <line x1="9.84" y1="74.41" x2="10.84" y2="74.41" stroke="#000000" stroke-width="0.15"/>
+        <text x="9.24" y="75.14" font-size="2.1" text-anchor="end">10000</text>
+      </g>
+    </g>
+    <g id="panel-1-taxonCurves" transform="translate(28.37,19.58)">
+      <g id="panel-1-taxonCurves-Betula" class="column" transform="translate(0,0)">
+        <g class="exaggeration">
+          <path d="M0,0L17.68,0L17.68,10.15L17.68,20.29L17.68,30.44L17.68,40.59L17.68,50.73L17.68,60.88L17.68,71.03L17.68,81.17L17.68,91.32L0,91.32Z" fill="#2f6b3a" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L12.63,0L12.97,10.15L11.06,20.29L9.22,30.44L7.62,40.59L12.58,50.73L17,60.88L17.68,71.03L8.05,81.17L3.48,91.32L0,91.32Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="17.68" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="91.32" x2="8" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="94.5" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="16" y1="91.32" x2="16" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="16" y="94.5" font-size="2.1" text-anchor="middle">40</text>
+        </g>
+        <text class="label" x="9.71" y="-1" transform="rotate(-90,9.71,-1)"><tspan font-style="italic">Betula</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Pinus" class="column" transform="translate(18.68,0)">
+        <g class="exaggeration">
+          <path d="M0,0L13.48,0L13.48,10.15L13.48,20.29L13.48,30.44L13.48,40.59L13.48,50.73L13.48,60.88L13.48,71.03L13.48,81.17L8.7,91.32L0,91.32Z" fill="#2f6b3a" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L8.95,0L8.98,10.15L9.55,20.29L9.71,30.44L11.43,40.59L13.48,50.73L9.84,60.88L5.05,71.03L1.79,81.17L0.87,91.32L0,91.32Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="13.48" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="91.32" x2="8" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="94.5" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="7.61" y="-1" transform="rotate(-90,7.61,-1)"><tspan font-style="italic">Pinus</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Quercus" class="column" transform="translate(33.17,0)">
+        <g class="exaggeration">
+          <path d="M0,0L5.83,0L5.83,10.15L5.83,20.29L5.83,30.44L5.83,40.59L5.83,50.73L4.47,60.88L0,71.03L0,81.17L0,91.32L0,91.32Z" fill="#2f6b3a" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L4.21,0L4.49,10.15L5.23,20.29L5.83,30.44L4.57,40.59L1.8,50.73L0.45,60.88L0,71.03L0,81.17L0,91.32L0,91.32Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="5.83" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.78" y="-1" transform="rotate(-90,3.78,-1)"><tspan font-style="italic">Quercus</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Corylus" class="column" transform="translate(39.99,0)">
+        <g class="exaggeration">
+          <path d="M0,0L12.38,0L12.38,10.15L12.38,20.29L12.38,30.44L12.38,40.59L12.38,50.73L12.38,60.88L8.42,71.03L1.79,81.17L0,91.32L0,91.32Z" fill="#7a9a3c" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L6.32,0L6.98,10.15L8.54,20.29L10.68,30.44L12.38,40.59L8.09,50.73L3.58,60.88L0.84,71.03L0.18,81.17L0,91.32L0,91.32Z" fill="#7a9a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.78,81.17L1.98,81.17M1.38,80.57L1.38,81.77" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="12.38" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="91.32" x2="8" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="94.5" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="7.05" y="-1" transform="rotate(-90,7.05,-1)"><tspan font-style="italic">Corylus</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Poaceae" class="column" transform="translate(53.37,0)">
+        <g class="exaggeration">
+          <path d="M0,0L19.13,0L19.13,10.15L19.13,20.29L19.13,30.44L19.13,40.59L19.13,50.73L19.13,60.88L19.13,71.03L19.13,81.17L19.13,91.32L0,91.32Z" fill="#c9a227" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L5.79,0L4.79,10.15L4.02,20.29L3.4,30.44L2.86,40.59L2.25,50.73L5.37,60.88L9.26,71.03L16.11,81.17L19.13,91.32L0,91.32Z" fill="#c9a227" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="19.13" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="91.32" x2="8" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="94.5" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="16" y1="91.32" x2="16" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="16" y="94.5" font-size="2.1" text-anchor="middle">40</text>
+        </g>
+        <text class="label" x="10.43" y="-1" transform="rotate(-90,10.43,-1)">Poaceae</text>
+      </g>
+      <g id="panel-1-taxonCurves-Cyperaceae" class="column" transform="translate(73.5,0)">
+        <g class="exaggeration">
+          <path d="M0,0L9.57,0L9.57,10.15L9.57,20.29L9.57,30.44L9.52,40.59L9.57,50.73L9.57,60.88L9.57,71.03L9.57,81.17L9.57,91.32L0,91.32Z" fill="#c9a227" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L2.11,0L1.8,10.15L1.51,20.29L1.17,30.44L0.95,40.59L1.35,50.73L2.68,60.88L4.63,71.03L8.05,81.17L9.57,91.32L0,91.32Z" fill="#c9a227" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="9.57" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="91.32" x2="8" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="94.5" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="5.65" y="-1" transform="rotate(-90,5.65,-1)">Cyperaceae</text>
+      </g>
+      <g id="panel-1-taxonCurves-Artemisia" class="column" transform="translate(84.07,0)">
+        <g class="exaggeration">
+          <path d="M0,0L0,0L0,10.15L1.01,20.29L0,30.44L1.9,40.59L4.49,50.73L6.96,60.88L6.96,71.03L6.96,81.17L6.96,91.32L0,91.32Z" fill="#c9a227" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L0,0L0,10.15L0.1,20.29L0,30.44L0.19,40.59L0.45,50.73L1.07,60.88L2.53,71.03L5.82,81.17L6.96,91.32L0,91.32Z" fill="#c9a227" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,20.29L1.9,20.29M1.3,19.69L1.3,20.89M0.79,40.59L1.99,40.59M1.39,39.99L1.39,41.19" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="6.96" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="4.34" y="-1" transform="rotate(-90,4.34,-1)"><tspan font-style="italic">Artemisia</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Sphagnum" class="column" transform="translate(92.03,0)">
+        <g class="exaggeration">
+          <path d="M0,0L4,0L4,10.15L4,20.29L4,30.44L4,40.59L4,50.73L4,60.88L4,71.03L1.78,81.17L0,81.17Z" fill="#8a6a9a" fill-opacity="0.35"/>
+        </g>
+        <g class="curve">
+          <path d="M0,0L1.42,0L2.08,10.15L2.8,20.29L3.62,30.44L3.32,40.59L2.13,50.73L1.05,60.88L0.42,71.03L0.18,81.17L0,81.17Z" fill="#8a6a9a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="81.17" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.78,81.17L1.98,81.17M1.38,80.57L1.38,81.77" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="91.32" x2="4" y2="91.32" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="91.32" x2="0" y2="92.32" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="94.5" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.86" y="-1" transform="rotate(-90,2.86,-1)"><tspan font-style="italic">Sphagnum</tspan></text>
+      </g>
+    </g>
+    <g id="overlay-0-zones" transform="translate(5,19.58)">
+      <line class="zone" x1="0" y1="55.81" x2="119.4" y2="55.81" stroke="#000000" stroke-width="0.2"/>
+      <text class="zone-label" x="120.4" y="56.67">P1/P2</text>
+    </g>
+  </g>
+</svg>

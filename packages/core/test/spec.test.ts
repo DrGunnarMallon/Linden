@@ -59,8 +59,8 @@ describe("spec migration", () => {
     const v1 = { specVersion: 1, page: { width: 100 }, panels: [{ type: "yAxis" }] };
     const r = parseSpec(JSON.stringify(v1));
     expect(r).toEqual({ ok: true, value: { specVersion: SPEC_VERSION, page: { width: 100 }, panels: [{ type: "yAxis" }] } });
-    expect(SPEC_VERSION).toBe(6);
-    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 6 });
+    expect(SPEC_VERSION).toBe(7);
+    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 7 });
     expect(v1.specVersion).toBe(1); // input not mutated
   });
 
@@ -78,15 +78,24 @@ describe("spec migration", () => {
       yAxis: { titles: { depth: "Depth (m below surface)", age: "" } },
       panels: [{ type: "taxonCurves", dataset: "d", style: { xTitle: { text: "%", show: "column" }, xTicks: { unitSuffix: true } } }],
     };
-    expect(migrateSpec(v5)).toEqual({ ...v5, specVersion: 6 });
-    expect(parseSpec(v5)).toEqual({ ok: true, value: { ...v5, specVersion: 6 } });
+    expect(migrateSpec(v5)).toEqual({ ...v5, specVersion: 7 });
+    expect(parseSpec(v5)).toEqual({ ok: true, value: { ...v5, specVersion: 7 } });
     // xTitle is panel-level: not allowed in per-variable overrides.
-    const bad = parseSpec({ specVersion: 6, panels: [{ type: "taxonCurves", dataset: "d", overrides: { a: { xTitle: { show: "none" } } } }] });
+    const bad = parseSpec({ specVersion: 7, panels: [{ type: "taxonCurves", dataset: "d", overrides: { a: { xTitle: { show: "none" } } } }] });
     expect(bad.ok).toBe(false);
   });
 
+  it("migrates v6 → v7 and accepts the v7 fields (global xScale, taxonCurves columnWidth)", () => {
+    const v6 = { specVersion: 6, panels: [{ type: "taxonCurves", dataset: "d", style: { commonScale: false, columnWidth: 12.5 } }] };
+    expect(migrateSpec(v6)).toEqual({ ...v6, specVersion: 7 });
+    expect(parseSpec(v6)).toEqual({ ok: true, value: { ...v6, specVersion: 7 } });
+    expect(parseSpec({ ...v6, specVersion: 7, xScale: 0.55 }).ok).toBe(true);
+    expect(parseSpec({ specVersion: 7, xScale: 0, panels: [] }).ok).toBe(false);
+    expect(parseSpec({ specVersion: 7, panels: [{ type: "taxonCurves", dataset: "d", style: { columnWidth: -1 } }] }).ok).toBe(false);
+  });
+
   it("leaves current, unknown and non-object input to validation", () => {
-    const current = { specVersion: 6, panels: [] };
+    const current = { specVersion: 7, panels: [] };
     expect(migrateSpec(current)).toBe(current);
     expect(migrateSpec({ specVersion: 0, panels: [] })).toEqual({ specVersion: 0, panels: [] });
     expect(migrateSpec("x")).toBe("x");
@@ -99,13 +108,13 @@ describe("spec migration", () => {
       panels: [{ type: "taxonCurves", dataset: "m", variables: { kinds: ["presence"] }, style: { presence: "bar" } }],
     };
     const r = parseSpec(v3);
-    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 6 } });
+    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 7 } });
   });
 
   it("migrates v2 → v3 and accepts the v3 grouping fields (top-level groups end up in the dataset entries)", () => {
     const entry = { dataset: "d", assignments: { Sphagnum: "bryophytes" }, order: ["Sphagnum"], transforms: [{ type: "merge", id: "M", name: "M", from: ["a", "b"] }] };
     const v2 = { specVersion: 2, groups: [{ id: "bryophytes", name: "Bryophytes" }], datasets: [entry], panels: [] };
-    const expected = { specVersion: 6, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
+    const expected = { specVersion: 7, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
     const r = parseSpec(v2);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value).toEqual(expected);
@@ -133,7 +142,7 @@ describe("spec migration", () => {
       };
       const groups = pollenGroups.map((g) => (g.id === "herbs" ? { ...g, name: "Herbs (upland)" } : g));
       expect(migrateSpec(v4)).toEqual({
-        specVersion: 6,
+        specVersion: 7,
         preset: "pollen-percent",
         datasets: [
           {
@@ -158,7 +167,7 @@ describe("spec migration", () => {
     it("creates entries (without transforms, as before) for panel datasets that had none", () => {
       const out = migrateSpec({ specVersion: 4, groups: [{ id: "g", name: "G" }], panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }] });
       expect(out).toEqual({
-        specVersion: 6,
+        specVersion: 7,
         panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }],
         datasets: [{ dataset: "d", transforms: [], groups: [{ id: "g", name: "G" }] }],
       });

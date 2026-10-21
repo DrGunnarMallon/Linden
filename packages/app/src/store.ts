@@ -1,7 +1,7 @@
 // App state. The spec is the single source of truth: the editor text, the variable checkboxes
 // and the preset picker all produce new Spec values via commitSpec, which feeds undo/redo.
 
-import { SPEC_VERSION, importers, parseProject, parseSpec, render, resolveSpec, serializeProject, type Dataset, type Preset, type Spec } from "@linden/core";
+import { SPEC_VERSION, importers, parseProject, parseSpec, render, resolveSpec, serializeProject, type Dataset, type DiagramLayout, type Preset, type Spec } from "@linden/core";
 import { create } from "zustand";
 import { examples, loadBundledPresets } from "./bundled";
 import { download } from "./download";
@@ -55,6 +55,8 @@ interface State {
   exportWarnings: string[];
   exporting: boolean;
   svg: string;
+  /** Layout metadata of the last good render (page mm), for hit-testing in the preview. */
+  layout: DiagramLayout | undefined;
   past: Spec[];
   future: Spec[];
   lastTypedAt: number;
@@ -93,10 +95,10 @@ interface State {
 
 const bundled = loadBundledPresets();
 
-function renderWith(datasets: Dataset[], spec: Spec, presets: Preset[]): { svg?: string; renderWarnings: string[] } {
+function renderWith(datasets: Dataset[], spec: Spec, presets: Preset[]): { svg?: string; layout?: DiagramLayout; renderWarnings: string[] } {
   try {
     const r = render(datasets, spec, presets);
-    return { svg: r.svg, renderWarnings: r.warnings };
+    return { svg: r.svg, layout: r.layout, renderWarnings: r.warnings };
   } catch (e) {
     return { renderWarnings: [`Render failed: ${(e as Error).message}`] };
   }
@@ -111,7 +113,7 @@ export const useStore = create<State>()((set, get) => {
   const rerender = (patch: Partial<State>) => {
     const s = { ...get(), ...patch };
     const r = renderWith(s.datasets, s.spec, s.presets);
-    set({ ...patch, renderWarnings: r.renderWarnings, ...(r.svg !== undefined ? { svg: r.svg } : {}) });
+    set({ ...patch, renderWarnings: r.renderWarnings, ...(r.svg !== undefined ? { svg: r.svg, layout: r.layout } : {}) });
   };
 
   /** New spec as one undo step. `text` keeps the user's formatting; otherwise the spec is pretty-printed. */
@@ -156,6 +158,7 @@ export const useStore = create<State>()((set, get) => {
     exportWarnings: [],
     exporting: false,
     svg: "",
+    layout: undefined,
     past: [],
     future: [],
     lastTypedAt: 0,

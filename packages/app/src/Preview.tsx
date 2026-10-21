@@ -1,6 +1,7 @@
 import { resolveSpec } from "@linden/core";
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { PreviewOverlay } from "./PreviewOverlay";
 import { SHORTCUTS } from "./shortcuts";
 import { useStore } from "./store";
 import { Button, cn, IconButton, Tooltip } from "./ui";
@@ -53,6 +54,8 @@ export function Preview() {
   /** Page point under the cursor during Ctrl+scroll, kept in place after the zoom. */
   const anchor = useRef<{ fx: number; fy: number; cx: number; cy: number } | null>(null);
   const page = useMemo(() => resolveSpec(spec, presets).spec.page, [spec, presets]);
+  /** While dragging in the overlay the figure is dimmed under the outlines (no re-render until release). */
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     const el = scroller.current;
@@ -115,12 +118,10 @@ export function Preview() {
     <div className="relative h-full">
       <div ref={scroller} className="canvas-dots relative h-full overflow-auto" aria-label="Diagram preview" role="region">
         <div className="flex min-h-full w-max min-w-full items-center justify-center" style={{ padding: `${PAD}px ${PAD}px ${PAD_BOTTOM}px` }}>
-          <div
-            ref={pageEl}
-            className="figure-page shrink-0 shadow-page"
-            style={{ width: pageW * scale, height: pageH * scale }}
-            dangerouslySetInnerHTML={{ __html: markup }}
-          />
+          <div ref={pageEl} className="figure-page relative shrink-0 shadow-page" style={{ width: pageW * scale, height: pageH * scale }}>
+            <div className={cn("h-full w-full transition-opacity", dragging && "opacity-35")} dangerouslySetInnerHTML={{ __html: markup }} />
+            <PreviewOverlay pxPerMm={PX_PER_MM * scale} onDragChange={setDragging} />
+          </div>
         </div>
       </div>
       <ZoomToolbar />

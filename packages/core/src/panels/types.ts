@@ -48,6 +48,22 @@ export interface PanelMeasure {
   overhang?: { left: number; right: number };
 }
 
+/** A column's geometry for direct manipulation in the app (SPEC §5.1); x relative to the panel. */
+export interface ColumnLayout {
+  id: string;
+  x: number;
+  width: number;
+  /**
+   * How the width follows a resize: "scale" = max(minWidth, extent × x factor) (common scale);
+   * "column" = max(minWidth, style.columnWidth × fitted / natural x factor); "fixed" = neither.
+   */
+  sizing: "scale" | "column" | "fixed";
+  /** "scale": data extent in % equivalents (width before minWidth = extent × x factor); else 0. */
+  extent: number;
+  /** minWidth after fitting. */
+  minWidth: number;
+}
+
 export interface Panel {
   type: string;
   /** Natural width in mm; must not depend on ctx.y.height. Width may grow with ctx.xScale. */
@@ -56,6 +72,8 @@ export interface Panel {
   render(ctx: PanelContext, g: SvgGroup): void;
   /** Labelled columns (x relative to the panel) for the shared header band; omit if none. */
   columns?(ctx: PanelContext): HeaderColumn[];
+  /** Column geometry for the app's resize handles (layout metadata); omit if the panel has no columns. */
+  columnLayout?(ctx: PanelContext): ColumnLayout[];
 }
 
 export interface OverlayContext {

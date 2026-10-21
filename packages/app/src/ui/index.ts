@@ -14,4 +14,4 @@ export { Select, type SelectOption } from "./Select";
 export { Switch } from "./Switch";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 export { toast, Toaster } from "./Toast";
-export { Kbd, Tooltip, TooltipProvider } from "./Tooltip";
+export { Kbd, Tooltip, TooltipLabel, TooltipProvider } from "./Tooltip";

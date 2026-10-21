@@ -58,6 +58,8 @@ export interface ResolvedSpec {
   style: ResolvedFigureStyle;
   /** Absent = no title band. */
   title?: ResolvedTitle;
+  /** Global x factor, mm per % before page fitting. */
+  xScale: number;
   yAxis: ResolvedYAxis;
   datasets: ResolvedDatasetEntry[];
   panels: ResolvedPanel[];
@@ -154,6 +156,7 @@ export function resolveSpec(spec: Spec, presets: readonly Preset[] = []): { spec
     specVersion: spec.specVersion,
     page,
     style,
+    xScale: spec.xScale ?? coreDefaults.xScale,
     yAxis: mergeLayers(coreDefaults.yAxis, preset?.yAxis, spec.yAxis),
     datasets: (spec.datasets ?? []).map((d) => resolveDatasetEntry(d, preset)),
     panels: spec.panels.map((p) => resolvePanel(p, preset)),

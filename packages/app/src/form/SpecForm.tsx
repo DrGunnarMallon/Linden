@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState, type ComponentType } from "react";
 import { matchPagePreset, PAGE_PRESETS } from "../specEdit";
 import { useStore } from "../store";
 import { CollapsibleSection, Select } from "../ui";
+import { useView } from "../view";
 import { FormContext, useForm, type ControlProps, type FormContextValue } from "./context";
 import { Control, CONTROLS, Field } from "./controls";
 import { fieldLabel, formSections, isBlock } from "./model";
@@ -69,6 +70,8 @@ export function SpecForm() {
   const spec = useStore((s) => s.spec);
   const presets = useStore((s) => s.presets);
   const [errors, setErrors] = useState<string[]>([]);
+  // A panel selected in the preview opens the Panels section (its card opens itself, see ArrayControl).
+  const reveal = useView((s) => s.selection?.seq);
   const effective = useMemo(() => {
     try {
       return resolveSpec(spec, presets).spec;
@@ -110,7 +113,13 @@ export function SpecForm() {
           const fields = section.fields.map((key) => root.fields.find((f) => f.key === key)!);
           const only = fields.length === 1 ? fields[0] : undefined;
           return (
-            <CollapsibleSection key={section.id} title={section.title} defaultOpen={OPEN_SECTIONS.has(section.id)}>
+            <CollapsibleSection
+              key={section.id}
+              title={section.title}
+              defaultOpen={OPEN_SECTIONS.has(section.id)}
+              reveal={section.fields.includes("panels") ? reveal : undefined}
+              scrollOnReveal={false}
+            >
               <div className="space-y-3 px-3 pb-3">
                 {section.id === "page" && <PageSizePreset page={effective?.page} />}
                 {only && isBlock(only.node) ? (

@@ -1,7 +1,7 @@
 // Drawing constants (mm): the figure style from the spec (style.*, SPEC §6) plus fixed constants;
 // one place to tune the look.
 
-import type { ResolvedFigureStyle, ResolvedPage } from "../model/defaults.js";
+import { coreDefaults, type ResolvedFigureStyle, type ResolvedPage } from "../model/defaults.js";
 import { resolveStyle } from "../model/resolve.js";
 import { stripMarkup } from "../render/svg.js";
 import { textWidthEm } from "./metrics.js";
@@ -29,10 +29,8 @@ export interface Theme {
   minorTickLength: number;
   columnGap: number;
   panelGap: number;
-  /** mm per data unit before any shrinking (e.g. 0.4 mm per %). */
+  /** mm per data unit before any shrinking (spec xScale, e.g. 0.4 mm per %). */
   naturalXScale: number;
-  /** Column width for panels without a common scale. */
-  independentColumnWidth: number;
   /** Gap between the plot top and the taxon labels. */
   headerGap: number;
   /** Font-size step (pt) when shrinking header labels. */
@@ -58,7 +56,7 @@ export interface Theme {
 
 export const PT_TO_MM = 25.4 / 72;
 
-export function makeTheme(page: ResolvedPage, style: ResolvedFigureStyle = resolveStyle(page, undefined)): Theme {
+export function makeTheme(page: ResolvedPage, style: ResolvedFigureStyle = resolveStyle(page, undefined), xScale = coreDefaults.xScale): Theme {
   const { fonts } = style;
   return {
     margin: { top: 5, right: 5, bottom: 5, left: 5 },
@@ -77,8 +75,7 @@ export function makeTheme(page: ResolvedPage, style: ResolvedFigureStyle = resol
     minorTickLength: style.tickLength * 0.6,
     columnGap: 1,
     panelGap: 2,
-    naturalXScale: 0.4,
-    independentColumnWidth: 15,
+    naturalXScale: xScale,
     headerGap: 1,
     headerFontStep: 0.25,
     labelThickness: 1,

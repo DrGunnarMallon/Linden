@@ -8,7 +8,7 @@ import { SpecSchema } from "./spec.js";
 /** Sections of the form, top to bottom. Top-level keys not listed here get a section of their own. */
 export const SPEC_FORM_SECTIONS: FormSection[] = [
   { id: "preset", title: "Preset", fields: ["preset"] },
-  { id: "page", title: "Page", fields: ["page", "title", "style"] },
+  { id: "page", title: "Page", fields: ["page", "title", "style", "xScale"] },
   { id: "yAxis", title: "Y axis", fields: ["yAxis"] },
   { id: "headers", title: "Headers", fields: ["headerBand", "groupHeaders", "headers"] },
   { id: "datasets", title: "Datasets & transforms", fields: ["datasets"] },
@@ -58,6 +58,12 @@ const SPEC_HINTS: Record<string, FormHint> = {
   "style.lineWidths.axis": { unit: "mm", step: 0.05 },
   "style.lineWidths.curve": { unit: "mm", step: 0.05 },
   "style.tickLength": { ...mm, advanced: true },
+
+  xScale: {
+    label: "x-scale (mm per %)",
+    step: 0.05,
+    help: "Width of 1 % in common-scale columns before page fitting (0.4 = 4 mm per 10 %); other scale families follow. Drag a panel's edge in the preview.",
+  },
 
   yAxis: { order: ["primary", "secondary", "reverse", "range", "ticks", "titles"] },
   "yAxis.primary": { optionLabels: { depth: "Depth", age: "Age" } },
@@ -116,12 +122,13 @@ const SPEC_HINTS: Record<string, FormHint> = {
   "panels[].variables.kinds": { itemLabel: "kind", advanced: true },
   "panels[].variables.minMax": { label: "Min. maximum", help: "Show a variable only if its maximum reaches this value." },
   "panels[].variables.order": selectionOrder,
-  "panels[].style": { order: ["mode", "fill", "exaggeration", "commonScale", "minWidth", "plusBelow", "presence", "xTicks", "xTitle", "groupGap"] },
+  "panels[].style": { order: ["mode", "fill", "exaggeration", "commonScale", "minWidth", "columnWidth", "plusBelow", "presence", "xTicks", "xTitle", "groupGap"] },
   "panels[].style.mode": { optionLabels: { silhouette: "Silhouette", bars: "Bars", line: "Line", linePoints: "Line + points" } },
   "panels[].style.fill": { help: "\"group\" = group colour, or a CSS colour." },
   "panels[].style.exaggeration": { label: "Exaggeration (×)", help: "Lighter curve at ×n behind the main one; 0 = off." },
   "panels[].style.commonScale": { help: "One x-scale for all columns (percentage diagrams)." },
   "panels[].style.minWidth": { ...mm, label: "Min. column width" },
+  "panels[].style.columnWidth": { ...mm, label: "Column width", help: "Columns without a common scale." },
   "panels[].style.plusBelow": { label: "\"+\" below", help: "Draw \"+\" for non-zero values below this; 0 = off." },
   "panels[].style.groupGap": { ...mm, advanced: true },
   "panels[].style.presence": { optionLabels: { dot: "Dot", bar: "Bar" }, advanced: true },

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fileBase } from "../src/store";
 import { parsePreference, resolveTheme } from "../src/theme";
-import { clampZoom, MAX_ZOOM, MIN_ZOOM, stepZoom } from "../src/view";
+import { clampSidebar, clampZoom, MAX_ZOOM, MIN_ZOOM, parseSidebarWidths, SIDEBAR_WIDTH, stepZoom } from "../src/view";
 
 describe("theme", () => {
   it("defaults to following the system, which falls back to dark", () => {
@@ -39,5 +39,22 @@ describe("download file names", () => {
     expect(fileBase("  Loch Ness: core 2 / 2024 ")).toBe("loch-ness-core-2-2024");
     expect(fileBase("Ödmarksmossen")).toBe("ödmarksmossen");
     expect(fileBase("  ")).toBe("diagram");
+  });
+});
+
+describe("sidebar widths", () => {
+  it("clamps a dragged width to the sidebar's range, in whole px", () => {
+    expect(clampSidebar("left", 300.6)).toBe(301);
+    expect(clampSidebar("left", 50)).toBe(SIDEBAR_WIDTH.left.min);
+    expect(clampSidebar("right", 5000)).toBe(SIDEBAR_WIDTH.right.max);
+    expect(clampSidebar("right", Number.NaN)).toBe(SIDEBAR_WIDTH.right.default);
+  });
+
+  it("reads stored widths, falling back to the defaults for anything unreadable", () => {
+    expect(parseSidebarWidths('{"left":300,"right":500}')).toEqual({ left: 300, right: 500 });
+    expect(parseSidebarWidths('{"left":10}')).toEqual({ left: SIDEBAR_WIDTH.left.min, right: SIDEBAR_WIDTH.right.default });
+    expect(parseSidebarWidths(null)).toEqual({ left: 272, right: 384 });
+    expect(parseSidebarWidths("not json")).toEqual({ left: 272, right: 384 });
+    expect(parseSidebarWidths('{"left":"wide"}')).toEqual({ left: 272, right: 384 });
   });
 });

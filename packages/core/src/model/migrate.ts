@@ -15,6 +15,8 @@ const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   4: toV5,
   // v6 added title, style, yAxis.titles and taxonCurves style.xTitle / xTicks.unitSuffix, all optional.
   5: (spec) => ({ ...spec, specVersion: 6 }),
+  // v7 added the global xScale and taxonCurves style.columnWidth, both optional (defaults = the former constants).
+  6: (spec) => ({ ...spec, specVersion: 7 }),
 };
 
 /**

@@ -71,7 +71,7 @@ describe("defaultValue", () => {
     const transforms = byPath("datasets[].transforms[]").find((n) => n.kind === "variants")!;
     if (panels.kind !== "variants" || overlays.kind !== "variants" || transforms.kind !== "variants") throw new Error();
     const spec = {
-      specVersion: 6,
+      specVersion: 7,
       panels: panels.variants.map((v) => defaultValue(v.node)),
       overlays: overlays.variants.map((v) => defaultValue(v.node)),
       datasets: [{ dataset: "d", transforms: transforms.variants.map((v) => defaultValue(v.node)) }],

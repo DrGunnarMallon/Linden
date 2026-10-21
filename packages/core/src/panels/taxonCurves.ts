@@ -14,7 +14,7 @@ import { columnMax } from "../layout/select.js";
 import { PathBuilder, rotate, translate, type SvgGroup } from "../render/svg.js";
 import { LABEL_OFFSET, TEXT_ASCENT, type HeaderColumn } from "../layout/header.js";
 import { compactLength, GAP_FLOOR, MIN_WIDTH_FLOOR } from "../layout/layout.js";
-import type { Panel, PanelContext, PanelMeasure } from "./types.js";
+import type { ColumnLayout, Panel, PanelContext, PanelMeasure } from "./types.js";
 
 export interface TaxonColumn {
   index: number;
@@ -85,7 +85,7 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
       const max = Math.max(columnMax(data.dataset, j), top ?? 0);
       const common = ctx.xScale * (ctx.scaleRatios.get(key) ?? 1);
       // Independent columns shrink with the global x factor like everything else.
-      const independent = ctx.theme.independentColumnWidth * (ctx.xScale / ctx.theme.naturalXScale);
+      const independent = resolved.columnWidth * (ctx.xScale / ctx.theme.naturalXScale);
       const { width, scale, step } = columnGeometry(max, style, common, independent, top !== undefined, integerKind(variable.kind));
       const col: TaxonColumn = { index: j, variable, style, max, x, width, scale, key };
       if (step !== undefined) col.step = step;
@@ -500,6 +500,14 @@ export const taxonCurvesPanel: Panel = {
       const col: HeaderColumn = { id: c.variable.id, label: c.variable.name, x: c.x, width: c.width };
       if (c.variable.group !== undefined) col.group = c.variable.group;
       return col;
+    });
+  },
+
+  columnLayout(ctx) {
+    return taxonColumns(ctx).map((c): ColumnLayout => {
+      const sizing = c.variable.kind === "presence" || c.variable.codes ? "fixed" : c.style.commonScale ? "scale" : "column";
+      const extent = sizing === "scale" && ctx.xScale > 0 ? (c.max * c.scale) / ctx.xScale : 0;
+      return { id: c.variable.id, x: c.x, width: c.width, sizing, extent, minWidth: c.style.minWidth };
     });
   },
 

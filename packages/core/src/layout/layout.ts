@@ -72,6 +72,8 @@ export interface LayoutResult {
   panels: { x: number; width: number }[];
   /** Panels plus gaps. */
   panelsWidth: number;
+  /** Page width (mm) left before fitting would start; 0 once fitted, negative if it does not fit. */
+  slack: number;
   warnings: string[];
   /** Adjustments made to fit the page. */
   info: string[];
@@ -215,6 +217,7 @@ export function computeLayout(
     plot: { x: x0, y: margin.top + titleHeight + headerHeight, width: ms.reduce((acc, m) => acc + m.width, gaps), height },
     panels,
     panelsWidth: ms.reduce((acc, m) => acc + m.width, gaps),
+    slack: page.width - pageNeeded(extent),
     warnings,
     info,
   };

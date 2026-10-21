@@ -2,7 +2,7 @@
 // Pure: same inputs → identical SVG string. Problems become warnings.
 
 import { autoGroupSpans, groupRowHeight, groupSpans, groupSpansExtent, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
-import { computeLayout, type FitState } from "./layout/layout.js";
+import { computeLayout, type FitState, type Rect } from "./layout/layout.js";
 import { makeYScale, referenceRange, scaleKey, type YScale } from "./layout/scales.js";
 import { columnMax, selectVariables } from "./layout/select.js";
 import { makeTheme } from "./layout/theme.js";
@@ -11,7 +11,7 @@ import { applyGroups } from "./model/groups.js";
 import { resolveSpec, type ResolvedSpec } from "./model/resolve.js";
 import type { Preset, Spec } from "./model/spec.js";
 import type { Dataset } from "./model/types.js";
-import type { PanelContext, PanelData } from "./panels/types.js";
+import type { ColumnLayout, PanelContext, PanelData } from "./panels/types.js";
 import { overlays, panels, transforms } from "./registry.js";
 import { specHash } from "./io/hash.js";
 import { svgDocument, translate } from "./render/svg.js";
@@ -23,6 +23,37 @@ export interface RenderResult {
   warnings: string[];
   /** Adjustments made to fit the page (e.g. "minWidth reduced from 4 to 2.6 mm …"); not problems. */
   info: string[];
+  /** Where things were drawn, for hit-testing and direct manipulation in the app (no DOM needed). */
+  layout: DiagramLayout;
+}
+
+export interface PanelLayout {
+  index: number;
+  type: string;
+  /** Page mm: the panel's width, from the top of the header band to the bottom of the footer band. */
+  box: Rect;
+  /** Column geometry (panels with columns only), x relative to the panel. */
+  columns: ColumnLayout[];
+}
+
+/** Layout metadata of a render, all in page mm (SPEC §5.1). */
+export interface DiagramLayout {
+  page: { width: number; height: number };
+  margin: { top: number; right: number; bottom: number; left: number };
+  /** Plot area: x = first panel's left edge, width = panels incl. gaps, height = y-scale range. */
+  plot: Rect;
+  headerHeight: number;
+  footerHeight: number;
+  /** Global x factor (mm per %): spec value before fitting and the one used. */
+  xScale: { natural: number; used: number };
+  /** Page width left before fitting would start; 0 once fitted, negative if the diagram does not fit. */
+  slack: number;
+  panelGap: number;
+  panels: PanelLayout[];
+  /** Shared y scale: depth = domain[0] at the plot top unless reverse is false. */
+  y: { domain: [number, number]; reverse: boolean };
+  /** Distinct sample depths of the plotted datasets, ascending. */
+  depths: number[];
 }
 
 function applyTransforms(datasets: readonly Dataset[], rs: ResolvedSpec, warn: (m: string) => void): Map<string, Dataset> {
@@ -73,11 +104,15 @@ function axisDataset(byId: Map<string, Dataset>, rs: ResolvedSpec): Dataset | un
   return ordered.find((d) => d.samples.some((s) => s.age !== undefined)) ?? ordered[0];
 }
 
+/** Datasets the y range comes from: those of the taxonCurves panels, else all. */
+function plottedDatasets(rs: ResolvedSpec, data: (PanelData | undefined)[], byId: Map<string, Dataset>): Dataset[] {
+  const used = rs.panels.flatMap((p, i) => (p.type === "taxonCurves" && data[i] ? [data[i]!.dataset] : []));
+  return used.length ? used : [...byId.values()];
+}
+
 function yDomain(rs: ResolvedSpec, data: (PanelData | undefined)[], byId: Map<string, Dataset>, warn: (m: string) => void): [number, number] {
   if (rs.yAxis.range) return rs.yAxis.range;
-  const used = rs.panels.flatMap((p, i) => (p.type === "taxonCurves" && data[i] ? [data[i]!.dataset] : []));
-  const sources = used.length ? used : [...byId.values()];
-  const depths = sources.flatMap((d) => d.samples.map((s) => s.depth));
+  const depths = plottedDatasets(rs, data, byId).flatMap((d) => d.samples.map((s) => s.depth));
   if (depths.length === 0) {
     warn("No samples to plot; y-axis range set to 0–1.");
     return [0, 1];
@@ -144,7 +179,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   resolved.warnings.forEach(warn);
   const rs = resolved.spec;
   const byId = applyTransforms(datasets, rs, warn);
-  const theme = makeTheme(rs.page, rs.style);
+  const theme = makeTheme(rs.page, rs.style, rs.xScale);
   const axisDs = axisDataset(byId, rs);
 
   const data: (PanelData | undefined)[] = rs.panels.map((p) => {
@@ -272,5 +307,29 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     });
   }, svgMetadata(spec));
 
-  return { svg, warnings: [...warnings], info: [...title.info, ...layout.info] };
+  const meta: DiagramLayout = {
+    page: { width: rs.page.width, height: rs.page.height },
+    margin: theme.margin,
+    plot: layout.plot,
+    headerHeight: layout.headerHeight,
+    footerHeight: layout.footerHeight,
+    xScale: { natural: rs.xScale, used: layout.xScale },
+    slack: layout.slack,
+    panelGap: theme.panelGap,
+    panels: rs.panels.map((p, i) => ({
+      index: i,
+      type: p.type,
+      box: {
+        x: layout.panels[i]!.x,
+        y: layout.plot.y - layout.headerHeight,
+        width: layout.panels[i]!.width,
+        height: layout.headerHeight + layout.plot.height + layout.footerHeight,
+      },
+      columns: panels.get(p.type).columnLayout?.(ctxFor(i, layout.fit, y, labelStyle)) ?? [],
+    })),
+    y: { domain, reverse: rs.yAxis.reverse },
+    depths: [...new Set(plottedDatasets(rs, data, byId).flatMap((d) => d.samples.map((s) => s.depth)))].sort((a, b) => a - b),
+  };
+
+  return { svg, warnings: [...warnings], info: [...title.info, ...layout.info], layout: meta };
 }

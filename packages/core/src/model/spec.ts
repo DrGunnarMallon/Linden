@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 6;
+export const SPEC_VERSION = 7;
 
 export const MeasurementKindSchema = z.enum([
   "count",
@@ -149,6 +149,8 @@ export const TaxonCurvesStyleSchema = z.strictObject({
   exaggeration: z.number().min(0).optional(),
   commonScale: z.boolean().optional(),
   minWidth: z.number().min(0).optional(),
+  /** Column width in mm for columns without a common scale (before page fitting). */
+  columnWidth: z.number().positive().optional(),
   /** Draw "+" for non-zero values below this; 0 = off. */
   plusBelow: z.number().min(0).optional(),
   /** Extra space in mm between adjacent columns of different groups. */
@@ -244,6 +246,8 @@ export const SpecSchema = z.strictObject({
   page: PageSchema.optional(),
   title: TitleSchema.optional(),
   style: FigureStyleSchema.optional(),
+  /** Global x factor in mm per % before page fitting (other scale families follow); default 0.4. */
+  xScale: z.number().positive().optional(),
   yAxis: YAxisSchema.optional(),
   datasets: z.array(DatasetEntrySchema).optional(),
   panels: z.array(PanelSchema),

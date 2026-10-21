@@ -8,6 +8,7 @@ import { defaultValue, humanize, matchesNode, type FormNodeKind } from "@linden/
 import { CircleHelp, GripVertical, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Badge, Button, Checkbox, cn, CollapsibleSection, IconButton, Input, Menu, MenuContent, MenuItem, MenuTrigger, NumberInput, Select, Tooltip } from "../ui";
+import { useView } from "../view";
 import { FormContext, useForm, type ControlOf, type ControlProps, type FormContextValue } from "./context";
 import { fieldLabel, isBlock, itemTitle, optionLabel } from "./model";
 import { getIn, moveItem, pathString, removeIn, renameKey, setIn, type Path } from "./paths";
@@ -404,6 +405,10 @@ function ArrayControl({ node, path, value, label }: ControlOf<"array">) {
   const item = node.item;
   const noun = node.hint.itemLabel ?? "item";
   const cards = isBlock(item);
+  // The panel selected in the preview: its card opens, scrolls into view and is outlined.
+  const isPanels = pathString(path) === "panels";
+  const selected = useView((s) => (isPanels ? s.selection?.panel : undefined));
+  const reveal = useView((s) => (isPanels ? s.selection?.seq : undefined));
 
   const add = (v: unknown) => {
     const k = keys.peekNext();
@@ -433,8 +438,9 @@ function ArrayControl({ node, path, value, label }: ControlOf<"array">) {
               {(handle) =>
                 cards ? (
                   <CollapsibleSection
-                    className="rounded-md border bg-surface-2"
+                    className={cn("rounded-md border bg-surface-2", selected === i && "border-accent")}
                     defaultOpen={added.has(keys.keys[i]!)}
+                    reveal={selected === i ? reveal : undefined}
                     title={itemTitle(node, v, i)}
                     actions={
                       <>

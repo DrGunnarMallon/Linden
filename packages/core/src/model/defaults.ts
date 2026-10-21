@@ -64,6 +64,8 @@ export interface CoreDefaults {
   /** Fonts are derived from the page font, see resolveStyle. */
   style: Omit<ResolvedFigureStyle, "fonts">;
   title: Pick<ResolvedTitle, "align">;
+  /** Global x factor, mm per % before page fitting. */
+  xScale: number;
   yAxis: ResolvedYAxis;
   headerBand: ResolvedHeaderBand;
   groupHeaders: ResolvedGroupHeaders;
@@ -75,6 +77,7 @@ export const coreDefaults: CoreDefaults = {
   page: { width: 180, height: 240, units: "mm", font: { family: "Arial", size: 7 } },
   style: { background: "#ffffff", lineWidths: { axis: 0.15, curve: 0.1 }, tickLength: 1, colours: { axis: "#000000", text: "#000000" } },
   title: { align: "left" },
+  xScale: 0.4,
   yAxis: { primary: "depth", reverse: true, range: null, titles: {} },
   headerBand: { angle: 60, minFontSize: 5, height: null },
   groupHeaders: { show: true, line: "line" },
@@ -85,6 +88,7 @@ export const coreDefaults: CoreDefaults = {
     exaggeration: 0,
     commonScale: true,
     minWidth: 0,
+    columnWidth: 15,
     plusBelow: 0,
     groupGap: 2,
     xTicks: { step: null, minSpacing: 6, unitSuffix: false },

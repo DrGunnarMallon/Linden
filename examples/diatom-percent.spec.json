@@ -1,0 +1,11 @@
+{
+  "specVersion": 4,
+  "preset": "diatom-percent",
+  "page": { "width": 180, "height": 150, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 20, "minor": 5 } },
+  "datasets": [{ "dataset": "diatom-percent" }],
+  "panels": [
+    { "type": "yAxis" },
+    { "type": "taxonCurves", "dataset": "diatom-percent" }
+  ]
+}

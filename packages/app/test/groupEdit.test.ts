@@ -146,3 +146,15 @@ describe("merging", () => {
     expect(render([bryo.ds], twice, presets).warnings).toEqual([]);
   });
 });
+
+describe("merging with preset default transforms", () => {
+  it("keeps the preset's percent transform when the entry lists none", () => {
+    const spec: Spec = { ...pollen.spec, datasets: [{ dataset: "demo-pollen" }] };
+    expect(render([pollen.ds], spec, presets).svg).toBe(render([pollen.ds], pollen.spec, presets).svg); // preset supplies percent
+    const { spec: merged } = mergeVariables(spec, presets, pollen.ds, ["Poaceae", "Cyperaceae"], "Grasses & sedges");
+    expect(valid(merged).datasets![0]!.transforms).toEqual([
+      { type: "merge", id: "Grasses & sedges", name: "Grasses & sedges", from: ["Poaceae", "Cyperaceae"], group: "herbs" },
+      { type: "percent", sum: "terrestrial" },
+    ]);
+  });
+});

@@ -97,7 +97,7 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
     const d = r.spec.datasets[0]!;
     expect(d.sums).toEqual({ terrestrial: { includeAll: true }, trees: { includeGroups: ["trees"] } });
     expect(d.outsideSum).toEqual({ groups: ["aquatics", "spores"], basis: "sumPlusGroup" });
-    expect(d.transforms).toEqual([]);
+    expect(d.transforms).toEqual([{ type: "percent", sum: "terrestrial" }]); // preset default (entry lists none)
     expect(r.spec.groups.map((g) => g.id)).toEqual(["trees", "shrubs", "herbs", "aquatics", "spores"]);
   });
 

@@ -10,6 +10,8 @@ const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   1: (spec) => ({ ...spec, specVersion: 2 }),
   // v3 added top-level groups, dataset assignments / order and the merge transform, all optional.
   2: (spec) => ({ ...spec, specVersion: 3 }),
+  // v4 added the scaleMap transform, dataset `scales`, selection `kinds` and style `presence`, all optional.
+  3: (spec) => ({ ...spec, specVersion: 4 }),
 };
 
 /** Migrates an older spec to SPEC_VERSION. Anything else (unknown versions, non-objects) is returned unchanged for validation to report. */

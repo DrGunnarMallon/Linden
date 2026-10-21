@@ -95,6 +95,7 @@ export function selectVariables(
   let idx = ds.variables
     .map((v, j) => ({ v, j }))
     .filter(({ v }) => all || ids.has(v.id) || (v.group !== undefined && groups.has(v.group)))
+    .filter(({ v }) => sel.kinds === undefined || sel.kinds.includes(v.kind))
     .filter(({ j }) => columnMax(ds, j) >= sel.minMax)
     .map(({ j }) => j);
 

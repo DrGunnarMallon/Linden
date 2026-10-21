@@ -96,7 +96,9 @@ describe("layoutLabels — taxon label band", () => {
   it("reports how far right the labels reach", () => {
     const em = 7 * PT_TO_MM;
     const r = layoutLabels([{ id: "a", label: "Poaceae", x: 10, width: 4 }], opts());
-    expect(r.right).toBeCloseTo(12 + 3.947 * em * cos60 + 0.55 * em * sin60, 10);
+    // Bottom-right corner of the rotated glyph box: baseline offset 0.35 em + descent 0.25 em across the text.
+    expect(r.right).toBeCloseTo(12 + 3.947 * em * cos60 + 0.6 * em * sin60, 10);
+    expect(r.left).toBeCloseTo(12 - 0.4 * em * sin60, 10); // top-left corner: 0.35 − 0.75 em
   });
 });
 
@@ -192,8 +194,8 @@ describe("render — header band with 40 long taxon names", () => {
   });
 
   it("keeps the label ends on the page by shrinking the x-scale", () => {
-    const { svg, warnings } = render([manyTaxa()], { ...base, page: { width: 100 } });
-    expect(warnings.some((w) => w.includes("x-scale reduced"))).toBe(true);
+    const { svg, info } = render([manyTaxa()], { ...base, page: { width: 100 } });
+    expect(info.some((w) => w.includes("x-scale reduced"))).toBe(true);
     // Rightmost column: 40 columns must still end well before the page edge to leave room for its label.
     const xs = [...svg.matchAll(/class="column" transform="translate\(([^,]+),0\)"/g)].map((m) => Number(m[1]));
     expect(Math.max(...xs)).toBeLessThan(100 - 5 - 10);

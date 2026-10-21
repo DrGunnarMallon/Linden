@@ -17,6 +17,10 @@ export interface Variable {
   unit?: string;
   group?: string;
   meta?: Record<string, unknown>;
+  /** Text codes of an ordinal column (e.g. DAFOR letters, "+"); values are indices into this list until a scaleMap maps them. */
+  codes?: string[];
+  /** Axis labels at plotted values, e.g. class codes after a scaleMap. */
+  scaleLabels?: { value: number; label: string }[];
 }
 
 export interface Group {
@@ -101,6 +105,8 @@ export interface OutsideSum {
 
 export interface TransformContext {
   sums: Record<string, SumDefinition>;
+  /** Named ordinal scales (code → plotted value). */
+  scales?: Record<string, Record<string, number | null>>;
   outsideSum?: OutsideSum;
   warn(message: string): void;
 }

@@ -33,6 +33,7 @@ function members(ds: Dataset, sel: ResolvedSelection): string[] {
   const all = ids.size === 0 && groups.size === 0;
   return ds.variables
     .filter((v) => all || ids.has(v.id) || (v.group !== undefined && groups.has(v.group)))
+    .filter((v) => sel.kinds === undefined || sel.kinds.includes(v.kind))
     .map((v) => v.id);
 }
 
@@ -311,9 +312,11 @@ export function mergeVariables(spec: Spec, presets: readonly Preset[], raw: Data
   const merge: MergeTransformParams = { type: "merge", id, name: name.trim(), from: sources };
   if (ordered[0]!.group !== undefined) merge.group = ordered[0]!.group;
   const visible = visibleIds(spec, presets, raw);
+  // An entry without transforms uses the preset's; writing a merge must keep them.
+  const inherited = resolveSpec(spec, presets).spec.datasets.find((d) => d.dataset === raw.id)?.transforms ?? [];
 
   let next = updateEntry(spec, raw.id, (e) => {
-    const transforms = (e.transforms ?? []).filter((t) => !(t.type === "merge" && dissolved.includes(t.id)));
+    const transforms = (e.transforms ?? inherited).filter((t) => !(t.type === "merge" && dissolved.includes(t.id)));
     const at = transforms.findIndex((t) => t.type === "percent");
     const out: DatasetEntry = { ...e, transforms: at === -1 ? [...transforms, merge] : [...transforms.slice(0, at), merge, ...transforms.slice(at)] };
     if (e.order) out.order = replaceIds(e.order, ordered.map((v) => v.id), [id]);

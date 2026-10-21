@@ -65,3 +65,27 @@ export function interpolate(xs: readonly number[], ys: readonly number[], x: num
   }
   return ys[n - 1];
 }
+
+/**
+ * Common-scale family of a variable: columns share mm per unit only within the same kind and unit,
+ * so e.g. percentages and counts never share a scale.
+ */
+export function scaleKey(v: { kind: string; unit?: string }): string {
+  return `${v.kind}|${v.unit ?? ""}`;
+}
+
+/** Smallest 1, 2 or 5 × 10^k that is ≥ x (1 for x ≤ 0). */
+export function niceCeil(x: number): number {
+  if (!(x > 0)) return 1;
+  const mag = 10 ** Math.floor(Math.log10(x));
+  const f = [1, 2, 5, 10].find((m) => m * mag >= x * (1 - 1e-12))!;
+  return clean(f * mag);
+}
+
+/**
+ * Value range drawn as wide as 100 % for a scale family: 100 for percentage kinds, else the
+ * family's maximum rounded up to a nice number. mm per unit = xScale × 100 / range.
+ */
+export function referenceRange(kind: string, max: number): number {
+  return kind === "percent" || kind === "volumePercent" ? 100 : niceCeil(max);
+}

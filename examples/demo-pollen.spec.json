@@ -1,5 +1,5 @@
 {
-  "specVersion": 3,
+  "specVersion": 4,
   "preset": "pollen-percent",
   "page": { "width": 180, "height": 120, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "yAxis": { "primary": "depth", "secondary": "age", "reverse": true, "ticks": { "major": 20, "minor": 10 } },

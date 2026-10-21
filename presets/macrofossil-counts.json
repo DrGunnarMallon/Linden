@@ -1,14 +1,20 @@
 {
   "presetVersion": 1,
   "name": "macrofossil-counts",
-  "description": "Plant macrofossils: counts per volume or abundance classes, bars, independent scales.",
+  "description": "Plant macrofossils: counts per volume, abundance classes (1–5 or DAFOR) and presence; bars, independent scales.",
   "groups": [
-    { "id": "terrestrial", "name": "Terrestrial", "order": 1 },
-    { "id": "wetland", "name": "Wetland", "order": 2 },
-    { "id": "aquatic", "name": "Aquatic", "order": 3 },
-    { "id": "other", "name": "Other", "order": 4 }
+    { "id": "terrestrial", "name": "Terrestrial", "colour": "#6b5a2e", "order": 1 },
+    { "id": "wetland", "name": "Wetland", "colour": "#4f7d3a", "order": 2 },
+    { "id": "aquatic", "name": "Aquatic", "colour": "#3a78a8", "order": 3 },
+    { "id": "other", "name": "Other", "colour": "#555555", "order": 4 }
   ],
+  "scales": {
+    "classes": { "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5 },
+    "dafor": { "-": 0, "R": 1, "O": 2, "F": 3, "A": 4, "D": 5 },
+    "presence": { "-": 0, "+": 1 }
+  },
+  "transforms": [{ "type": "scaleMap", "scale": ["classes", "dafor", "presence"] }],
   "panelDefaults": {
-    "taxonCurves": { "mode": "bars", "commonScale": false, "minWidth": 6, "exaggeration": 0 }
+    "taxonCurves": { "mode": "bars", "fill": "group", "commonScale": false, "minWidth": 6, "exaggeration": 0, "presence": "dot" }
   }
 }

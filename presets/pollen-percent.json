@@ -11,6 +11,7 @@
   ],
   "sums": { "terrestrial": { "includeGroups": ["trees", "shrubs", "herbs"] } },
   "outsideSum": { "groups": ["aquatics", "spores"], "basis": "sumPlusGroup" },
+  "transforms": [{ "type": "percent", "sum": "terrestrial" }],
   "panelDefaults": {
     "taxonCurves": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4, "plusBelow": 0.5 }
   }

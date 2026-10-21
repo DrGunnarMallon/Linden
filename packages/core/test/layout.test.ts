@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeLayout, fitXScale } from "../src/layout/layout.js";
+import { compactLength, computeLayout, MIN_WIDTH_FLOOR, type FitState } from "../src/layout/layout.js";
 import { interpolate, makeYScale, niceStep, ticksAt } from "../src/layout/scales.js";
 import { makeTheme } from "../src/layout/theme.js";
 import { coreDefaults, type ResolvedTaxonCurvesStyle } from "../src/model/defaults.js";
@@ -45,16 +45,23 @@ describe("common scale", () => {
     expect(columnGeometry(50, style({ minWidth: 4 }), 0.4, 15)).toEqual({ width: 20, scale: 0.4 });
   });
 
-  it("independent scale (commonScale false) uses a fixed width and own scale", () => {
-    expect(columnGeometry(30, style({ commonScale: false }), 0.4, 15)).toEqual({ width: 15, scale: 0.5 });
+  it("independent scale (commonScale false): fixed width, own scale ending on a whole tick step", () => {
+    // 30 over 15 mm = 0.5 mm/unit → auto step 20 (≥ 6 mm) → axis 0–40 → 15 / 40 mm per unit.
+    expect(columnGeometry(30, style({ commonScale: false }), 0.4, 15)).toEqual({ width: 15, scale: 0.375, step: 20 });
+    expect(columnGeometry(40, style({ commonScale: false }), 0.4, 15)).toEqual({ width: 15, scale: 0.375, step: 20 });
+    expect(columnGeometry(54, style({ commonScale: false, xTicks: { step: 25, minSpacing: 6 } }), 0.4, 15)).toEqual({ width: 15, scale: 0.2, step: 25 });
+    // exact (class scales): the top class at the column end.
+    expect(columnGeometry(5, style({ commonScale: false }), 0.4, 15, true)).toEqual({ width: 15, scale: 3 });
   });
 });
 
 describe("fitting the page", () => {
   const theme = makeTheme(coreDefaults.page); // 180 mm wide, margins 5 + 5 → 170 mm available
   const maxes = [60, 40, 20, 5];
-  const panel = (minWidth: number) => (f: number) => ({
-    width: maxes.reduce((w, m) => w + columnGeometry(m, style({ minWidth }), f, 15).width, 0) + 3 * theme.columnGap,
+  const panel = (minWidth: number) => (s: FitState) => ({
+    width:
+      maxes.reduce((w, m) => w + columnGeometry(m, style({ minWidth: compactLength(minWidth, MIN_WIDTH_FLOOR, s.compact) }), s.xScale, 15).width, 0) +
+      3 * theme.columnGap,
     headerHeight: 10,
   });
 
@@ -62,29 +69,49 @@ describe("fitting the page", () => {
     const r = computeLayout(coreDefaults.page, theme, [panel(4)]);
     expect(r.xScale).toBe(theme.naturalXScale);
     expect(r.warnings).toEqual([]);
+    expect(r.info).toEqual([]);
     expect(r.panelsWidth).toBeCloseTo(24 + 16 + 8 + 4 + 3, 10); // 5 % → 2 mm, floored to minWidth 4
   });
 
-  it("shrinks the global x-scale with a warning when too wide", () => {
+  it("step (a) only: shrinks the global x-scale, reported as info, no warning", () => {
     const wide = [panel(4), panel(4), panel(4), panel(4)]; // 4 × 55 + 3 × 2 = 226 mm > 170 mm
     const r = computeLayout(coreDefaults.page, theme, wide);
     expect(r.xScale).toBeLessThan(theme.naturalXScale);
     expect(r.panelsWidth).toBeLessThanOrEqual(170 + 1e-9);
     expect(r.panelsWidth).toBeCloseTo(170, 6);
-    expect(r.warnings).toEqual([expect.stringContaining("x-scale reduced from 0.4 to")]);
+    expect(r.warnings).toEqual([]);
+    expect(r.info).toEqual([expect.stringMatching(/^x-scale reduced from 0\.4 to 0\.\d+ mm per unit to fit the page \(needs 236 mm at full size, page is 180 mm; common scale kept\)\.$/)]);
+    expect(r.fit.compact).toBe(1);
     // Common scale kept: the 60 % and 40 % columns are still 3 : 2.
     const w60 = columnGeometry(60, style({ minWidth: 4 }), r.xScale, 15).width;
     const w40 = columnGeometry(40, style({ minWidth: 4 }), r.xScale, 15).width;
     expect(w60 / w40).toBeCloseTo(1.5, 10);
   });
 
-  it("warns about overflow when even minimum widths do not fit, without breaking the scale", () => {
-    const r = fitXScale((f) => 200 + f, 170, 0.4);
-    expect(r.xScale).toBe(0.4);
-    expect(r.warning).toMatch(/overflows the page/);
+  it("steps (a)+(b): x-scale stops at 25 %, then minWidth is compacted only as far as needed", () => {
+    // Nine panels at x floor 0.1 mm/%: columns 6, 4, 4, 4 mm (minWidth 4) + 3 gaps = 21 mm → 9 × 21 + 8 × 2 = 205 mm > 170.
+    // Fully compacted (minWidth 0.5): 6 + 4 + 2 + 0.5 + 3 = 15.5 mm → 155.5 mm, so (b) stops part-way.
+    const r = computeLayout(coreDefaults.page, theme, Array(9).fill(panel(4)), { minWidths: [4] });
+    expect(r.xScale).toBeCloseTo(0.1, 10);
+    expect(r.fit.compact).toBeGreaterThan(0);
+    expect(r.fit.compact).toBeLessThan(1);
+    expect(r.panelsWidth).toBeCloseTo(170, 6);
+    expect(r.warnings).toEqual([]);
+    expect(r.info).toEqual([
+      expect.stringMatching(/^x-scale reduced from 0\.4 to 0\.1 mm per unit/),
+      expect.stringMatching(/^minWidth reduced from 4 to \d\.\d+ mm, column gaps from 1 to 0\.\d+ mm to fit the page\.$/),
+    ]);
   });
 
-  it("render() shrinks and warns, keeping columns proportional", () => {
+  it("step (d): warns with how many mm do not fit, after trying every step", () => {
+    const r = computeLayout(coreDefaults.page, theme, [(s: FitState) => ({ width: 200 + s.xScale, headerHeight: 0 })], { labelFont: { base: 7, min: 5 } });
+    expect(r.info).toHaveLength(3); // (a), (b) and (c) all applied (and reported) before the warning
+    expect(r.warnings).toEqual([
+      "Diagram does not fit the page width: it needs a page 210.1 mm wide (panels 200.1 mm, margins 5 + 5 mm) but the page is 180 mm — 30.1 mm too wide even at the smallest x-scale, minWidth, gaps and label size. Select fewer variables or use a wider page.",
+    ]);
+  });
+
+  it("render() shrinks (info, no warning), keeping columns proportional", () => {
     const n = 12;
     const ds: Dataset = {
       id: "wide",
@@ -95,8 +122,9 @@ describe("fitting the page", () => {
       groups: [],
       values: [Array.from({ length: n }, (_, j) => (j % 2 ? 60 : 30)), Array(n).fill(0)],
     };
-    const { svg, warnings } = render([ds], { specVersion: 2, panels: [{ type: "taxonCurves", dataset: "wide" }] });
-    expect(warnings).toEqual([expect.stringContaining("x-scale reduced")]);
+    const { svg, warnings, info } = render([ds], { specVersion: 2, panels: [{ type: "taxonCurves", dataset: "wide" }] });
+    expect(warnings).toEqual([]);
+    expect(info).toEqual([expect.stringContaining("x-scale reduced")]);
     const widths = [...svg.matchAll(/class="x-axis">\s*<line x1="0" y1="[^"]+" x2="([^"]+)"/g)].map((m) => Number(m[1]));
     expect(widths).toHaveLength(n);
     expect(widths[1]! / widths[0]!).toBeCloseTo(2, 2);

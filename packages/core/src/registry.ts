@@ -8,6 +8,7 @@ import type { Overlay, Panel } from "./panels/types.js";
 import { yAxisPanel } from "./panels/yAxis.js";
 import { mergeTransform } from "./transforms/merge.js";
 import { percentTransform } from "./transforms/percent.js";
+import { scaleMapTransform } from "./transforms/scaleMap.js";
 
 export interface Registered {
   type: string;
@@ -47,6 +48,7 @@ importers.register(csvImporter);
 export const transforms = new Registry<Transform>("transform");
 transforms.register(percentTransform);
 transforms.register(mergeTransform);
+transforms.register(scaleMapTransform);
 
 export const panels = new Registry<Panel>("panel");
 panels.register(yAxisPanel);

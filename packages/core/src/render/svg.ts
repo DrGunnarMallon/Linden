@@ -15,6 +15,9 @@ const ATTR_ORDER = [
   "y1",
   "x2",
   "y2",
+  "cx",
+  "cy",
+  "r",
   "width",
   "height",
   "viewBox",
@@ -143,6 +146,11 @@ export class SvgGroup {
 
   rect(x: number, y: number, width: number, height: number, attrs: Attrs = {}): this {
     this.children.push(`<rect${attrString({ ...attrs, x, y, width, height })}/>`);
+    return this;
+  }
+
+  circle(cx: number, cy: number, r: number, attrs: Attrs = {}): this {
+    this.children.push(`<circle${attrString({ ...attrs, cx, cy, r })}/>`);
     return this;
   }
 

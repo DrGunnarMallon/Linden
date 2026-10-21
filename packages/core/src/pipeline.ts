@@ -1,10 +1,10 @@
 // Full pipeline — SPEC.md §5: resolve → transforms → selection → layout → panels → SVG.
 // Pure: same inputs → identical SVG string. Problems become warnings.
 
-import { groupRowHeight, groupSpans, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
-import { computeLayout } from "./layout/layout.js";
-import { makeYScale, type YScale } from "./layout/scales.js";
-import { selectVariables } from "./layout/select.js";
+import { groupRowHeight, groupSpans, groupSpansExtent, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
+import { computeLayout, type FitState } from "./layout/layout.js";
+import { makeYScale, referenceRange, scaleKey, type YScale } from "./layout/scales.js";
+import { columnMax, selectVariables } from "./layout/select.js";
 import { makeTheme } from "./layout/theme.js";
 import { applyGroups } from "./model/groups.js";
 import { resolveSpec, type ResolvedSpec } from "./model/resolve.js";
@@ -18,6 +18,8 @@ import { mergedTwice } from "./transforms/merge.js";
 export interface RenderResult {
   svg: string;
   warnings: string[];
+  /** Adjustments made to fit the page (e.g. "minWidth reduced from 4 to 2.6 mm …"); not problems. */
+  info: string[];
 }
 
 function applyTransforms(datasets: readonly Dataset[], rs: ResolvedSpec, warn: (m: string) => void): Map<string, Dataset> {
@@ -49,7 +51,7 @@ function applyTransforms(datasets: readonly Dataset[], rs: ResolvedSpec, warn: (
         continue;
       }
       if (t.type === "percent") percentDone = true;
-      const ctx = { sums: entry.sums, warn, ...(entry.outsideSum ? { outsideSum: entry.outsideSum } : {}) };
+      const ctx = { sums: entry.sums, scales: entry.scales, warn, ...(entry.outsideSum ? { outsideSum: entry.outsideSum } : {}) };
       ds = transforms.get(t.type).apply(ds, t, ctx);
     }
     for (const id of entry.order) {
@@ -78,6 +80,24 @@ function yDomain(rs: ResolvedSpec, data: (PanelData | undefined)[], byId: Map<st
     return [0, 1];
   }
   return [Math.min(...depths), Math.max(...depths)];
+}
+
+/**
+ * One ratio per scale family (kind|unit) over every selected variable: 100 / reference range, so
+ * percentages keep xScale and e.g. counts get their own scale. Presence has no scale.
+ */
+function commonScaleRatios(data: readonly (PanelData | undefined)[]): Map<string, number> {
+  const max = new Map<string, { kind: string; max: number }>();
+  for (const d of data) {
+    for (const j of d?.variables ?? []) {
+      const v = d!.dataset.variables[j]!;
+      if (v.kind === "presence") continue;
+      const key = scaleKey(v);
+      const m = columnMax(d!.dataset, j);
+      max.set(key, { kind: v.kind, max: Math.max(m, max.get(key)?.max ?? 0) });
+    }
+  }
+  return new Map([...max].map(([key, { kind, max: m }]) => [key, 100 / referenceRange(kind, m)]));
 }
 
 /** Display name of a group: resolved spec (preset) first, then the datasets in spec order. */
@@ -132,14 +152,17 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   });
 
   const domain = yDomain(rs, data, byId, warn);
+  const scaleRatios = commonScaleRatios(data);
   const provisionalHeader = { fontSize: theme.fontSize, angle: rs.headerBand.angle };
-  const ctxFor = (i: number, xScale: number, y: YScale, header = provisionalHeader): PanelContext => ({
+  const ctxFor = (i: number, fit: FitState, y: YScale, header = provisionalHeader): PanelContext => ({
     id: `panel-${i}-${rs.panels[i]!.type}`,
     spec: rs.panels[i]!,
     data: data[i],
     y,
     yAxis: rs.yAxis,
-    xScale,
+    xScale: fit.xScale,
+    scaleRatios,
+    fit,
     page: rs.page,
     theme,
     groups: rs.groups,
@@ -157,12 +180,12 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   );
 
   // Shared header band: every panel's labelled columns, x from the plot's left edge.
-  const columnsAt = (xScale: number): HeaderColumn[] => {
+  const columnsAt = (fit: FitState): HeaderColumn[] => {
     const out: HeaderColumn[] = [];
     let x = 0;
     rs.panels.forEach((p, i) => {
       const panel = panels.get(p.type);
-      const ctx = ctxFor(i, xScale, provisionalY);
+      const ctx = ctxFor(i, fit, provisionalY);
       for (const c of panel.columns?.(ctx) ?? []) out.push({ ...c, x: x + c.x });
       x += panel.measure(ctx).width + theme.panelGap;
     });
@@ -177,31 +200,36 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     thickness: theme.labelThickness,
   };
   const groupRow = rs.headers.length > 0 ? groupRowHeight(theme) : 0;
-  const headerAt = (xScale: number) => {
-    const cols = columnsAt(xScale);
-    const labels = layoutLabels(cols, labelOptions);
+  const nameOf = (id: string) => groupName(rs, byId, id);
+  // Label font capped by the fit (step c); the label layout may go smaller to avoid collisions.
+  const headerAt = (fit: FitState) => {
+    const cols = columnsAt(fit);
+    const labels = layoutLabels(cols, { ...labelOptions, fontSize: Math.min(labelOptions.fontSize, fit.labelFont) });
     const height = cols.length > 0 ? theme.headerGap + labels.height + groupRow : groupRow;
-    return { cols, labels, height, right: labels.right };
+    const groups = groupSpansExtent(groupSpans(rs.headers, cols, nameOf, theme, () => undefined), theme);
+    return { cols, labels, height, left: Math.min(labels.left, groups.left), right: Math.max(labels.right, groups.right) };
   };
 
+  const minWidths = rs.panels.flatMap((p) =>
+    p.type === "taxonCurves" ? [p.style.minWidth, ...Object.values(p.overrides).flatMap((o) => (o.minWidth === undefined ? [] : [o.minWidth]))] : [],
+  );
   const layout = computeLayout(
     rs.page,
     theme,
-    rs.panels.map((p, i) => (xScale: number) => panels.get(p.type).measure(ctxFor(i, xScale, provisionalY))),
-    extraRight,
-    headerAt,
+    rs.panels.map((p, i) => (fit: FitState) => panels.get(p.type).measure(ctxFor(i, fit, provisionalY))),
+    { extraRight, header: headerAt, labelFont: { base: rs.page.font.size, min: rs.headerBand.minFontSize }, minWidths },
   );
   layout.warnings.forEach(warn);
-  const header = headerAt(layout.xScale);
+  const header = headerAt(layout.fit);
   header.labels.warnings.forEach(warn);
-  const spans = groupSpans(rs.headers, header.cols, (id) => groupName(rs, byId, id), theme, warn);
+  const spans = groupSpans(rs.headers, header.cols, nameOf, theme, warn);
   const labelStyle = { fontSize: header.labels.fontSize, angle: header.labels.angle };
 
   const y = makeYScale(domain, layout.plot.height, rs.yAxis.reverse);
   const svg = svgDocument(rs.page.width, rs.page.height, (root) => {
     const body = root.group({ "font-family": theme.fontFamily, "font-size": theme.fontSize });
     rs.panels.forEach((p, i) => {
-      const ctx = ctxFor(i, layout.xScale, y, labelStyle);
+      const ctx = ctxFor(i, layout.fit, y, labelStyle);
       const g = body.group({ id: ctx.id, transform: translate(layout.panels[i]!.x, layout.plot.y) });
       panels.get(p.type).render(ctx, g);
     });
@@ -215,5 +243,5 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     });
   });
 
-  return { svg, warnings: [...warnings] };
+  return { svg, warnings: [...warnings], info: layout.info };
 }

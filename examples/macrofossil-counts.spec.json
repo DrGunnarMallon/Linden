@@ -1,0 +1,13 @@
+{
+  "specVersion": 4,
+  "preset": "macrofossil-counts",
+  "page": { "width": 240, "height": 150, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 50, "minor": 10 } },
+  "datasets": [{ "dataset": "macrofossil-counts" }],
+  "panels": [
+    { "type": "yAxis" },
+    { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["count"] } },
+    { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["abundanceClass"] } },
+    { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["presence"] } }
+  ]
+}

@@ -72,6 +72,8 @@ interface Variable {
   unit?: string;
   group?: string;          // refers to Group.id
   meta?: Record<string, unknown>; // e.g. ecological group code from Tilia, Neotoma taxon id
+  codes?: string[];        // text codes of an ordinal column (DAFOR letters, "+"); values index into it until a scaleMap maps them
+  scaleLabels?: { value: number; label: string }[]; // axis labels at plotted values, set by scaleMap (e.g. the DAFOR letters)
 }
 
 interface Group {
@@ -116,7 +118,7 @@ The spec is JSON, validated with a schema (zod in `core`, exported as JSON Schem
 
 ```jsonc
 {
-  "specVersion": 3,
+  "specVersion": 4,
   "page": { "width": 180, "height": 240, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "headerBand": { "angle": 60, "minFontSize": 5, "height": null },   // taxon labels; height null = fit
   "yAxis": {
@@ -184,8 +186,10 @@ Key rules:
   Variables with no non-zero value go last. These panel orders apply within groups (see column order). All orders except `data` break ties by variable id (code-unit comparison, locale-independent).
 - **Per-variable overrides** are allowed (`overrides: { "Pinus": { "exaggeration": 0 } }`) but discouraged. Panel-level layout keys (`groupGap`) cannot be overridden; overrides for ids not in the dataset produce a warning.
 - **Group headers** (`headers`): a bracket with a label above exactly the columns whose group is in `spans.groups` or whose id is in `spans.ids`, across all panels. `label` defaults to the spanned group names joined by " & ". If the matching columns are not adjacent, one bracket is drawn per run (label on the first) and a warning is emitted; overlapping headers warn. `style.groupGap` (mm) adds space between adjacent columns of different groups.
-- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks`; v3 added top-level `groups`, `datasets[].assignments` / `order` and the `merge` transform (all optional, so each migration only bumps the number).
-- **Presets** provide defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named sums replace whole (a spec sum with the same name as a preset sum wins entirely); `outsideSum` comes from the dataset entry, else from the preset.
+- **Spec versions**: `parseSpec` migrates older versions before validation (`model/migrate.ts`). v2 added `headerBand`, `headers`, `style.groupGap` and `style.xTicks`; v3 added top-level `groups`, `datasets[].assignments` / `order` and the `merge` transform; v4 added the `scaleMap` transform, `datasets[].scales`, `variables.kinds` and `style.presence` (all optional, so each migration only bumps the number).
+- **Presets** provide defaults; explicit spec values always win. Resolution order: core defaults → preset → spec → per-variable override. Objects merge deeply; arrays and `null` replace. Named sums and named scales replace whole (a spec sum/scale with the same name as a preset one wins entirely); `outsideSum` comes from the dataset entry, else from the preset; a dataset entry without `transforms` uses the preset's `transforms` (so `"preset": "testate-percent"` alone gives percentages of total tests).
+- **Dataset entries** may define named ordinal `scales` (`{ "dafor": { "-": 0, "R": 1, …, "D": 5 } }`, code → plotted value, `null` = not assessed), referenced by the `scaleMap` transform.
+- **Selection by kind**: `variables.kinds` keeps only variables of these measurement kinds (after transforms), e.g. one panel each for counts, abundance classes and presence.
 - **Dataset entries** may carry `outsideSum: { "groups": [...], "basis": "sum" | "sumPlusGroup" }` (same shape as in presets).
 - **Zones overlay**: `{ "type": "zones", "manual": [{ "depth": 65, "label": "P1/P2" }] }` draws boundaries at given depths (M1). Zones from an analysis (`from`, `n`, `labels`) follow in M3.
 - Spec objects are strict: unknown keys are validation errors (catches typos). `parseSpec` returns readable errors with paths, e.g. `panels[1].style.mode: …`.
@@ -261,7 +265,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 | `percent`       | counts → % of a named sum; sum defined by `includeGroups` / `includeVariables` / `includeAll`; excluded groups expressed as % of (sum + group) — a preset choice, not hard-coded |
 | `concentration` | via exotic marker spikes (Lycopodium/microspheres) or volume/mass |
 | `influx`        | concentration × accumulation rate (needs ages) |
-| `scaleMap`      | map ordinal classes to plotted widths (macrofossils, DAFOR) |
+| `scaleMap`      | `{ scale: name \| [names] }` or `{ map: {code: value} }`, optional `kinds` (default `abundanceClass`, `presence`) or `variables`. Maps ordinal classes / presence codes (1–5, DAFOR, `+`) to plotted values. With a list of named scales each variable uses the first scale that contains every code it uses. Unmapped codes → `null` + warning; an unmapped numeric 0 stays 0. Sets `scaleLabels` to the whole chosen scale, so class axes show the codes. Text codes no scaleMap has mapped are never plotted (warning). |
 | `merge`         | `{ id, name, from: [ids], group?, keepSources: false }` — sums the sources per sample into one variable placed where the first source was; null + number = number, all null = null, 0 stays 0. Sources of different kinds are refused (warning); different units warn. Must come before `percent` (a merge after a percent transform is skipped with a warning), so merged taxa are percentages of the same sum. A variable used by two merges is a warning. |
 | `log` / `sqrt`  | for analyses or display |
 
@@ -276,10 +280,21 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 ## 6. Layout engine
 
 - Coordinates in mm. Page = plot area + header band (taxon labels) + footer band (x-axis scales). The SVG viewBox is in mm; `page.font.size` is in points (converted to mm) and is the base size for all text. No DOM: text widths come from a deterministic per-character metrics table for Helvetica/Arial (`layout/metrics.ts`, unknown characters ≈ 0.556 em); the app may later substitute real measurement behind the same function.
-- `measure()` must not depend on the plot height; it may grow with `xScale`. Layout fits the single `xScale` (natural 0.4 mm per unit) by bisection.
+- `measure()` must not depend on the plot height; it may grow with the fit state (x factor, compaction, label font) but never shrink when they grow. Panels report what they draw beyond their own width (`PanelMeasure.overhang`: edge tick and unit labels, markers) so the layout can reserve it.
+- **Everything drawn is reserved; nothing is drawn outside the page.** The panels stay inside the page margins; ink beyond them — rotated taxon labels (their full rotated glyph box: baseline offset 0.35 em, ascent 0.75 em, descent 0.25 em), group-header labels, zone labels, edge tick/unit labels — may use the margins but never leaves the page. If ink sticks out left of the first panel, the diagram shifts right.
 - Columns are laid out left to right in panel order. Each taxon column's width is proportional to its maximum value **when `commonScale` is true** (the standard convention for percentage diagrams: 10% is the same width in every column). `minWidth` stops rare taxa from vanishing.
-- If total natural width exceeds page width: first shrink the global x-scale factor (preserving common scale), then report a warning. Never silently break the common scale.
-- Header labels: rotated (`headerBand.angle`, default 60°), anchored at column centre. One header band is laid out for all panels (from their `columns()`), so every taxon label has the same font size. Adjacent labels collide when their perpendicular distance (pitch × sin θ) is under 1 em while they overlap along the text (pitch × cos θ < label length). Resolution order: reduce the font in 0.25 pt steps from `page.font.size` down to `headerBand.minFontSize`; then grow the band beyond `headerBand.height` (if set; warns); labels that still overlap produce a warning — never silently. The right end of the labels is reserved in the x-scale fit, so labels never run off the page.
+- **Scale families.** A common scale is shared only by columns of the same kind and unit (`kind|unit`), across all panels — percentages and counts never share one. Percent kinds (`percent`, `volumePercent`) use the global x-scale (natural 0.4 mm per %); any other family is scaled so that its maximum, rounded up to a 1–2–5 value, is as wide as 100 %. One global factor shrinks all families together when fitting the page. A panel mixing kinds gets a warning (use `variables.kinds`).
+- **Independent scales** (`commonScale: false`): fixed column width, own scale from 0 to the column maximum rounded up to a whole tick step (class scales: up to the top class), so the axis ends on a labelled tick; labels stay inside the column (first left-aligned, last right-aligned).
+- **Unit labels** below the tick labels: every independent-scale column with a `unit`; common-scale columns only when the diagram has more than one scale family, once per run of one family (`unit`, else the kind). The footer grows by one line only when unit labels are shown.
+- **Presence** (kind `presence`): no scale; a fixed-width column (`max(minWidth, 3 mm)`) with a dot (`style.presence: "dot"`, default) or a full-width bar (`"bar"`) at each sample with value > 0; 0 and `null` draw nothing.
+- **Fitting the page width.** If the natural layout is too wide, these steps apply in order, each only as far as needed (bisection), the next only if the previous one at its floor is not enough:
+  a. shrink the global x factor (all scale families together, so common scales stay common; independent-scale columns shrink with it), down to 25 % of natural (0.1 mm per %);
+  b. compact every column `minWidth` (towards 0.5 mm) and the column and group gaps (towards 0.3 mm) proportionally;
+  c. reduce the taxon-label font cap in 0.25 pt steps, down to `headerBand.minFontSize`;
+  d. warn: "does not fit the page width", with the page width needed, the parts (panels, labels left/right) and how many mm are missing.
+  Each applied step is reported as an **info** message (`RenderResult.info`, e.g. "minWidth reduced from 4 to 2.6 mm, column gaps from 1 to 0.73 mm to fit the page."), not as a warning. Never silently break the common scale.
+- Tick labels are placed left to right across a whole panel: a label (even a column's "0") is skipped if it would touch the previous one, so compacted columns thin their labels instead of overlapping them.
+- Header labels: rotated (`headerBand.angle`, default 60°), anchored at column centre. One header band is laid out for all panels (from their `columns()`), so every taxon label has the same font size. Adjacent labels collide when their perpendicular distance (pitch × sin θ) is under 1 em while they overlap along the text (pitch × cos θ < label length). Resolution order: reduce the font in 0.25 pt steps from `page.font.size` down to `headerBand.minFontSize`; then grow the band beyond `headerBand.height` (if set; warns); labels that still overlap produce a warning — never silently. Both ends of the labels are reserved in the page fit (see "Fitting the page width"), so labels never run off the page.
 - Group headers sit in a row above the taxon labels (§4 `headers`).
 - Per-column x axes: tick step = `style.xTicks.step`, or automatically the smallest 1–2–5 × 10ⁿ step at least `xTicks.minSpacing` mm long at the column's scale (with a common scale, the same step in every column — e.g. 20 % at 0.4 mm/%). Tick labels are placed left to right and skipped if they would touch the previous label or the next column's "0", so narrow columns keep a single label.
 - One shared y-scale for all panels; secondary axis (age) drawn by interpolation from sample depth–age pairs, never by re-scaling.
@@ -291,7 +306,7 @@ interface Exporter { type: string; export(svg: string, opts: unknown): Promise<B
 
 ### 7.1 MVP
 - `yAxis` — depth and/or age axis with ticks and label.
-- `taxonCurves` — one column per variable. Modes: `silhouette` (filled), `bars`, `line`, `linePoints`. Options: exaggeration curve (×n, lighter fill), zero line, `null` gaps, x-axis ticks per column, `+` marker for values below a threshold (e.g. < 0.5%).
+- `taxonCurves` — one column per variable. Modes: `silhouette` (filled), `bars`, `line`, `linePoints`. Options: exaggeration curve (×n, lighter fill), zero line, `null` gaps, x-axis ticks per column, `+` marker for values below a threshold (e.g. < 0.5%), presence marks (§6), class-code axes after a `scaleMap`.
 - `zones` overlay — horizontal lines + labels.
 
 ### 7.2 Next
@@ -323,13 +338,15 @@ Any new proxy should be expressible by a preset alone. If it needs code, it need
 
 ## 8. Presets
 
-JSON files in `/presets`, same shape as a partial spec plus metadata:
+JSON files in `/presets`, same shape as a partial spec plus metadata: `presetVersion`, `name` (must equal the file name), `description`, `page`, `yAxis`, `headerBand`, `groups`, `sums`, `scales`, `outsideSum`, default dataset `transforms`, `selectionDefaults`, `panelDefaults` (strict: only implemented panel types). `loadPresets(files)` validates them (JSON, schema, name = file name, unique names) and reports readable errors prefixed with the file name; it never throws.
 
-- `pollen-percent` — terrestrial sum, groups trees/shrubs/herbs/aquatics/spores, exaggeration ×10, silhouettes, summary panel.
-- `testate-percent` — % of total tests, bars, optional WTD panel.
-- `diatom-percent` — % of total valves, `minMax` threshold 2%, weighted-average-depth ordering.
-- `macrofossil-counts` — bars, no common scale, abundance classes supported.
-- `geochem` — continuous line panels.
+- `pollen-percent` — terrestrial sum, groups trees/shrubs/herbs/aquatics/spores, aquatics/spores as % of (sum + group), percent transform, exaggeration ×10, silhouettes, `+` below 0.5 %. (Summary panel: M3.)
+- `testate-percent` — percent transform of total tests, bars, common scale. (Inferred WTD panel: M3, continuous panel.)
+- `diatom-percent` — percent transform of total valves, `minMax` threshold 2%, weighted-average-depth ordering.
+- `macrofossil-counts` — groups terrestrial/wetland/aquatic/other, named scales `classes` (0–5), `dafor` (`-` R O F A D) and `presence` (`-` `+`), a default scaleMap trying them in that order, bars, independent scales, presence dots.
+- `geochem` — continuous line panels (M3).
+
+Examples (synthetic data, marked as such in the CSV header): `examples/{testate-percent,diatom-percent,macrofossil-counts}.{csv,spec.json}`; `npm run demo -w @linden/core` renders every example to `examples/out/`.
 
 Users can save their own presets.
 
@@ -337,7 +354,7 @@ Users can save their own presets.
 
 | priority | type | notes |
 |---|---|---|
-| MVP | `csv` / `tsv` | wide format: first columns depth[, age], then one column per variable. Optional header rows starting with `group` and/or `kind` (or sidecar JSON, later) for groups/kinds. Delimiter `,` / tab / `;` auto-detected; `;` files may use decimal commas. Variable id = header without `*` markup; name = header. Empty cell → `null`, missing kind → `count`. |
+| MVP | `csv` / `tsv` | wide format: first columns depth[, age], then one column per variable. Optional header rows starting with `group`, `kind` and/or `unit` (or sidecar JSON, later). Lines starting with `#` before the header are comments. Delimiter `,` / tab / `;` auto-detected; `;` files may use decimal commas. Variable id = header without `*` markup; name = header. Empty cell → `null`, missing kind → `count`. Ordinal columns (`abundanceClass`, `presence`) with any non-numeric cell keep their cells as text codes (`variable.codes`, first-seen order) for a `scaleMap`; text in other kinds → `null` + warning. |
 | MVP | `xlsx` | same layout; via SheetJS. |
 | 2 | `tilia-tlx` | Tilia XML: variables, ecological groups, units, chronology, lithology. Map Tilia ecological group codes (TRSH, UPHE, AQVP, VACR, …) to Groups. |
 | 3 | `neotoma` | download dataset by ID via the Neotoma API. |

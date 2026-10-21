@@ -3,7 +3,21 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 3;
+export const SPEC_VERSION = 4;
+
+export const MeasurementKindSchema = z.enum([
+  "count",
+  "percent",
+  "concentration",
+  "influx",
+  "abundanceClass",
+  "presence",
+  "volumePercent",
+  "continuous",
+]);
+
+/** Named ordinal scale: class code (e.g. "3", "D", "+") → plotted value; null = treat as not assessed. */
+export const ScaleSchema = z.record(z.string(), z.number().nullable());
 
 export const SumSchema = z.strictObject({
   includeGroups: z.array(z.string()).optional(),
@@ -58,12 +72,26 @@ export const MergeTransformSchema = z.strictObject({
   keepSources: z.boolean().optional(),
 });
 
-export const TransformSpecSchema = z.discriminatedUnion("type", [PercentTransformSchema, MergeTransformSchema]);
+/**
+ * Maps ordinal classes / presence codes to plotted values. Give `scale` (a named scale, or a list:
+ * each variable uses the first listed scale containing all of its codes) or an inline `map`.
+ */
+export const ScaleMapTransformSchema = z.strictObject({
+  type: z.literal("scaleMap"),
+  scale: z.union([z.string(), z.array(z.string()).min(1)]).optional(),
+  map: ScaleSchema.optional(),
+  /** Variables of these kinds are mapped; default ["abundanceClass", "presence"]. Ignored if `variables` is given. */
+  kinds: z.array(MeasurementKindSchema).optional(),
+  variables: z.array(z.string()).optional(),
+});
+
+export const TransformSpecSchema = z.discriminatedUnion("type", [PercentTransformSchema, MergeTransformSchema, ScaleMapTransformSchema]);
 
 export const DatasetEntrySchema = z.strictObject({
   dataset: z.string(),
   transforms: z.array(TransformSpecSchema).optional(),
   sums: z.record(z.string(), SumSchema).optional(),
+  scales: z.record(z.string(), ScaleSchema).optional(),
   outsideSum: OutsideSumSchema.optional(),
   /** variable id → group id; overrides the dataset's group (applied before transforms). */
   assignments: z.record(z.string(), z.string()).optional(),
@@ -74,6 +102,8 @@ export const DatasetEntrySchema = z.strictObject({
 export const SelectionSchema = z.strictObject({
   ids: z.array(z.string()).optional(),
   groups: z.array(z.string()).optional(),
+  /** Keep only variables of these kinds (after transforms). */
+  kinds: z.array(MeasurementKindSchema).optional(),
   minMax: z.number().min(0).optional(),
   order: z
     .union([z.enum(["data", "alphabetical", "weightedAverageDepth", "firstOccurrence"]), z.array(z.string())])
@@ -100,6 +130,8 @@ export const TaxonCurvesStyleSchema = z.strictObject({
   /** Extra space in mm between adjacent columns of different groups. */
   groupGap: z.number().min(0).optional(),
   xTicks: XTicksSchema.optional(),
+  /** Mark for kind "presence" (value > 0): a dot or a full-width bar. */
+  presence: z.enum(["dot", "bar"]).optional(),
 });
 
 export const YAxisPanelSchema = z.strictObject({
@@ -184,13 +216,12 @@ export const PresetSchema = z.strictObject({
   headerBand: HeaderBandSchema.optional(),
   groups: z.array(GroupSpecSchema).optional(),
   sums: z.record(z.string(), SumSchema).optional(),
+  scales: z.record(z.string(), ScaleSchema).optional(),
   outsideSum: OutsideSumSchema.optional(),
+  /** Default transforms for dataset entries that do not list their own. */
+  transforms: z.array(TransformSpecSchema).optional(),
   selectionDefaults: SelectionSchema.optional(),
-  // Defaults for panel types not yet in the schema are kept as-is.
-  panelDefaults: z
-    .object({ taxonCurves: TaxonCurvesStyleSchema.optional() })
-    .catchall(z.record(z.string(), z.unknown()))
-    .optional(),
+  panelDefaults: z.strictObject({ taxonCurves: TaxonCurvesStyleSchema.optional() }).optional(),
 });
 
 export type Spec = z.infer<typeof SpecSchema>;
@@ -202,6 +233,8 @@ export type TransformSpec = z.infer<typeof TransformSpecSchema>;
 export type PercentTransformParams = z.infer<typeof PercentTransformSchema>;
 export type MergeTransformParams = z.infer<typeof MergeTransformSchema>;
 export type SpecGroup = z.infer<typeof SpecGroupSchema>;
+export type ScaleMapTransformParams = z.infer<typeof ScaleMapTransformSchema>;
+export type ScaleSpec = z.infer<typeof ScaleSchema>;
 export type Selection = z.infer<typeof SelectionSchema>;
 export type TaxonCurvesStyle = z.infer<typeof TaxonCurvesStyleSchema>;
 export type XTicks = z.infer<typeof XTicksSchema>;

@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240mm" height="150mm" viewBox="0 0 240 150">
+  <g font-family="Arial" font-size="2.47">
+    <g id="panel-0-yAxis" transform="translate(5,37.55)">
+      <g class="axis-primary" transform="translate(0,0)">
+        <text x="1.98" y="50.52" transform="rotate(-90,1.98,50.52)" text-anchor="middle">Depth (cm)</text>
+        <line x1="8.57" y1="0" x2="8.57" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="6.74" x2="8.57" y2="6.74" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="13.47" x2="8.57" y2="13.47" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="20.21" x2="8.57" y2="20.21" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="26.94" x2="8.57" y2="26.94" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="40.42" x2="8.57" y2="40.42" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="47.15" x2="8.57" y2="47.15" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="53.89" x2="8.57" y2="53.89" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="60.63" x2="8.57" y2="60.63" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="74.1" x2="8.57" y2="74.1" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="80.83" x2="8.57" y2="80.83" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="87.57" x2="8.57" y2="87.57" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="94.31" x2="8.57" y2="94.31" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.57" y1="0" x2="8.57" y2="0" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="0.73" font-size="2.1" text-anchor="end">0</text>
+        <line x1="7.57" y1="33.68" x2="8.57" y2="33.68" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="34.42" font-size="2.1" text-anchor="end">50</text>
+        <line x1="7.57" y1="67.36" x2="8.57" y2="67.36" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="68.1" font-size="2.1" text-anchor="end">100</text>
+        <line x1="7.57" y1="101.04" x2="8.57" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="101.78" font-size="2.1" text-anchor="end">150</text>
+      </g>
+    </g>
+    <g id="panel-1-taxonCurves" transform="translate(15.57,37.55)">
+      <g id="panel-1-taxonCurves-Betula_seeds" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="11.25" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.44" width="6" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.17" width="14.25" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="19.91" width="11.25" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="26.64" width="7.5" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="33.38" width="6.75" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="40.12" width="5.25" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="46.85" width="3.75" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.59" width="1.5" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="60.33" width="0.75" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="7.5" y1="101.04" x2="7.5" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.5" y="104.22" font-size="2.1" text-anchor="middle">10</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">20</text>
+          <text class="unit" x="7.5" y="106.53" font-size="2.1" text-anchor="middle">n/20 cm³</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Betula</tspan> seeds</text>
+      </g>
+      <g id="panel-1-taxonCurves-Carex_nutlets" class="column" transform="translate(18,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="1.05" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.44" width="0.9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.17" width="1.95" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="19.91" width="2.4" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="26.64" width="3.75" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="33.38" width="6.75" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="40.12" width="7.8" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="46.85" width="8.1" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.59" width="7.5" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="60.33" width="5.4" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="67.06" width="4.35" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="73.8" width="3.6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.53" width="2.85" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="87.27" width="1.95" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="94.01" width="1.05" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="100.74" width="0.45" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="7.5" y1="101.04" x2="7.5" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.5" y="104.22" font-size="2.1" text-anchor="middle">50</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">100</text>
+          <text class="unit" x="7.5" y="106.53" font-size="2.1" text-anchor="middle">n/20 cm³</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Carex</tspan> nutlets</text>
+      </g>
+      <g id="panel-1-taxonCurves-Menyanthes_trifoliata_seeds" class="column" transform="translate(34,0)">
+        <g class="curve">
+          <rect x="0" y="33.38" width="1" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="40.12" width="2" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="46.85" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.59" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="60.33" width="11" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="67.06" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="73.8" width="8" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.53" width="5" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="87.27" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="94.01" width="2" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="5" y1="101.04" x2="5" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="5" y="104.22" font-size="2.1" text-anchor="middle">5</text>
+          <line x1="10" y1="101.04" x2="10" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="10" y="104.22" font-size="2.1" text-anchor="middle">10</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">15</text>
+          <text class="unit" x="7.5" y="106.53" font-size="2.1" text-anchor="middle">n/20 cm³</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Menyanthes trifoliata</tspan> seeds</text>
+      </g>
+      <g id="panel-1-taxonCurves-Potamogeton_natans_endocarps" class="column" transform="translate(52,0)">
+        <g class="curve">
+          <rect x="0" y="60.33" width="0.38" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="67.06" width="0.75" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="73.8" width="2.25" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.53" width="6.75" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="87.27" width="7.13" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="94.01" width="6.38" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="100.74" width="10.13" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="7.5" y1="101.04" x2="7.5" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.5" y="104.22" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">40</text>
+          <text class="unit" x="7.5" y="106.53" font-size="2.1" text-anchor="middle">n/20 cm³</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Potamogeton natans</tspan> endocarps</text>
+      </g>
+      <g id="panel-1-taxonCurves-Nymphaea_alba_seeds" class="column" transform="translate(68,0)">
+        <g class="curve">
+          <rect x="0" y="67.06" width="1.5" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="73.8" width="3" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.53" width="9" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="87.27" width="9" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="94.01" width="7.5" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="100.74" width="3" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="7.5" y1="101.04" x2="7.5" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.5" y="104.22" font-size="2.1" text-anchor="middle">5</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">10</text>
+          <text class="unit" x="7.5" y="106.53" font-size="2.1" text-anchor="middle">n/20 cm³</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Nymphaea alba</tspan> seeds</text>
+      </g>
+    </g>
+    <g id="panel-2-taxonCurves" transform="translate(100.57,37.55)">
+      <g id="panel-2-taxonCurves-Ericaceae_rootlets" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.44" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.17" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="19.91" width="9" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="26.64" width="9" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="33.38" width="6" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="40.12" width="3" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">-</text>
+          <line x1="3" y1="101.04" x2="3" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="3" y="104.22" font-size="2.1" text-anchor="middle">R</text>
+          <line x1="6" y1="101.04" x2="6" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="6" y="104.22" font-size="2.1" text-anchor="middle">O</text>
+          <line x1="9" y1="101.04" x2="9" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="9" y="104.22" font-size="2.1" text-anchor="middle">F</text>
+          <line x1="12" y1="101.04" x2="12" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="12" y="104.22" font-size="2.1" text-anchor="middle">A</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">D</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Ericaceae rootlets</text>
+      </g>
+      <g id="panel-2-taxonCurves-Sphagnum_leaves" class="column" transform="translate(18,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.44" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.17" width="15" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="19.91" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="26.64" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="33.38" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="40.12" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="46.85" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.59" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="3" y1="101.04" x2="3" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="3" y="104.22" font-size="2.1" text-anchor="middle">1</text>
+          <line x1="6" y1="101.04" x2="6" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="6" y="104.22" font-size="2.1" text-anchor="middle">2</text>
+          <line x1="9" y1="101.04" x2="9" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="9" y="104.22" font-size="2.1" text-anchor="middle">3</text>
+          <line x1="12" y1="101.04" x2="12" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="12" y="104.22" font-size="2.1" text-anchor="middle">4</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">5</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Sphagnum</tspan> leaves</text>
+      </g>
+      <g id="panel-2-taxonCurves-Monocot_remains_undiff_" class="column" transform="translate(34,0)">
+        <g class="curve">
+          <rect x="0" y="6.44" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.17" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="19.91" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="26.64" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="33.38" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="40.12" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="46.85" width="15" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.59" width="15" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="60.33" width="15" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="67.06" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="73.8" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.53" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="87.27" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="94.01" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="100.74" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">0</text>
+          <line x1="3" y1="101.04" x2="3" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="3" y="104.22" font-size="2.1" text-anchor="middle">1</text>
+          <line x1="6" y1="101.04" x2="6" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="6" y="104.22" font-size="2.1" text-anchor="middle">2</text>
+          <line x1="9" y1="101.04" x2="9" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="9" y="104.22" font-size="2.1" text-anchor="middle">3</text>
+          <line x1="12" y1="101.04" x2="12" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="12" y="104.22" font-size="2.1" text-anchor="middle">4</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">5</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Monocot remains undiff.</text>
+      </g>
+      <g id="panel-2-taxonCurves-Brown_mosses" class="column" transform="translate(50,0)">
+        <g class="curve">
+          <rect x="0" y="46.85" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.59" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="60.33" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="67.06" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="73.8" width="15" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.53" width="15" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="87.27" width="9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="94.01" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="100.74" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="15" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="101.04" x2="0" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="104.22" font-size="2.1" text-anchor="start">-</text>
+          <line x1="3" y1="101.04" x2="3" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="3" y="104.22" font-size="2.1" text-anchor="middle">R</text>
+          <line x1="6" y1="101.04" x2="6" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="6" y="104.22" font-size="2.1" text-anchor="middle">O</text>
+          <line x1="9" y1="101.04" x2="9" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="9" y="104.22" font-size="2.1" text-anchor="middle">F</text>
+          <line x1="12" y1="101.04" x2="12" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="12" y="104.22" font-size="2.1" text-anchor="middle">A</text>
+          <line x1="15" y1="101.04" x2="15" y2="102.04" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="104.22" font-size="2.1" text-anchor="end">D</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Brown mosses</text>
+      </g>
+    </g>
+    <g id="panel-3-taxonCurves" transform="translate(167.57,37.55)">
+      <g id="panel-3-taxonCurves-Daphnia_ephippia" class="column" transform="translate(0,0)">
+        <g class="presence">
+          <circle cx="3" cy="80.83" r="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="87.57" r="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="94.31" r="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="101.04" r="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="6" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        </g>
+        <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)"><tspan font-style="italic">Daphnia</tspan> ephippia</text>
+      </g>
+      <g id="panel-3-taxonCurves-Charcoal_fragments" class="column" transform="translate(9,0)">
+        <g class="presence">
+          <circle cx="3" cy="0" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="6.74" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="13.47" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="20.21" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="6" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        </g>
+        <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)">Charcoal fragments</text>
+      </g>
+      <g id="panel-3-taxonCurves-Cenococcum_sclerotia" class="column" transform="translate(16,0)">
+        <g class="presence">
+          <circle cx="3" cy="0" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="6.74" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="13.47" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="20.21" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="26.94" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="33.68" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+          <circle cx="3" cy="40.42" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="101.04" x2="6" y2="101.04" stroke="#000000" stroke-width="0.15"/>
+        </g>
+        <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)"><tspan font-style="italic">Cenococcum</tspan> sclerotia</text>
+      </g>
+    </g>
+  </g>
+</svg>

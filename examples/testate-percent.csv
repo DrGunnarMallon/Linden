@@ -1,0 +1,23 @@
+# SYNTHETIC DATA - generated for the Linden examples (seed 11). Not real observations; do not cite.
+depth,*Archerella flava*,*Hyalosphenia papilio*,*Amphitrema wrightianum*,*Arcella discoides* type,*Difflugia pulex*,*Nebela tincta* type,*Heleopera sphagni*,*Assulina muscorum*,*Assulina seminulum*,*Trigonopyxis arcula* type,*Bullinularia indica*,*Corythion dubium*,*Euglypha tuberculata* type,*Cyclopyxis arcelloides* type,*Trinema lineare*
+kind,count,count,count,count,count,count,count,count,count,count,count,count,count,count,count
+0,0,0,0,0,0,11,0,37,13,26,5,19,12,14,11
+4,0,0,0,1,0,11,0,41,12,19,7,18,16,13,12
+8,0,0,0,1,0,12,0,44,18,19,7,18,12,8,9
+12,0,0,0,2,1,12,0,42,17,17,8,15,16,14,6
+16,0,0,0,3,1,20,0,27,24,8,11,20,14,16,6
+20,0,1,0,3,2,31,1,26,23,4,8,18,18,10,7
+24,0,2,0,6,3,23,1,30,17,3,8,12,25,15,5
+28,1,3,0,10,6,27,2,25,21,1,8,9,20,13,3
+32,1,9,0,13,6,41,5,15,11,1,3,4,21,16,3
+36,3,16,0,11,9,35,6,10,10,0,2,2,26,17,2
+40,8,20,0,12,8,40,12,10,5,0,1,1,17,14,1
+44,10,26,1,19,13,29,15,4,4,0,1,0,18,9,1
+48,18,30,1,21,9,24,20,3,3,0,0,0,14,8,0
+52,29,29,3,20,10,20,18,1,2,0,0,0,14,4,0
+56,36,43,4,21,7,13,13,1,1,0,0,0,10,3,0
+60,37,50,8,18,8,7,12,0,0,0,0,0,8,2,0
+64,58,41,7,10,6,4,16,0,0,0,0,0,6,1,0
+68,52,38,11,16,4,5,16,0,0,0,0,0,5,1,0
+72,68,32,15,10,3,3,12,0,0,0,0,0,6,1,0
+76,60,37,25,9,2,2,10,0,0,0,0,0,4,1,0

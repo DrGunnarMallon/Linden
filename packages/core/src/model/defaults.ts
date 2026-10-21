@@ -16,7 +16,7 @@ export type ResolvedYAxis = Required<Pick<YAxisSpec, "primary" | "reverse">> & {
   ticks?: YAxisSpec["ticks"];
 };
 
-export type ResolvedSelection = Required<Pick<Selection, "minMax" | "order">> & Pick<Selection, "ids" | "groups">;
+export type ResolvedSelection = Required<Pick<Selection, "minMax" | "order">> & Pick<Selection, "ids" | "groups" | "kinds">;
 
 export type ResolvedTaxonCurvesStyle = Required<Omit<TaxonCurvesStyle, "xTicks">> & {
   xTicks: { step: number | null; minSpacing: number };
@@ -52,5 +52,6 @@ export const coreDefaults: CoreDefaults = {
     plusBelow: 0,
     groupGap: 2,
     xTicks: { step: null, minSpacing: 6 },
+    presence: "dot",
   },
 };

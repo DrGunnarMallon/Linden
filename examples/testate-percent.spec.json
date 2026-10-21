@@ -1,0 +1,11 @@
+{
+  "specVersion": 4,
+  "preset": "testate-percent",
+  "page": { "width": 180, "height": 130, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 10, "minor": 5 } },
+  "datasets": [{ "dataset": "testate-percent" }],
+  "panels": [
+    { "type": "yAxis" },
+    { "type": "taxonCurves", "dataset": "testate-percent", "variables": { "order": "weightedAverageDepth" } }
+  ]
+}

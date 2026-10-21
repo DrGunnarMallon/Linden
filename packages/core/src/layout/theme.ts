@@ -36,6 +36,9 @@ export interface Theme {
   defaultFill: string;
   stroke: string;
   plusSize: number;
+  /** Width of a presence column and radius of its dots. */
+  presenceWidth: number;
+  presenceDotRadius: number;
   plusOffset: number;
   zoneLineWidth: number;
 }
@@ -68,6 +71,8 @@ export function makeTheme(page: ResolvedPage): Theme {
     defaultFill: "#808080",
     stroke: "#000000",
     plusSize: 0.6,
+    presenceWidth: 3,
+    presenceDotRadius: 0.6,
     plusOffset: 1.2,
     zoneLineWidth: 0.2,
   };
@@ -80,4 +85,9 @@ export function estimateTextWidth(text: string, fontSize: number): number {
 
 export function footerHeight(theme: Theme): number {
   return theme.tickLength + 0.5 + theme.tickFontSize + 0.5;
+}
+
+/** Footer with a second line for unit labels under the tick labels. */
+export function footerHeightWithUnits(theme: Theme): number {
+  return footerHeight(theme) + theme.tickFontSize * 1.1;
 }

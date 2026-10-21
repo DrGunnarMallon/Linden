@@ -1,6 +1,9 @@
 // CSV / TSV importer — see SPEC.md §9.
 // Wide format: depth[, age], then one column per variable.
-// Optional header rows directly below the first: "group" and/or "kind".
+// Optional header rows directly below the first: "group", "kind" and/or "unit".
+// Lines starting with "#" before the header are comments (e.g. provenance notes).
+// Ordinal columns (kind abundanceClass / presence) may hold text codes (DAFOR letters, "+"): they
+// are kept as `variable.codes`, values = indices into it, for a scaleMap transform to map.
 
 import type { Dataset, Group, Importer, ImportResult, MeasurementKind, Sample, Variable } from "../model/types.js";
 
@@ -28,11 +31,16 @@ const MEASUREMENT_KINDS: readonly MeasurementKind[] = [
 
 const DELIMITERS: readonly Delimiter[] = [",", "\t", ";"];
 
-/** Picks the candidate delimiter that occurs most often (outside quotes) in the first line. Ties: , > tab > ; */
+/** Text without leading "#" comment lines. */
+function skipComments(text: string): string {
+  return text.replace(/^\uFEFF?(?:[ \t]*#[^\n]*(?:\r?\n|$))*/, "");
+}
+
+/** Picks the candidate delimiter that occurs most often (outside quotes) in the first non-comment line. Ties: , > tab > ; */
 export function detectDelimiter(text: string): Delimiter {
   const counts = new Map<string, number>();
   let inQuotes = false;
-  for (const ch of text) {
+  for (const ch of skipComments(text)) {
     if (ch === '"') inQuotes = !inQuotes;
     else if (!inQuotes && (ch === "\n" || ch === "\r")) break;
     else if (!inQuotes) counts.set(ch, (counts.get(ch) ?? 0) + 1);
@@ -107,7 +115,7 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
   const decimalComma = delimiter === ";";
 
   // Keep 1-based row numbers for warnings; drop blank rows.
-  const rows = parseDelimited(text, delimiter)
+  const rows = parseDelimited(skipComments(text), delimiter)
     .map((cells, i) => ({ cells: cells.map((c) => c.trim()), rowNo: i + 1 }))
     .filter((r) => r.cells.some((c) => c !== ""));
 
@@ -127,6 +135,7 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
   // Optional "group" / "kind" rows.
   let groupRow: string[] | undefined;
   let kindRow: string[] | undefined;
+  let unitRow: string[] | undefined;
   let r = 1;
   for (; r < rows.length; r++) {
     const row = rows[r]!;
@@ -137,6 +146,9 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
     } else if (label === "kind") {
       if (kindRow) warnings.push(`Row ${row.rowNo}: duplicate "kind" row ignored.`);
       else kindRow = row.cells;
+    } else if (label === "unit") {
+      if (unitRow) warnings.push(`Row ${row.rowNo}: duplicate "unit" row ignored.`);
+      else unitRow = row.cells;
     } else break;
   }
 
@@ -168,6 +180,8 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
     const v: Variable = { id, name: varName, kind };
     const group = groupRow?.[c] ?? "";
     if (group !== "") v.group = group;
+    const unit = unitRow?.[c] ?? "";
+    if (unit !== "") v.unit = unit;
     variables.push(v);
   }
 
@@ -178,6 +192,21 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
       groups.push({ id: v.group, name: v.group, order: groups.length + 1 });
     }
   }
+
+  // Ordinal columns with any non-numeric cell keep their cells as text codes (first-seen order).
+  const ORDINAL: readonly MeasurementKind[] = ["abundanceClass", "presence"];
+  const dataRows = rows.slice(r);
+  const coded = variables.map(
+    (v, k) =>
+      ORDINAL.includes(v.kind) &&
+      dataRows.some(({ cells }) => {
+        const cell = cells[k + firstVar] ?? "";
+        return cell !== "" && Number.isNaN(parseNumber(cell, decimalComma));
+      }),
+  );
+  coded.forEach((isCoded, k) => {
+    if (isCoded) variables[k]!.codes = [];
+  });
 
   // Samples and values.
   const samples: Sample[] = [];
@@ -226,6 +255,12 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
       const cell = cells[c] ?? "";
       if (cell === "") {
         rowValues.push(null);
+        continue;
+      }
+      const codes = variables[c - firstVar]!.codes;
+      if (codes) {
+        if (!codes.includes(cell)) codes.push(cell);
+        rowValues.push(codes.indexOf(cell));
         continue;
       }
       const n = parseNumber(cell, decimalComma);

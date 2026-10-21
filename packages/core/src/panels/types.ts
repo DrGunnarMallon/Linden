@@ -1,6 +1,7 @@
 // Panel and overlay interfaces — see SPEC.md §5.1.
 
 import type { HeaderColumn } from "../layout/header.js";
+import type { FitState } from "../layout/layout.js";
 import type { YScale } from "../layout/scales.js";
 import type { Theme } from "../layout/theme.js";
 import type { ResolvedPage, ResolvedYAxis } from "../model/defaults.js";
@@ -24,8 +25,12 @@ export interface PanelContext {
   y: YScale;
   /** Resolved y-axis settings (ticks, secondary axis). */
   yAxis: ResolvedYAxis;
-  /** Global common x-scale in mm per data unit (after any shrinking). */
+  /** Global common x-scale in mm per data unit (after any shrinking), for percentages. */
   xScale: number;
+  /** Per scale family (scaleKey: kind|unit), mm per unit = xScale × ratio; shared by all panels. */
+  scaleRatios: ReadonlyMap<string, number>;
+  /** Page-fitting state (SPEC §6); panels apply `fit.compact` to minWidth and gaps via compactLength. */
+  fit: FitState;
   page: ResolvedPage;
   theme: Theme;
   /** Group display metadata (colours) from the resolved spec. */
@@ -39,6 +44,10 @@ export interface PanelContext {
 export interface PanelMeasure {
   width: number;
   headerHeight: number;
+  /** Footer height if more than the default (e.g. unit labels). */
+  footerHeight?: number;
+  /** How far the panel draws beyond [0, width] (tick/unit labels, markers); reserved by the layout. */
+  overhang?: { left: number; right: number };
 }
 
 export interface Panel {

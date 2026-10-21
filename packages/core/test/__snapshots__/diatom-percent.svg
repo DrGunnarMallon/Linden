@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="150mm" viewBox="0 0 180 150">
+  <g font-family="Arial" font-size="2.47">
+    <g id="panel-0-yAxis" transform="translate(5,35.04)">
+      <g class="axis-primary" transform="translate(0,0)">
+        <text x="1.98" y="52.93" transform="rotate(-90,1.98,52.93)" text-anchor="middle">Depth (cm)</text>
+        <line x1="8.57" y1="0" x2="8.57" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="4.6" x2="8.57" y2="4.6" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="9.21" x2="8.57" y2="9.21" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="13.81" x2="8.57" y2="13.81" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="23.01" x2="8.57" y2="23.01" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="27.62" x2="8.57" y2="27.62" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="32.22" x2="8.57" y2="32.22" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="41.42" x2="8.57" y2="41.42" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="46.03" x2="8.57" y2="46.03" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="50.63" x2="8.57" y2="50.63" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="59.83" x2="8.57" y2="59.83" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="64.44" x2="8.57" y2="64.44" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="69.04" x2="8.57" y2="69.04" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="78.24" x2="8.57" y2="78.24" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="82.85" x2="8.57" y2="82.85" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="87.45" x2="8.57" y2="87.45" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="96.65" x2="8.57" y2="96.65" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="101.26" x2="8.57" y2="101.26" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.97" y1="105.86" x2="8.57" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <line x1="7.57" y1="0" x2="8.57" y2="0" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="0.73" font-size="2.1" text-anchor="end">0</text>
+        <line x1="7.57" y1="18.41" x2="8.57" y2="18.41" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="19.14" font-size="2.1" text-anchor="end">20</text>
+        <line x1="7.57" y1="36.82" x2="8.57" y2="36.82" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="37.55" font-size="2.1" text-anchor="end">40</text>
+        <line x1="7.57" y1="55.23" x2="8.57" y2="55.23" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="55.96" font-size="2.1" text-anchor="end">60</text>
+        <line x1="7.57" y1="73.64" x2="8.57" y2="73.64" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="74.38" font-size="2.1" text-anchor="end">80</text>
+        <line x1="7.57" y1="92.05" x2="8.57" y2="92.05" stroke="#000000" stroke-width="0.15"/>
+        <text x="6.97" y="92.79" font-size="2.1" text-anchor="end">100</text>
+      </g>
+    </g>
+    <g id="panel-1-taxonCurves" transform="translate(15.57,35.04)">
+      <g id="panel-1-taxonCurves-Staurosira_construens" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <path d="M0,0L3.31,0L3.5,4.6L2.01,9.21L1.4,13.81L0.6,18.41L0.3,23.01L0.2,27.62L0.1,32.22L0,36.82L0,41.42L0,46.03L0,50.63L0,55.23L0,59.83L0,64.44L0,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,32.22L1.9,32.22M1.3,31.62L1.3,32.82" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.5" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.5" y="-0.57" transform="rotate(-60,2.5,-0.57)"><tspan font-style="italic">Staurosira construens</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Fragilaria_crotonensis" class="column" transform="translate(4.5,0)">
+        <g class="curve">
+          <path d="M0,0L3.81,0L3.2,4.6L3.42,9.21L3.31,13.81L2.7,18.41L2.31,23.01L1.3,27.62L0.7,32.22L0.3,36.82L0.2,41.42L0.1,46.03L0,50.63L0,55.23L0,59.83L0,64.44L0,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,46.03L1.9,46.03M1.3,45.43L1.3,46.63" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.81" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.65" y="-0.57" transform="rotate(-60,2.65,-0.57)"><tspan font-style="italic">Fragilaria crotonensis</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Aulacoseira_subarctica" class="column" transform="translate(9.31,0)">
+        <g class="curve">
+          <path d="M0,0L2.01,0L1.6,4.6L2.21,9.21L1.1,13.81L1.1,18.41L0.7,23.01L0.8,27.62L0.4,32.22L0.3,36.82L0.3,41.42L0.1,46.03L0.1,50.63L0,55.23L0,59.83L0,64.44L0,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,46.03L1.9,46.03M1.3,45.43L1.3,46.63M0.7,50.63L1.9,50.63M1.3,50.03L1.3,51.23" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.25" y="-0.57" transform="rotate(-60,2.25,-0.57)"><tspan font-style="italic">Aulacoseira subarctica</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Aulacoseira_granulata" class="column" transform="translate(13.31,0)">
+        <g class="curve">
+          <path d="M0,0L5.41,0L4.4,4.6L4.22,9.21L3.21,13.81L2.7,18.41L2.21,23.01L1.6,27.62L1.49,32.22L1.09,36.82L0.5,41.42L0.5,46.03L0.2,50.63L0.1,55.23L0.1,59.83L0,64.44L0,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,55.23L1.9,55.23M1.3,54.63L1.3,55.83M0.7,59.83L1.9,59.83M1.3,59.23L1.3,60.43" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.41" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.46" y="-0.57" transform="rotate(-60,3.46,-0.57)"><tspan font-style="italic">Aulacoseira granulata</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Navicula_cryptocephala" class="column" transform="translate(19.72,0)">
+        <g class="curve">
+          <path d="M0,0L7.12,0L6.7,4.6L5.43,9.21L7.12,13.81L5.4,18.41L5.33,23.01L2.8,27.62L2.59,32.22L1.89,36.82L0.9,41.42L0.8,46.03L0.5,50.63L0.3,55.23L0.1,59.83L0.1,64.44L0,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,59.83L1.9,59.83M1.3,59.23L1.3,60.43M0.7,64.44L1.9,64.44M1.3,63.84L1.3,65.04" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="7.12" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="4.31" y="-0.57" transform="rotate(-60,4.31,-0.57)"><tspan font-style="italic">Navicula cryptocephala</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Stephanodiscus_hantzschii" class="column" transform="translate(27.84,0)">
+        <g class="curve">
+          <path d="M0,0L4.01,0L4,4.6L4.02,9.21L3.71,13.81L2.1,18.41L2.91,23.01L1.8,27.62L1.69,32.22L1.29,36.82L0.8,41.42L0.7,46.03L0.6,50.63L0.4,55.23L0.3,59.83L0.1,64.44L0.1,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,64.44L1.9,64.44M1.3,63.84L1.3,65.04M0.7,69.04L1.9,69.04M1.3,68.44L1.3,69.64" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="4.02" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.76" y="-0.57" transform="rotate(-60,2.76,-0.57)"><tspan font-style="italic">Stephanodiscus hantzschii</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Cymbella_cistula" class="column" transform="translate(32.86,0)">
+        <g class="curve">
+          <path d="M0,0L2.11,0L1.7,4.6L2.51,9.21L1.5,13.81L1.9,18.41L1.81,23.01L1.7,27.62L0.9,32.22L0.8,36.82L0.4,41.42L0.4,46.03L0.3,50.63L0.2,55.23L0.1,59.83L0,64.44L0,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,59.83L1.9,59.83M1.3,59.23L1.3,60.43" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.25" y="-0.57" transform="rotate(-60,2.25,-0.57)"><tspan font-style="italic">Cymbella cistula</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Discostella_stelligera" class="column" transform="translate(36.86,0)">
+        <g class="curve">
+          <path d="M0,0L6.22,0L7.8,4.6L7.54,9.21L7.52,13.81L8.9,18.41L7.44,23.01L6.4,27.62L7.46,32.22L3.98,36.82L3.82,41.42L4.12,46.03L2.8,50.63L1.5,55.23L0.8,59.83L0.8,64.44L0.7,69.04L0.4,73.64L0.2,78.24L0.2,82.85L0.1,87.45L0.1,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.8,78.24L2,78.24M1.4,77.64L1.4,78.84M0.7,87.45L1.9,87.45M1.3,86.85L1.3,88.05M0.7,92.05L1.9,92.05M1.3,91.45L1.3,92.65" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="8.9" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="105.86" x2="8" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+        </g>
+        <text class="label" x="5.2" y="-0.57" transform="rotate(-60,5.2,-0.57)"><tspan font-style="italic">Discostella stelligera</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Aulacoseira_ambigua" class="column" transform="translate(46.76,0)">
+        <g class="curve">
+          <path d="M0,0L0.7,0L1.3,4.6L1.41,9.21L2.41,13.81L3.6,18.41L5.03,23.01L5.4,27.62L4.08,32.22L5.17,36.82L4.42,41.42L3.22,46.03L1.5,50.63L0.8,55.23L0.3,59.83L0.2,64.44L0.1,69.04L0,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,69.04L1.9,69.04M1.3,68.44L1.3,69.64" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.4" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.45" y="-0.57" transform="rotate(-60,3.45,-0.57)"><tspan font-style="italic">Aulacoseira ambigua</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Cyclotella_meneghiniana" class="column" transform="translate(53.16,0)">
+        <g class="curve">
+          <path d="M0,0L0.8,0L0.8,4.6L1.41,9.21L1.3,13.81L1.7,18.41L1.91,23.01L1.8,27.62L1.59,32.22L2.59,36.82L1.61,41.42L1.61,46.03L1.3,50.63L1.6,55.23L1.4,59.83L1.41,64.44L0.8,69.04L0.7,73.64L0.6,78.24L0.5,82.85L0.4,87.45L0.4,92.05L0.5,96.65L0.3,101.26L0.2,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.8,105.86L2,105.86M1.4,105.26L1.4,106.46" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.25" y="-0.57" transform="rotate(-60,2.25,-0.57)"><tspan font-style="italic">Cyclotella meneghiniana</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Cyclotella_ocellata" class="column" transform="translate(57.16,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0.1,13.81L0.3,18.41L0.4,23.01L0.8,27.62L1,32.22L1.39,36.82L1.61,41.42L1.51,46.03L1,50.63L1.4,55.23L0.7,59.83L0.4,64.44L0.2,69.04L0.1,73.64L0,78.24L0,82.85L0,87.45L0,92.05L0,96.65L0,101.26L0,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,13.81L1.9,13.81M1.3,13.21L1.3,14.41M0.7,73.64L1.9,73.64M1.3,73.04L1.3,74.24" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.25" y="-0.57" transform="rotate(-60,2.25,-0.57)"><tspan font-style="italic">Cyclotella ocellata</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Cocconeis_placentula" class="column" transform="translate(61.16,0)">
+        <g class="curve">
+          <path d="M0,0L0.3,0L0.3,4.6L0.4,9.21L0.6,13.81L0.8,18.41L1.11,23.01L1.7,27.62L3.48,32.22L3.28,36.82L4.52,41.42L5.03,46.03L5.5,50.63L4.3,55.23L5.1,59.83L3.92,64.44L3.81,69.04L2.9,73.64L4.19,78.24L3.31,82.85L2.81,87.45L1.59,92.05L1.91,96.65L1.39,101.26L1,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.5" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.5" y="-0.57" transform="rotate(-60,3.5,-0.57)"><tspan font-style="italic">Cocconeis placentula</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Stephanodiscus_parvus" class="column" transform="translate(67.66,0)">
+        <g class="curve">
+          <path d="M0,0L0.1,0L0.1,4.6L0.2,9.21L0.4,13.81L0.7,18.41L0.7,23.01L1.3,27.62L2.69,32.22L3.18,36.82L4.52,41.42L3.72,46.03L4.2,50.63L6.7,55.23L4.7,59.83L4.22,64.44L3.61,69.04L4.1,73.64L3.89,78.24L2.61,82.85L2.71,87.45L1.29,92.05L1.61,96.65L0.9,101.26L0.9,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,0L1.9,0M1.3,-0.6L1.3,0.6M0.7,4.6L1.9,4.6M1.3,4L1.3,5.2" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="6.7" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="4.1" y="-0.57" transform="rotate(-60,4.1,-0.57)"><tspan font-style="italic">Stephanodiscus parvus</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Amphora_pediculus" class="column" transform="translate(75.36,0)">
+        <g class="curve">
+          <path d="M0,0L0.1,0L0.1,4.6L0.3,9.21L0.4,13.81L0.7,18.41L1.11,23.01L1.4,27.62L1.49,32.22L2.39,36.82L2.21,41.42L2.61,46.03L2,50.63L3.1,55.23L2.9,59.83L2.71,64.44L2.51,69.04L1.9,73.64L2.19,78.24L2.01,82.85L1.91,87.45L1.49,92.05L1.81,96.65L1,101.26L1.5,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,0L1.9,0M1.3,-0.6L1.3,0.6M0.7,4.6L1.9,4.6M1.3,4L1.3,5.2" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.1" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.3" y="-0.57" transform="rotate(-60,2.3,-0.57)"><tspan font-style="italic">Amphora pediculus</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Pseudostaurosira_brevistriata" class="column" transform="translate(79.46,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0.1,4.6L0.1,9.21L0.1,13.81L0.3,18.41L0.6,23.01L0.7,27.62L1,32.22L1.59,36.82L2.01,41.42L2.01,46.03L2.7,50.63L1.8,55.23L1.8,59.83L2.51,64.44L2.71,69.04L2,73.64L1.6,78.24L1.6,82.85L0.9,87.45L1.19,92.05L1.01,96.65L0.8,101.26L0.6,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,4.6L1.9,4.6M1.3,4L1.3,5.2M0.7,9.21L1.9,9.21M1.3,8.61L1.3,9.81M0.7,13.81L1.9,13.81M1.3,13.21L1.3,14.41" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.25" y="-0.57" transform="rotate(-60,2.25,-0.57)"><tspan font-style="italic">Pseudostaurosira brevistriata</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Epithemia_adnata" class="column" transform="translate(83.46,0)">
+        <g class="curve">
+          <path d="M0,0L0.8,0L1,4.6L1.01,9.21L1.5,13.81L2.1,18.41L1.61,23.01L3.6,27.62L3.08,32.22L2.79,36.82L3.02,41.42L3.22,46.03L4.7,50.63L3.3,55.23L3.5,59.83L5.03,64.44L3.41,69.04L4.5,73.64L3.29,78.24L4.51,82.85L4.92,87.45L4.57,92.05L4.42,96.65L3.58,101.26L4.19,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.03" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.26" y="-0.57" transform="rotate(-60,3.26,-0.57)"><tspan font-style="italic">Epithemia adnata</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Encyonema_minutum" class="column" transform="translate(89.49,0)">
+        <g class="curve">
+          <path d="M0,0L0.2,0L0.2,4.6L0.4,9.21L0.5,13.81L0.8,18.41L0.8,23.01L1.4,27.62L1.99,32.22L2.19,36.82L2.01,41.42L1.81,46.03L2.8,50.63L2.9,55.23L3.4,59.83L2.31,64.44L2.31,69.04L3.2,73.64L2.29,78.24L2.31,82.85L3.92,87.45L2.08,92.05L2.81,96.65L2.69,101.26L2.79,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.92" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.71" y="-0.57" transform="rotate(-60,2.71,-0.57)"><tspan font-style="italic">Encyonema minutum</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Tabellaria_flocculosa" class="column" transform="translate(94.41,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0.1,13.81L0.1,18.41L0.2,23.01L0.5,27.62L0.6,32.22L1.19,36.82L1.51,41.42L2.31,46.03L2.2,50.63L2.2,55.23L3.6,59.83L2.71,64.44L3.91,69.04L3.3,73.64L2.29,78.24L3.01,82.85L2.11,87.45L1.39,92.05L1.61,96.65L1.59,101.26L1.4,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,13.81L1.9,13.81M1.3,13.21L1.3,14.41M0.7,18.41L1.9,18.41M1.3,17.81L1.3,19.01" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.91" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.7" y="-0.57" transform="rotate(-60,2.7,-0.57)"><tspan font-style="italic">Tabellaria flocculosa</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Nitzschia_fonticola" class="column" transform="translate(99.32,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0,13.81L0,18.41L0,23.01L0,27.62L0,32.22L0.1,36.82L0.1,41.42L0.4,46.03L0.8,50.63L1.4,55.23L2.5,59.83L2.41,64.44L3.21,69.04L3.7,73.64L3.19,78.24L2.41,82.85L2.01,87.45L1.39,92.05L0.7,96.65L0.6,101.26L0.3,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,36.82L1.9,36.82M1.3,36.22L1.3,37.42M0.7,41.42L1.9,41.42M1.3,40.82L1.3,42.02" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.7" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.6" y="-0.57" transform="rotate(-60,2.6,-0.57)"><tspan font-style="italic">Nitzschia fonticola</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Staurosirella_pinnata" class="column" transform="translate(104.02,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0,13.81L0,18.41L0.1,23.01L0.2,27.62L0.3,32.22L0.6,36.82L0.8,41.42L1.21,46.03L1.2,50.63L1.5,55.23L1.3,59.83L2.01,64.44L2.41,69.04L2.2,73.64L1.5,78.24L1.9,82.85L2.21,87.45L2.08,92.05L1.81,96.65L1.79,101.26L1.3,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,23.01L1.9,23.01M1.3,22.41L1.3,23.61" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.25" y="-0.57" transform="rotate(-60,2.25,-0.57)"><tspan font-style="italic">Staurosirella pinnata</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Achnanthidium_minutissimum" class="column" transform="translate(108.02,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0,13.81L0.1,18.41L0.1,23.01L0.2,27.62L0.2,32.22L0.3,36.82L0.6,41.42L0.8,46.03L0.9,50.63L0.8,55.23L1.1,59.83L1.21,64.44L1.8,69.04L1.3,73.64L1.5,78.24L2.11,82.85L1.71,87.45L1.79,92.05L2.61,96.65L2.09,101.26L3.09,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,18.41L1.9,18.41M1.3,17.81L1.3,19.01M0.7,23.01L1.9,23.01M1.3,22.41L1.3,23.61M0.8,32.22L2,32.22M1.4,31.62L1.4,32.82" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="3.09" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.29" y="-0.57" transform="rotate(-60,2.29,-0.57)"><tspan font-style="italic">Achnanthidium minutissimum</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Nitzschia_palea" class="column" transform="translate(112.11,0)">
+        <g class="curve">
+          <path d="M0,0L0.1,0L0.1,4.6L0.1,9.21L0.1,13.81L0.2,18.41L0.3,23.01L0.6,27.62L0.4,32.22L0.8,36.82L1.01,41.42L1.01,46.03L1.4,50.63L1.4,55.23L1.1,59.83L2.01,64.44L1.9,69.04L1.4,73.64L2.59,78.24L3.11,82.85L2.71,87.45L3.87,92.05L4.02,96.65L4.48,101.26L5.69,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,0L1.9,0M1.3,-0.6L1.3,0.6M0.7,4.6L1.9,4.6M1.3,4L1.3,5.2M0.7,9.21L1.9,9.21M1.3,8.61L1.3,9.81M0.7,13.81L1.9,13.81M1.3,13.21L1.3,14.41" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.69" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.59" y="-0.57" transform="rotate(-60,3.59,-0.57)"><tspan font-style="italic">Nitzschia palea</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Navicula_radiosa" class="column" transform="translate(118.79,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0,13.81L0,18.41L0,23.01L0.1,27.62L0.2,32.22L0.2,36.82L0.5,41.42L0.6,46.03L1.2,50.63L1.9,55.23L2.9,59.83L3.32,64.44L3.01,69.04L4.8,73.64L5.49,78.24L3.31,82.85L4.72,87.45L5.66,92.05L3.42,96.65L4.58,101.26L3.99,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,27.62L1.9,27.62M1.3,27.02L1.3,28.22M0.8,32.22L2,32.22M1.4,31.62L1.4,32.82M0.8,36.82L2,36.82M1.4,36.22L1.4,37.42" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.66" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.58" y="-0.57" transform="rotate(-60,3.58,-0.57)"><tspan font-style="italic">Navicula radiosa</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Asterionella_formosa" class="column" transform="translate(125.45,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0,13.81L0,18.41L0,23.01L0,27.62L0,32.22L0,36.82L0,41.42L0,46.03L0.1,50.63L0.1,55.23L0.4,59.83L0.7,64.44L0.9,69.04L1,73.64L2.29,78.24L2.71,82.85L2.61,87.45L4.57,92.05L4.02,96.65L5.47,101.26L3.69,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,50.63L1.9,50.63M1.3,50.03L1.3,51.23M0.7,55.23L1.9,55.23M1.3,54.63L1.3,55.83" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="5.47" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.48" y="-0.57" transform="rotate(-60,3.48,-0.57)"><tspan font-style="italic">Asterionella formosa</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Gomphonema_parvulum" class="column" transform="translate(131.92,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L0,4.6L0,9.21L0,13.81L0,18.41L0,23.01L0,27.62L0,32.22L0,36.82L0,41.42L0,46.03L0.1,50.63L0.2,55.23L0.3,59.83L0.5,64.44L0.9,69.04L1,73.64L1.3,78.24L2.91,82.85L2.81,87.45L4.76,92.05L6.23,96.65L6.97,101.26L7.58,105.86L0,105.86Z" fill="#3a6f8f" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.7,50.63L1.9,50.63M1.3,50.03L1.3,51.23" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="105.86" x2="7.58" y2="105.86" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="105.86" x2="0" y2="106.86" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="109.04" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="4.54" y="-0.57" transform="rotate(-60,4.54,-0.57)"><tspan font-style="italic">Gomphonema parvulum</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

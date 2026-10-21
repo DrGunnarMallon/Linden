@@ -31,13 +31,20 @@ export interface LabelOptions {
   thickness: number;
 }
 
+/** Rotated taxon labels: baseline shifted by OFFSET em across the text (so the glyphs centre on the
+ * column), glyph box ASCENT em above and DESCENT em below the baseline. Shared with the renderer. */
+export const LABEL_OFFSET = 0.35;
+export const TEXT_ASCENT = 0.75;
+export const TEXT_DESCENT = 0.25;
+
 export interface LabelLayout {
   /** Label font size in mm. */
   fontSize: number;
   angle: number;
   /** Height of the label band in mm (without the gap above the plot). */
   height: number;
-  /** Right end of the rightmost label, from the plot's left edge. */
+  /** Left end of the leftmost / right end of the rightmost label, from the plot's left edge. */
+  left: number;
   right: number;
   /** Adjacent label pairs that still overlap. */
   collisions: number;
@@ -46,6 +53,7 @@ export interface LabelLayout {
 
 interface Fit {
   height: number;
+  left: number;
   right: number;
   collisions: [string, string][];
 }
@@ -60,6 +68,7 @@ function fitAt(cols: readonly HeaderColumn[], em: number, opts: LabelOptions): F
   const cos = Math.cos(a);
   const widths = cols.map((c) => estimateTextWidth(c.label, em));
   let height = 0;
+  let left = Number.POSITIVE_INFINITY;
   let right = 0;
   const collisions: [string, string][] = [];
   cols.forEach((c, i) => {
@@ -67,7 +76,9 @@ function fitAt(cols: readonly HeaderColumn[], em: number, opts: LabelOptions): F
     if (w === 0) return;
     const centre = c.x + c.width / 2;
     height = Math.max(height, w * sin + em * cos);
-    right = Math.max(right, centre + w * cos + 0.55 * em * sin);
+    // Corners of the rotated glyph box (see LABEL_OFFSET / TEXT_ASCENT / TEXT_DESCENT).
+    left = Math.min(left, centre + (LABEL_OFFSET - TEXT_ASCENT) * em * sin);
+    right = Math.max(right, centre + w * cos + (LABEL_OFFSET + TEXT_DESCENT) * em * sin);
     // Parallel neighbours: d·sinθ apart across the text, d·cosθ along it.
     const next = cols[i + 1];
     if (next && widths[i + 1]! > 0) {
@@ -75,7 +86,7 @@ function fitAt(cols: readonly HeaderColumn[], em: number, opts: LabelOptions): F
       if (d * sin < opts.thickness * em && d * cos < w) collisions.push([c.id, next.id]);
     }
   });
-  return { height, right, collisions };
+  return { height, left: Number.isFinite(left) ? left : 0, right, collisions };
 }
 
 /**
@@ -120,6 +131,7 @@ export function layoutLabels(cols: readonly HeaderColumn[], opts: LabelOptions):
     fontSize: em,
     angle: opts.angle,
     height: opts.height === null ? fit.height : Math.max(opts.height, fit.height),
+    left: fit.left,
     right: fit.right,
     collisions: fit.collisions.length,
     warnings,
@@ -192,6 +204,19 @@ export function groupSpans(
     }
   }
   return spans;
+}
+
+/** Horizontal extent of the group header row (brackets and centred labels). */
+export function groupSpansExtent(spans: readonly GroupSpan[], theme: Theme): { left: number; right: number } {
+  let left = 0;
+  let right = 0;
+  for (const s of spans) {
+    const half = estimateTextWidth(s.label, theme.fontSize) / 2;
+    const c = (s.x0 + s.x1) / 2;
+    left = Math.min(left, s.x0, c - half);
+    right = Math.max(right, s.x1, c + half);
+  }
+  return { left, right };
 }
 
 /** Draws brackets whose line sits `bracketGap` above `top` (the top of the label band). */

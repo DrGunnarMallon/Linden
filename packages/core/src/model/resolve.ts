@@ -20,6 +20,7 @@ export interface ResolvedDatasetEntry {
   dataset: string;
   transforms: TransformSpec[];
   sums: Record<string, SumDefinition>;
+  scales: Record<string, Record<string, number | null>>;
   outsideSum?: OutsideSum;
   assignments: Record<string, string>;
   order: string[];
@@ -90,8 +91,10 @@ function resolveDatasetEntry(entry: DatasetEntry, preset: Preset | undefined): R
   // Sum definitions replace whole (merging includeGroups with includeAll would change meaning).
   const resolved: ResolvedDatasetEntry = {
     dataset: entry.dataset,
-    transforms: entry.transforms ?? [],
+    // Arrays replace: the entry's own transforms, else the preset's defaults.
+    transforms: entry.transforms ?? preset?.transforms ?? [],
     sums: { ...preset?.sums, ...entry.sums },
+    scales: { ...preset?.scales, ...entry.scales },
     assignments: entry.assignments ?? {},
     order: entry.order ?? [],
   };

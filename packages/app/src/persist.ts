@@ -6,6 +6,8 @@ export interface Project {
   /** Project name shown in the top bar and used for download file names. */
   name?: string;
   datasets: Dataset[];
+  /** The data as imported (provenance); missing in projects saved before it existed (= `datasets`). */
+  imported?: Dataset[];
   /** Last valid spec (what is rendered). */
   spec: Spec;
   /** Editor contents; may be invalid JSON while the user is typing. */

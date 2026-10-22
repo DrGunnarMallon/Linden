@@ -1,5 +1,5 @@
-import { ChevronRight, FolderOpen, ShieldCheck, TreeDeciduous, Upload } from "lucide-react";
-import { importData, loadExample, openProject } from "./actions";
+import { ChevronRight, FilePlus, FolderOpen, ShieldCheck, TreeDeciduous, Upload } from "lucide-react";
+import { importData, loadExample, newProject, openProject } from "./actions";
 import { examples } from "./bundled";
 import { Button, Card } from "./ui";
 
@@ -17,6 +17,9 @@ export function Welcome() {
         <div className="mt-6 flex gap-2">
           <Button variant="primary" onClick={() => void importData()}>
             <Upload /> Import CSV
+          </Button>
+          <Button variant="secondary" onClick={newProject}>
+            <FilePlus /> New project
           </Button>
           <Button variant="secondary" onClick={() => void openProject()}>
             <FolderOpen /> Open project

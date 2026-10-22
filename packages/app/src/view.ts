@@ -5,6 +5,8 @@ import type { CurveStyleOverride } from "@linden/core";
 import type { CurveSelection } from "./curveEdit";
 
 export type Zoom = "fit" | number;
+/** Workspace tab: the figure or the data sheet. Switching keeps zoom and selections (view state). */
+export type WorkspaceTab = "diagram" | "data";
 /** The inspector's spec editor: generated form or raw JSON. Remembered in localStorage. */
 export type InspectorTab = "form" | "json";
 
@@ -85,6 +87,11 @@ export function stepZoom(scale: number, dir: 1 | -1): number {
 }
 
 interface ViewState {
+  workspaceTab: WorkspaceTab;
+  /** Dataset shown in the Data tab; undefined = the first one. */
+  dataDataset: string | undefined;
+  /** The New project dialog is open. */
+  newProjectOpen: boolean;
   zoom: Zoom;
   /** Scale actually used for the page (resolves "fit"); set by the canvas. */
   scale: number;
@@ -104,6 +111,9 @@ interface ViewState {
   recentColours: string[];
   /** Curve style copied with Copy style (context menu, Ctrl/Cmd+Alt+C); not in the spec. */
   styleClipboard: CurveStyleOverride | null;
+  setWorkspaceTab(tab: WorkspaceTab): void;
+  setDataDataset(id: string | undefined): void;
+  setNewProjectOpen(open: boolean): void;
   setZoom(zoom: Zoom): void;
   zoomBy(dir: 1 | -1): void;
   setScale(scale: number): void;
@@ -122,6 +132,9 @@ interface ViewState {
 }
 
 export const useView = create<ViewState>()((set, get) => ({
+  workspaceTab: "diagram",
+  dataDataset: undefined,
+  newProjectOpen: false,
   zoom: "fit",
   scale: 1,
   leftOpen: true,
@@ -133,6 +146,9 @@ export const useView = create<ViewState>()((set, get) => ({
   curveTab: false,
   recentColours: readRecentColours(),
   styleClipboard: null,
+  setWorkspaceTab: (workspaceTab) => set({ workspaceTab }),
+  setDataDataset: (dataDataset) => set({ dataDataset }),
+  setNewProjectOpen: (newProjectOpen) => set({ newProjectOpen }),
   setZoom: (zoom) => set({ zoom: zoom === "fit" ? zoom : clampZoom(zoom) }),
   zoomBy: (dir) => set({ zoom: stepZoom(get().scale, dir) }),
   setScale: (scale) => set({ scale }),

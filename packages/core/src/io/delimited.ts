@@ -1,6 +1,7 @@
 // CSV / TSV importer — see SPEC.md §9.
 // Wide format: depth[, age], then one column per variable.
-// Optional header rows directly below the first: "group", "kind" and/or "unit".
+// Optional header rows directly below the first: "group", "kind", "unit" and/or "id" (variable ids
+// other than the header without markup, written by exportDelimited after a rename).
 // Lines starting with "#" before the header are comments (e.g. provenance notes).
 // Ordinal columns (kind abundanceClass / presence) may hold text codes (DAFOR letters, "+"): they
 // are kept as `variable.codes`, values = indices into it, for a scaleMap transform to map.
@@ -132,7 +133,8 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
   const hasAge = /^age\b/i.test(head[1] ?? "");
   const firstVar = hasAge ? 2 : 1;
 
-  // Optional "group" / "kind" rows.
+  // Optional "group" / "kind" / "unit" / "id" rows.
+  let idRow: string[] | undefined;
   let groupRow: string[] | undefined;
   let kindRow: string[] | undefined;
   let unitRow: string[] | undefined;
@@ -149,6 +151,9 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
     } else if (label === "unit") {
       if (unitRow) warnings.push(`Row ${row.rowNo}: duplicate "unit" row ignored.`);
       else unitRow = row.cells;
+    } else if (label === "id") {
+      if (idRow) warnings.push(`Row ${row.rowNo}: duplicate "id" row ignored.`);
+      else idRow = row.cells;
     } else break;
   }
 
@@ -161,7 +166,7 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
       varName = `column ${c + 1}`;
       warnings.push(`Column ${c + 1} has no name; called "${varName}".`);
     }
-    let id = stripMarkup(varName);
+    let id = idRow?.[c] || stripMarkup(varName);
     if (ids.has(id)) {
       let k = 2;
       while (ids.has(`${id} (${k})`)) k++;
@@ -310,3 +315,40 @@ export const csvImporter: Importer = {
     return importDelimited(text, (options ?? {}) as DelimitedImportOptions);
   },
 };
+
+export interface DelimitedExportOptions {
+  /** Default ",". */
+  delimiter?: Delimiter;
+}
+
+/** Quotes a field if it holds the delimiter, a quote, a line break or surrounding spaces (the importer trims). */
+function csvField(text: string, delimiter: Delimiter): string {
+  return text.includes(delimiter) || /["\r\n]/.test(text) || text !== text.trim() ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/**
+ * The dataset as CSV in the importer's wide format, so it reads back the same: header (depth[, age],
+ * variable names with markup), then "id" (only if an id differs from its name without markup),
+ * "group" (if any), "kind" and "unit" (if any) rows, then one row per sample. null → empty cell,
+ * 0 → "0"; text codes are written as their codes. Numbers use the shortest exact form.
+ */
+export function exportDelimited(ds: Dataset, options: DelimitedExportOptions = {}): string {
+  const d = options.delimiter ?? ",";
+  const hasAge = ds.samples.some((s) => s.age !== undefined);
+  const lead = hasAge ? 2 : 1;
+  const row = (label: string, cells: readonly string[]) => [label, ...Array<string>(lead - 1).fill(""), ...cells];
+  const lines: string[][] = [["depth", ...(hasAge ? ["age"] : []), ...ds.variables.map((v) => v.name)]];
+  if (ds.variables.some((v) => v.id !== stripMarkup(v.name))) lines.push(row("id", ds.variables.map((v) => v.id)));
+  if (ds.variables.some((v) => v.group !== undefined)) lines.push(row("group", ds.variables.map((v) => v.group ?? "")));
+  lines.push(row("kind", ds.variables.map((v) => v.kind)));
+  if (ds.variables.some((v) => v.unit !== undefined)) lines.push(row("unit", ds.variables.map((v) => v.unit ?? "")));
+  ds.samples.forEach((s, i) => {
+    const cells = ds.variables.map((v, j) => {
+      const x = ds.values[i]?.[j] ?? null;
+      if (x === null) return "";
+      return v.codes ? (v.codes[x] ?? "") : String(x);
+    });
+    lines.push([String(s.depth), ...(hasAge ? [s.age === undefined ? "" : String(s.age)] : []), ...cells]);
+  });
+  return `${lines.map((cells) => cells.map((c) => csvField(c, d)).join(d)).join("\n")}\n`;
+}

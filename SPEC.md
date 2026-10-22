@@ -11,7 +11,7 @@ This document is the source of truth for architecture. Code follows the spec; if
 ## 1. Principles
 
 1. **Proxy-agnostic core.** Nothing in `core` knows what pollen is. Proxy conventions (pollen sums, macrofossil abundance scales, diatom groupings) live in **presets** — plain JSON files — never in code paths.
-2. **Declarative.** A diagram is fully described by `data + spec`. The UI only edits the spec. The same `data + spec` always produces the same SVG, byte-for-byte.
+2. **Declarative.** A diagram is fully described by `data + spec`. The UI edits the spec, and the data only through pure edit operations (§5.4). The same `data + spec` always produces the same SVG, byte-for-byte.
 3. **Modular by registry.** Importers, transforms, analyses, panels and exporters are plugins registered by `type` string. Adding a feature means adding a module, not editing the engine.
 4. **Vector-first, physical units.** Layout is computed in millimetres on a defined page. SVG is the native output; PDF and PNG are derived from it.
 5. **Client-side only.** No server, no upload of user data. Hostable as static files (e.g. GitHub Pages).
@@ -40,7 +40,8 @@ linden/
 ```
 core/src/
   model/        types for Dataset, Variable, Sample, Spec; spec form description + UI hints (§11)
-  io/           importers (csv, xlsx, tilia-tlx, neotoma) + spec (de)serialisation
+  io/           importers (csv, xlsx, tilia-tlx, neotoma), clipboard tables, CSV export + spec (de)serialisation
+  edit/         pure data edit operations, ids, provenance, dangling spec references (§5.4)
   transforms/   percentage, concentration, influx, scale-mapping, smoothing
   analyses/     coniss, broken-stick, (later) pca, rarefaction
   layout/       page, columns, scales, label placement
@@ -67,7 +68,7 @@ type MeasurementKind =
   | "continuous";    // LOI, magnetic susceptibility, δ13C, inferred WTD/pH/temperature
 
 interface Variable {
-  id: string;              // stable key, unique within dataset (column header by default)
+  id: string;              // stable key, unique within dataset; never changes (§5.4). Import: header without markup
   name: string;            // display name, may contain italics markup (see §7.4)
   kind: MeasurementKind;
   unit?: string;
@@ -85,7 +86,7 @@ interface Group {
 }
 
 interface Sample {
-  id: string;
+  id: string;              // stable key; import: the depth as written (`#2`… for repeats)
   depth: number;           // primary y; unit given by dataset.depthUnit
   age?: number;            // optional, from chronology
   ageError?: [number, number];
@@ -112,6 +113,8 @@ interface Dataset {
 Zero and `null` are different: zero means "looked, found none"; `null` means "not assessed". Panels must render them differently (gap vs. zero line).
 
 Multiple datasets (e.g. pollen + macrofossils + LOI from the same core) are combined in one diagram by sharing a y-axis (§5).
+
+**Ids and names.** Every variable and sample has an internal `id` that never changes; the display `name` is freely editable. Everything in the spec — assignments, `order`, merges, `curveStyles`, overrides, header spans — refers to ids, so renaming a taxon keeps its style, group and position. Importers derive ids from the file (§9); ids for variables and samples created by edits are generated deterministically (§5.4).
 
 ## 4. The diagram spec
 
@@ -317,6 +320,17 @@ Core registers the `svg` exporter in `exporters`; the app registers its browser-
 - **Broken-stick** (Bennett 1996): suggested number of significant zones.
 - Later: PCA/DCA axis scores as a `continuous` variable, rarefaction, CONISS on combined proxies.
 
+### 5.4 Data edits and provenance
+
+Data are edited only through pure functions in `core/src/edit` (no DOM): `setCell`, `setCells` (a block, e.g. a paste), `renameVariable`, `setVariableKind`, `setVariableUnit`, `addVariable`, `deleteVariable`, `moveVariable`, `addSample`, `deleteSample`, `setSampleDepth`, `setSampleAge`, `sortSamplesByDepth`. Each takes variables and samples by id and returns `{ dataset, warnings }`: a new dataset, never mutating its input — or the input itself when nothing changed or the edit was refused (e.g. a non-finite number, text in a numeric column, an empty name), so callers can skip work by reference.
+
+- **Cells**: a number, `null` or text. Empty text, "—" and "-" are `null` (not assessed), `0` stays `0`. Text in an ordinal column (`abundanceClass`, `presence`) is a code (`variable.codes`, appended when new; "-" is a code only where the column already uses it, e.g. DAFOR "absent"); an ordinal column without values takes text as its first code. Elsewhere text is refused with a warning. `parseCellText(text, decimalComma)` reads typed or pasted text.
+- **Kinds**: a column of text codes changed to a non-ordinal kind keeps the codes that are numbers; the others become `null` (warning).
+- **Ids** (`edit/ids.ts`): a new variable's id is the slug of its first name (markup and diacritics removed, lower case, `-` separated; `variable` if empty), with `-2`, `-3`, … on collision; a new sample's id is its depth as text, with `#2`, … on collision. No randomness, no clock. A variable's id is never derived from its name again.
+- **Samples**: `addSample` inserts at a given row, by default after the last sample not deeper than it. Depth changes keep the sample's id and row; depths that stop increasing (or repeat) give a warning — `sortSamplesByDepth` sorts stably.
+- **Dangling references**: deleting a variable never edits the spec. `danglingReferences(spec, datasets)` lists spec references to ids that are no variable (or merge with a source left) of the datasets — dataset entries' `assignments`, `order`, merge `from`, scaleMap `variables`; taxonCurves `variables.ids` / list `order` and `overrides`; `headers[].spans.ids`; `curveStyles` — as `{ path, id }`. `cleanupSpec(spec, datasets)` removes exactly those (a merge with no source left goes; emptied `assignments` / `order` / `overrides` / `curveStyles` are removed, selection lists kept even when empty). Pass all of the project's datasets: `curveStyles` and headers are not per dataset.
+- **Provenance**: a project keeps its datasets **as imported** (an immutable snapshot, `[]` for a blank project) next to the edited ones (bundle §10). `provenance(snapshot)` answers whether a cell differs from its imported value, matched by sample and variable id (so sorting and inserting rows or columns mark nothing; cells of added samples or variables have no imported value; text codes compare as text). `revertCell` sets a cell back.
+
 ## 6. Layout engine
 
 - Coordinates in mm. Page = title band (title, subtitle) + header band (taxon labels) + plot area + footer band (x-axis scales and titles). The SVG viewBox is in mm; font sizes are in points (converted to mm); `page.font` is the base for all text unless `style.fonts` says otherwise (§4). The page background is a full-page `<rect id="background">` unless `style.background` is `null`.
@@ -396,7 +410,7 @@ Users can save their own presets.
 
 | priority | type | notes |
 |---|---|---|
-| MVP | `csv` / `tsv` | wide format: first columns depth[, age], then one column per variable. Optional header rows starting with `group`, `kind` and/or `unit` (or sidecar JSON, later). Lines starting with `#` before the header are comments. Delimiter `,` / tab / `;` auto-detected; `;` files may use decimal commas. Variable id = header without `*` markup; name = header. Empty cell → `null`, missing kind → `count`. Ordinal columns (`abundanceClass`, `presence`) with any non-numeric cell keep their cells as text codes (`variable.codes`, first-seen order) for a `scaleMap`; text in other kinds → `null` + warning. |
+| MVP | `csv` / `tsv` | wide format: first columns depth[, age], then one column per variable. Optional header rows starting with `group`, `kind`, `unit` and/or `id` (variable ids, when they differ from the header without markup) (or sidecar JSON, later). Lines starting with `#` before the header are comments. Delimiter `,` / tab / `;` auto-detected; `;` files may use decimal commas. Variable id = header without `*` markup; name = header. Empty cell → `null`, missing kind → `count`. Ordinal columns (`abundanceClass`, `presence`) with any non-numeric cell keep their cells as text codes (`variable.codes`, first-seen order) for a `scaleMap`; text in other kinds → `null` + warning. |
 | MVP | `xlsx` | same layout; via SheetJS. |
 | 2 | `tilia-tlx` | Tilia XML: variables, ecological groups, units, chronology, lithology. Map Tilia ecological group codes (TRSH, UPHE, AQVP, VACR, …) to Groups. |
 | 3 | `neotoma` | download dataset by ID via the Neotoma API. |
@@ -404,13 +418,18 @@ Users can save their own presets.
 
 Importers never throw on recoverable problems: they return warnings.
 
+**CSV export** (`exportDelimited`): the importer's wide format, so a dataset reads back unchanged — header (`depth`, `age` if any sample has one, variable names with markup), an `id` row only if some id differs from its name without markup (e.g. after a rename), `group` (if any), `kind`, `unit` (if any), then one row per sample; `null` → empty cell, `0` → `0`, text codes as text, numbers in their shortest exact form, fields quoted when needed.
+
+**Clipboard** (`io/paste.ts`, tab-separated text from Excel, LibreOffice or Google Sheets): `parseClipboard` reads the cells and guesses — a header row (a first row with text and fewer numbers than the first data row), optional `group` / `kind` / `unit` / `id` rows below it, the depth column (headed `depth…` or `cm`; otherwise the first numeric column, flagged as a guess), an age column (`age…`, `… BP`, `b2k`), decimal commas (only when the cells clearly use them: some `0,5`-style cell, no `0.5`-style cell, not all like `1,234` — reported as a warning, as are ambiguous cells) and a kind per column (text → `abundanceClass`, all whole numbers → `count`, decimals → `continuous`). `datasetFromClipboard(table, choices)` builds the dataset from the confirmed choices (depth / age column; per column name, kind, unit, group) with edit-generated ids; rows without a numeric depth are skipped with a warning.
+
 ## 10. Export
 
 - **SVG** (native): clean, one `<g id="panel-<i>-<type>">` per panel, text as text (editable in Inkscape/Illustrator), `<metadata>` with Linden version and spec hash (§6).
 - **PDF**: svg2pdf.js + jsPDF, vector, page = `page.width × page.height` mm exactly, Liberation Sans regular + italic embedded (subset, with ToUnicode, so text is selectable); document Creator/Subject carry the version and spec hash.
 - **PNG**: rasterised in the browser at 300 / 600 (default) / 1200 dpi, pixels = round(mm / 25.4 × dpi), white or transparent background, resolution recorded in a `pHYs` chunk. (TIFF: later.)
 - **Page presets** (app): single column 85 mm, 1.5 column 120 mm, double column 180 mm (width only, height kept), A4 portrait / landscape, or custom width × height; they only change `spec.page`.
-- **Project bundle**: `.linden.json` = spec + embedded data, for sharing and archiving: `{ "format": "linden-project", "bundleVersion": 1, "generator": "Linden <version>", "spec": {…}, "datasets": [Dataset, …] }` (`core/io/project.ts`: `serializeProject` / `parseProject`). Datasets are stored as imported (§3), so 0 and `null` stay distinct; non-finite values are refused. The spec is migrated like any spec file; the data are validated (shape, values matrix = samples × variables).
+- **Project bundle**: `.linden.json` = spec + embedded data, for sharing and archiving: `{ "format": "linden-project", "bundleVersion": 2, "generator": "Linden <version>", "spec": {…}, "datasets": [Dataset, …], "imported": [Dataset, …] }` (`core/io/project.ts`: `serializeProject` / `parseProject`). `datasets` are the data as edited, `imported` the immutable snapshot as imported (§5.4; `[]` for a blank project). 0 and `null` stay distinct; non-finite values are refused. The spec is migrated like any spec file; the data are validated (shape, values matrix = samples × variables). Version-1 bundles (no `imported`) are read with their datasets as the imported snapshot.
+- **Data CSV** (app: project menu, Data tab): the edited dataset in the CSV importer's format (§9), so it round-trips.
 
 ## 11. App (UI) outline
 
@@ -430,7 +449,15 @@ Importers never throw on recoverable problems: they return warnings.
 - **Direct manipulation in the preview.** Hit-testing uses `render().layout` (§5.1), never the SVG. Clicking a panel selects it (accent outline) and opens its card in the form (switching to Form if the JSON is valid); clicking outside the panels or Esc deselects. The selected panel has a resize handle on its right edge: common-scale taxonCurves change the global `xScale` (all common-scale columns in every panel scale together; readout "mm per 10 %"), taxonCurves without a common scale change `style.columnWidth`, any other panel with a `width` changes `width`. Snap 0.5 mm (x-scale: 0.5 mm per 10 %); Alt disables snapping. A drag never grows the diagram beyond the page width left before fitting (`slack`): it stops there and says why. Manual zone boundaries can be dragged up and down, snapping to midpoints between samples. While dragging, only outlines are drawn over the dimmed figure; on release the spec changes once (one undo step) and the figure is rendered. Selection is view state, not part of the spec or the undo history.
 - **Curve inspector** (Curve tab, shown while curves or a group are selected). Clicking a taxon column in the preview (its plot area, axis or rotated label; hit-tested on `layout`) or a taxon in the variable list selects that curve and opens the tab for it; Shift / Ctrl / Cmd-click adds or removes curves; clicking a group header (preview group row or variable list) selects the group. Clicking a panel's background (gaps, panels without columns) still selects the panel and opens its card. The tab is generated from `CurveStyleOverrideSchema` with the form controls: a type selector (segmented, with icons), then only the options of that type plus the shared ones, in the sections of `CURVE_FORM_SECTIONS` (`core/model/specForm.ts`); colours, dashes and fill patterns use app widgets named in the hints (group colour, recent colours, hex; previews). Each option shows whether it is inherited (muted, with its level: "from group Bryophytes", "from preset …", "default") or set at the level being edited (with a reset button); section headers count the options set; "Reset … to inherited" removes the whole level. **Edit target**: the selected curve's `curveStyles[variable id]` by default; a selected group writes `groupStyles[group id]`; "Apply to: this curve | its group | whole panel" switches the level (panel = `panels[i].style.curve`), and the inherited values shown are those of that level. With several curves, options equal across them show their value and differing ones show "Mixed"; an edit sets the option at every target. Edits write only the changed options and drop emptied objects and levels, so the spec holds just what the user set; every edit goes through the store (undo/redo, live preview; text and number fields debounced as in the form). The curve selection is view state, exclusive with the panel selection.
 - **Curve quick actions.** Right-clicking a curve (preview column or taxon in the variable list) opens a context menu acting on the whole curve selection if the clicked curve is part of it, else on the clicked curve alone (which becomes the selection without switching the inspector); right-clicking a group header (preview group row or variable list) offers the same actions for the group (written to `groupStyles`). Items: **Type ▸** (the types with their icons, a check on the current type, "Mixed" for mixed selections; then the saved styles), **Copy style**, **Paste style**, **Paste style to group**, **Save style as…**, **Apply this style to ▸ group | whole panel**, **Exaggeration** (on/off; on unless all are on), **Hide curve** (type `none`), **Reset to inherited**, **Open in inspector**. Shortcuts: Ctrl/Cmd+Alt+C / V copy / paste the style of the selection (shown in the menu). *Copied style* = the clicked (else first selected) curve's or the group's type plus every option set at its panel, group or curve level — what the user set, not core or preset defaults (a type that comes from the data, kind `presence`, is not copied). The clipboard is view state. *Applying a style* (paste, saved style, apply this style) at a level makes that level the style, minus the options it would inherit anyway (compared under the style's type), so the spec stays minimal; at group level the members' `curveStyles` are removed, at panel level also the `groupStyles` of the panel's groups and the `curveStyles` of its columns, so every curve there looks like the source. Type, Exaggeration and Hide set one option at the selection's own level (removed where it equals the inherited value). The Curve tab lists the saved styles as one-click buttons (applied at the "Apply to" level) with a menu to save the current style, export / import the library and delete saved styles. Every action is one store edit: one undo step, also for many curves at once.
-- Empty project: a welcome screen (import CSV, open project, load an example).
+- **Diagram | Data tabs** at the top of the workspace. Both stay mounted once opened, so switching is instant and keeps zoom, scroll and selections. In the Data tab only undo / redo stay global shortcuts (keys type into cells).
+- **Data tab** (Glide Data Grid): one dataset at a time (a picker when there are several); rows are samples, frozen columns depth (and age, if any sample has one), one column per variable. Each variable's header has three tiers: its **group** (dropdown: the dataset's effective groups, "New group…"; writes a spec assignment as dragging in the variable list does), its **kind** (dropdown, shown with the unit) and its **name** with `*italic*` rendered (double-click to rename: the id stays, §5.4). Right-click a column: insert left / right, kind, unit, group, delete; right-click a cell: revert to imported value, insert sample above / below (halfway between neighbours), sort by depth, delete sample, and the column's items. A trailing row and the toolbar add samples (one step beyond the last spacing); the toolbar also adds variables, sorts, pastes and exports CSV.
+  - `null` shows as a muted "—", `0` as `0`; typing "-" or deleting a value sets `null` (in ordinal columns that use "-" as a code, it is that code). Typed "0,5" is a decimal comma ("1,234" is refused as ambiguous). A depth cannot be emptied.
+  - Cells that differ from the imported value carry a small accent mark; "Revert to imported value" sets them back (§5.4 provenance).
+  - Every edit — a cell, a block of cells (Delete), a paste, a rename — is one store edit and one undo step; undo / redo cover spec and data together. The figure re-renders 300 ms after the last data edit, and only if the data or spec actually changed.
+  - Deleting a variable that the spec still refers to shows the dangling references with a **Clean up spec** action (`cleanupSpec`, its own undo step); nothing is removed silently.
+  - **Paste** (Ctrl/Cmd+V or the toolbar): into an empty sheet, a dialog shows what `parseClipboard` detected — depth column (marked "guessed — please check" when not headed `depth`/`cm`), age column, and per column its name, kind, unit and group, all editable — before applying. Into a sheet with data, the block is pasted at the selected cell; samples are added below as needed (with pasted depths, else continuing the last spacing, with a warning), and variables only after asking. Decimal commas are accepted when the clipboard clearly uses them, and reported.
+- **New project** (top bar project menu, welcome screen): asks for a project name, the depth unit and optionally a preset, then creates an empty dataset (depth column only, empty imported snapshot) with a dataset entry, y axis and taxonCurves panel, and opens the Data tab.
+- Empty project: a welcome screen (new project, import CSV, open project, load an example).
 - UI theme: dark (default), light or system, remembered in localStorage; it never affects the figure (§4 `style`).
 - Persist work in IndexedDB; never auto-upload.
 
@@ -447,8 +474,8 @@ Importers never throw on recoverable problems: they return warnings.
 - **M1 — MVP diagram**: CSV import, percent transform, `yAxis` + `taxonCurves` (silhouette/bars), manual zones, SVG export, spec save/load.
 - **M2 — publication**: exaggeration, common scale + min width, header labels and group headers, PDF/PNG export, presets for pollen/testate/diatoms/macrofossils.
 - **M3 — visual elements, UI design, graphical spec editor and mouse resizing**: diagram title, axis titles, x-axis tick labels, figure style (`style`), summary panel, continuous panel, age axis; app UI design, a graphical editor for the spec, resizing columns and panels with the mouse.
-- **M4 — interoperability**: Tilia `.tlx` import, xlsx, multiple datasets on one diagram, lithology and dates panels.
-- **M5 — analysis**: CONISS + dendrogram + broken-stick, zones from an analysis.
+- **M4 — data and interoperability**: data view and editable data (§11 Data tab, §5.4 edit operations), continuous columns and age axis, multiple datasets on one diagram, Excel (xlsx) and Tilia `.tlx` import, lithology, dates and summary panels.
+- **M5 — analyses**: CONISS, broken-stick, dendrogram, zones from an analysis.
 - **M6 — headless**: CLI, Python wrapper, documentation site with gallery.
 
 ## 14. Non-goals (for now)

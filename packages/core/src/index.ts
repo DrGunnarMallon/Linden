@@ -12,8 +12,32 @@ export { migratePreset, migrateSpec } from "./model/migrate.js";
 export { loadPresets } from "./io/presets.js";
 export type { PresetFile } from "./io/presets.js";
 export type { ParseResult } from "./io/spec.js";
-export { csvImporter, importDelimited, parseDelimited, detectDelimiter } from "./io/delimited.js";
-export type { Delimiter, DelimitedImportOptions } from "./io/delimited.js";
+export { csvImporter, importDelimited, parseDelimited, detectDelimiter, exportDelimited } from "./io/delimited.js";
+export type { Delimiter, DelimitedImportOptions, DelimitedExportOptions } from "./io/delimited.js";
+export { parseClipboard, datasetFromClipboard } from "./io/paste.js";
+export type { ClipboardColumn, ClipboardImport, ClipboardTable } from "./io/paste.js";
+export {
+  addSample,
+  addVariable,
+  deleteSample,
+  deleteVariable,
+  moveVariable,
+  parseCellText,
+  renameVariable,
+  setCell,
+  setCells,
+  setSampleAge,
+  setSampleDepth,
+  setVariableKind,
+  setVariableUnit,
+  sortSamplesByDepth,
+} from "./edit/dataset.js";
+export type { AddResult, CellInput, EditResult, NewSample, NewVariable } from "./edit/dataset.js";
+export { sampleId, slugify, uniqueId, variableId } from "./edit/ids.js";
+export { cleanupSpec, danglingReferences } from "./edit/references.js";
+export type { DanglingReference } from "./edit/references.js";
+export { provenance, revertCell } from "./edit/provenance.js";
+export type { ImportedCell, Provenance } from "./edit/provenance.js";
 export { percentTransform } from "./transforms/percent.js";
 export { render, prepareDatasets, svgMetadata } from "./pipeline.js";
 export { applyGroups, groupOrder } from "./model/groups.js";
@@ -37,7 +61,7 @@ export type { YScale } from "./layout/scales.js";
 export { makeTheme, estimateTextWidth, PT_TO_MM } from "./layout/theme.js";
 export type { Theme } from "./layout/theme.js";
 export { selectVariables } from "./layout/select.js";
-export { SvgGroup, PathBuilder, svgDocument, fmt, markupToSvg, stripMarkup } from "./render/svg.js";
+export { SvgGroup, PathBuilder, svgDocument, fmt, markupToSvg, markupRuns, stripMarkup } from "./render/svg.js";
 export type { Attrs } from "./render/svg.js";
 export { svgExporter } from "./export/svg.js";
 export { sha256Hex, canonicalJson, specHash } from "./io/hash.js";

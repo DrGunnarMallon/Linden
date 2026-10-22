@@ -7,11 +7,17 @@ import { LINDEN_VERSION } from "../version.js";
 import { formatPath, parseSpec, type ParseResult } from "./spec.js";
 
 export const BUNDLE_FORMAT = "linden-project";
-export const BUNDLE_VERSION = 1;
+export const BUNDLE_VERSION = 2;
 
 export interface ProjectBundle {
   spec: Spec;
+  /** The data as edited (what is drawn). */
   datasets: Dataset[];
+  /**
+   * The data as imported (provenance, SPEC §5.4): an immutable snapshot for marking and reverting
+   * edited cells; [] for a blank project. serializeProject writes `datasets` when omitted.
+   */
+  imported?: Dataset[];
 }
 
 const VariableSchema = z.strictObject({
@@ -78,10 +84,12 @@ const DatasetSchema = z
 
 const BundleSchema = z.strictObject({
   format: z.literal(BUNDLE_FORMAT),
-  bundleVersion: z.literal(BUNDLE_VERSION),
+  // Version 1 had no `imported`: its datasets were stored as imported.
+  bundleVersion: z.union([z.literal(1), z.literal(BUNDLE_VERSION)]),
   generator: z.string().optional(),
   spec: z.unknown(),
   datasets: z.array(DatasetSchema),
+  imported: z.array(DatasetSchema).optional(),
 });
 
 /**
@@ -89,7 +97,8 @@ const BundleSchema = z.strictObject({
  * non-finite values, which JSON would silently turn into null ("not assessed").
  */
 export function serializeProject(bundle: ProjectBundle): string {
-  for (const ds of bundle.datasets) {
+  const imported = bundle.imported ?? bundle.datasets;
+  for (const ds of [...bundle.datasets, ...imported]) {
     ds.values.forEach((row, i) =>
       row.forEach((v, j) => {
         if (v !== null && !Number.isFinite(v)) throw new Error(`Dataset "${ds.id}": non-finite value at sample ${i}, variable ${j}.`);
@@ -102,11 +111,15 @@ export function serializeProject(bundle: ProjectBundle): string {
     generator: `Linden ${LINDEN_VERSION}`,
     spec: bundle.spec,
     datasets: bundle.datasets,
+    imported,
   };
   return `${JSON.stringify(out, null, 2)}\n`;
 }
 
-/** Accepts a JSON string or parsed object. The spec is migrated like any spec file (parseSpec). */
+/**
+ * Accepts a JSON string or parsed object. The spec is migrated like any spec file (parseSpec); a
+ * version-1 bundle (or one without `imported`) gets its datasets as the imported snapshot.
+ */
 export function parseProject(json: unknown): ParseResult<ProjectBundle> {
   let input = json;
   if (typeof json === "string") {
@@ -122,5 +135,6 @@ export function parseProject(json: unknown): ParseResult<ProjectBundle> {
   }
   const spec = parseSpec(bundle.data.spec);
   if (!spec.ok) return { ok: false, errors: spec.errors.map((e) => `spec.${e}`) };
-  return { ok: true, value: { spec: spec.value, datasets: bundle.data.datasets as Dataset[] } };
+  const datasets = bundle.data.datasets as Dataset[];
+  return { ok: true, value: { spec: spec.value, datasets, imported: (bundle.data.imported as Dataset[] | undefined) ?? datasets } };
 }

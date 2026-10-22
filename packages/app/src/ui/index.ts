@@ -19,6 +19,7 @@ export {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "./ContextMenu";
+export { Dialog, DialogClose, DialogContent } from "./Dialog";
 export { IconButton } from "./IconButton";
 export { fieldClass, Input } from "./Input";
 export { Menu, MenuContent, MenuItem, MenuLabel, MenuRadioGroup, MenuRadioItem, MenuSeparator, MenuSub, MenuSubContent, MenuSubTrigger, MenuTrigger } from "./Menu";

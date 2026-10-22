@@ -46,6 +46,19 @@ export async function importData(): Promise<void> {
   else toast(`Imported ${file.name}`, { variant: "success", description: warnings ? `${warnings} warning${warnings > 1 ? "s" : ""} — see the status bar.` : undefined });
 }
 
+/** Opens the New project dialog (it asks before replacing a project with data). */
+export function newProject(): void {
+  useView.getState().setNewProjectOpen(true);
+}
+
+/** Exports the dataset shown in the Data tab (else the first) as CSV. */
+export function exportData(): void {
+  const { datasets } = useStore.getState();
+  const id = useView.getState().dataDataset ?? datasets[0]?.id;
+  const file = id === undefined ? undefined : useStore.getState().exportData(id);
+  if (file) toast(`Exported ${file}`, { variant: "success", description: "Same format as the CSV importer, so it reads back unchanged." });
+}
+
 export async function openProject(): Promise<void> {
   const file = await pickFile(".linden.json,.json,application/json");
   if (!file || !confirmReplace("this file")) return;

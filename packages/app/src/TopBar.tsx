@@ -2,6 +2,8 @@ import {
   ChevronDown,
   Download,
   FileCode,
+  FilePlus,
+  FileSpreadsheet,
   FileImage,
   FileText,
   FolderOpen,
@@ -18,7 +20,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useEffect, useState, type ReactElement } from "react";
-import { exportAs, importData, loadExample, loadSpecFile, openProject, saveProject, saveSpecFile } from "./actions";
+import { exportAs, exportData, importData, loadExample, loadSpecFile, newProject, openProject, saveProject, saveSpecFile } from "./actions";
 import { examples } from "./bundled";
 import { PNG_DPIS } from "./export/png";
 import { SHORTCUTS } from "./shortcuts";
@@ -79,17 +81,24 @@ function ProjectName() {
 
 function ProjectMenu() {
   const specErrors = useStore((s) => s.specErrors.length);
+  const hasData = useStore((s) => s.datasets.length > 0);
   return (
     <Menu>
       <MenuTrigger asChild>
         <IconButton label="Project menu" icon={<ChevronDown />} size="sm" />
       </MenuTrigger>
       <MenuContent>
+        <MenuItem onSelect={newProject}>
+          <FilePlus /> New project…
+        </MenuItem>
         <MenuItem onSelect={() => void openProject()}>
           <FolderOpen /> Open project…
         </MenuItem>
         <MenuItem onSelect={saveProject}>
           <Save /> Save project
+        </MenuItem>
+        <MenuItem disabled={!hasData} onSelect={exportData}>
+          <FileSpreadsheet /> Export data (CSV)
         </MenuItem>
         <MenuSeparator />
         <MenuItem onSelect={() => void loadSpecFile()}>

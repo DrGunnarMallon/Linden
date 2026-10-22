@@ -1,8 +1,11 @@
-// App state. The spec is the single source of truth: the editor text, the variable checkboxes
-// and the preset picker all produce new Spec values via commitSpec, which feeds undo/redo.
+// App state. The spec is the single source of truth for the diagram: the editor text, the variable
+// checkboxes and the preset picker all produce new Spec values via commitSpec, which feeds undo/redo.
+// Data edits (Data tab) produce new Dataset values via core's edit operations and commitData; the
+// history holds spec and datasets together, so one undo reverts either.
 
 import {
   SPEC_VERSION,
+  exportDelimited,
   importers,
   parseProject,
   parseSpec,
@@ -13,6 +16,7 @@ import {
   type CurveStyleOverride,
   type Dataset,
   type DiagramLayout,
+  type EditResult,
   type Preset,
   type SavedCurveStyle,
   type Spec,
@@ -56,6 +60,8 @@ import {
 } from "./specEdit";
 
 const HISTORY_LIMIT = 200;
+/** Data edits re-render the figure this long after the last one (SPEC §11 Data tab). */
+const DATA_RENDER_DELAY_MS = 300;
 /** Valid edits in the text editor closer together than this become one undo step. */
 const TYPING_MERGE_MS = 1000;
 
@@ -68,10 +74,25 @@ export function fileBase(projectName: string): string {
   return slug || "diagram";
 }
 
+/** One undo step: spec and data as they were. */
+export interface Snapshot {
+  spec: Spec;
+  datasets: Dataset[];
+}
+
+export interface NewProjectOptions {
+  name: string;
+  depthUnit: Dataset["depthUnit"];
+  preset?: string;
+}
+
 interface State {
   ready: boolean;
   projectName: string;
+  /** The data as edited (what is drawn). */
   datasets: Dataset[];
+  /** The data as imported (provenance): never edited; [] for a blank project. */
+  imported: Dataset[];
   spec: Spec;
   specText: string;
   specErrors: string[];
@@ -85,8 +106,8 @@ interface State {
   svg: string;
   /** Layout metadata of the last good render (page mm), for hit-testing in the preview. */
   layout: DiagramLayout | undefined;
-  past: Spec[];
-  future: Spec[];
+  past: Snapshot[];
+  future: Snapshot[];
   lastTypedAt: number;
   /** Field of the last form edit (see editSpec); undefined after any other edit. */
   lastEditKey: string | undefined;
@@ -102,6 +123,17 @@ interface State {
   redo(): void;
   setPreset(name: string | undefined): void;
   setVariableVisible(datasetId: string, varId: string, visible: boolean): void;
+  /** Blank project with one empty dataset (depth column only). */
+  newProject(opts: NewProjectOptions): void;
+  /**
+   * One data edit (one undo step) of dataset `datasetId` via a core edit operation; the figure follows
+   * after DATA_RENDER_DELAY_MS. Nothing is committed if the dataset comes back unchanged. Returns the warnings.
+   */
+  editData(datasetId: string, edit: (ds: Dataset) => EditResult): string[];
+  /** Replaces a dataset (same id) and optionally the spec, as one undo step. */
+  replaceData(ds: Dataset, spec?: Spec): void;
+  /** Downloads a dataset as CSV in the importer's format; resolves to the file name. */
+  exportData(datasetId: string): string | undefined;
   /** Resolves to the number of datasets imported (0 = nothing usable; see importWarnings). */
   importFile(file: File): Promise<number>;
   removeDataset(id: string): void;
@@ -147,12 +179,30 @@ function sameSpec(a: Spec, b: Spec): boolean {
 }
 
 export const useStore = create<State>()((set, get) => {
+  /** Inputs of the last render: the figure is only rendered again when one of them changed. */
+  let rendered: { datasets: Dataset[]; spec: Spec; presets: Preset[] } | undefined;
+  let renderTimer: ReturnType<typeof setTimeout> | undefined;
+
   /** Re-renders after datasets/spec change. Keeps the last good SVG if rendering throws. */
   const rerender = (patch: Partial<State>) => {
+    clearTimeout(renderTimer);
     const s = { ...get(), ...patch };
+    if (rendered && rendered.datasets === s.datasets && rendered.spec === s.spec && rendered.presets === s.presets) {
+      set(patch);
+      return;
+    }
+    rendered = { datasets: s.datasets, spec: s.spec, presets: s.presets };
     const r = renderWith(s.datasets, s.spec, s.presets);
     set({ ...patch, renderWarnings: r.renderWarnings, ...(r.svg !== undefined ? { svg: r.svg, layout: r.layout } : {}) });
   };
+
+  /** Data edits arrive in bursts (typing, pasting): render once they pause. */
+  const scheduleRender = () => {
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(() => rerender({}), DATA_RENDER_DELAY_MS);
+  };
+
+  const snapshot = (): Snapshot => ({ spec: get().spec, datasets: get().datasets });
 
   /** New spec as one undo step. `text` keeps the user's formatting; otherwise the spec is pretty-printed. */
   const commitSpec = (spec: Spec, text?: string, mergeWithLast = false) => {
@@ -161,12 +211,27 @@ export const useStore = create<State>()((set, get) => {
       spec,
       specText: text ?? prettySpec(spec),
       specErrors: [],
-      past: mergeWithLast ? past : [...past, current].slice(-HISTORY_LIMIT),
+      past: mergeWithLast ? past : [...past, { spec: current, datasets: get().datasets }].slice(-HISTORY_LIMIT),
       future: [],
       // Typing callers set these again after committing; any other edit ends a typing burst.
       lastTypedAt: 0,
       lastEditKey: undefined,
     });
+  };
+
+  /** New datasets (and spec) as one undo step; the figure follows debounced. */
+  const commitData = (datasets: Dataset[], spec: Spec = get().spec) => {
+    const specChanged = spec !== get().spec;
+    set({
+      datasets,
+      spec,
+      ...(specChanged ? { specText: prettySpec(spec), specErrors: [] } : {}),
+      past: [...get().past, snapshot()].slice(-HISTORY_LIMIT),
+      future: [],
+      lastTypedAt: 0,
+      lastEditKey: undefined,
+    });
+    scheduleRender();
   };
 
   /** Commits `next` as one undo step if it differs from the current spec. */
@@ -181,7 +246,17 @@ export const useStore = create<State>()((set, get) => {
   const rawDataset = (id: string) => get().datasets.find((d) => d.id === id);
 
   const setProject = (p: Project) => {
-    rerender({ projectName: p.name ?? DEFAULT_NAME, datasets: p.datasets, spec: p.spec, specText: p.specText, importWarnings: p.importWarnings, past: [], future: [] });
+    rerender({
+      projectName: p.name ?? DEFAULT_NAME,
+      datasets: p.datasets,
+      // Projects saved before provenance existed held their data as imported.
+      imported: p.imported ?? p.datasets,
+      spec: p.spec,
+      specText: p.specText,
+      importWarnings: p.importWarnings,
+      past: [],
+      future: [],
+    });
     const parsed = parseSpec(p.specText);
     set({ specErrors: parsed.ok ? [] : parsed.errors });
   };
@@ -190,6 +265,7 @@ export const useStore = create<State>()((set, get) => {
     ready: false,
     projectName: DEFAULT_NAME,
     datasets: [],
+    imported: [],
     spec: EMPTY_SPEC,
     specText: prettySpec(EMPTY_SPEC),
     specErrors: [],
@@ -231,6 +307,7 @@ export const useStore = create<State>()((set, get) => {
       setProject({
         name: `${example.label} example`,
         datasets,
+        imported: datasets,
         spec: parsed.ok ? parsed.value : EMPTY_SPEC,
         specText: example.specText,
         importWarnings: warnings.map((w) => `${example.name}.csv: ${w}`),
@@ -263,17 +340,51 @@ export const useStore = create<State>()((set, get) => {
     },
 
     undo() {
-      const { past, future, spec } = get();
+      const { past, future } = get();
       const prev = past[past.length - 1];
       if (!prev) return;
-      rerender({ spec: prev, specText: prettySpec(prev), specErrors: [], past: past.slice(0, -1), future: [spec, ...future], lastTypedAt: 0 });
+      const specText = prev.spec === get().spec ? get().specText : prettySpec(prev.spec);
+      rerender({ ...prev, specText, specErrors: [], past: past.slice(0, -1), future: [snapshot(), ...future], lastTypedAt: 0 });
     },
 
     redo() {
-      const { past, future, spec } = get();
+      const { past, future } = get();
       const next = future[0];
       if (!next) return;
-      rerender({ spec: next, specText: prettySpec(next), specErrors: [], past: [...past, spec], future: future.slice(1), lastTypedAt: 0 });
+      const specText = next.spec === get().spec ? get().specText : prettySpec(next.spec);
+      rerender({ ...next, specText, specErrors: [], past: [...past, snapshot()], future: future.slice(1), lastTypedAt: 0 });
+    },
+
+    newProject({ name, depthUnit, preset }) {
+      const projectName = name.trim() || DEFAULT_NAME;
+      const base = fileBase(projectName);
+      const ds: Dataset = { id: base === "diagram" ? "data" : base, name: projectName, depthUnit, samples: [], variables: [], groups: [], values: [] };
+      const spec = ensureDatasetInSpec(preset ? { ...EMPTY_SPEC, preset } : EMPTY_SPEC, ds);
+      setProject({ name: projectName, datasets: [ds], imported: [], spec, specText: prettySpec(spec), importWarnings: [] });
+      set({ specErrors: [] });
+    },
+
+    editData(datasetId, edit) {
+      const ds = rawDataset(datasetId);
+      if (!ds) return [`Unknown dataset "${datasetId}".`];
+      const r = edit(ds);
+      if (r.dataset !== ds) commitData(get().datasets.map((d) => (d.id === datasetId ? r.dataset : d)));
+      return r.warnings;
+    },
+
+    replaceData(ds, spec) {
+      commitData(
+        get().datasets.map((d) => (d.id === ds.id ? ds : d)),
+        spec,
+      );
+    },
+
+    exportData(datasetId) {
+      const ds = rawDataset(datasetId);
+      if (!ds) return undefined;
+      const filename = `${fileBase(ds.name)}.csv`;
+      download(filename, exportDelimited(ds), "text/csv");
+      return filename;
     },
 
     setPreset(name) {
@@ -393,8 +504,8 @@ export const useStore = create<State>()((set, get) => {
     },
 
     saveProjectBundle() {
-      const { spec, datasets, projectName } = get();
-      download(`${fileBase(projectName)}.linden.json`, serializeProject({ spec, datasets }), "application/json");
+      const { spec, datasets, imported, projectName } = get();
+      download(`${fileBase(projectName)}.linden.json`, serializeProject({ spec, datasets, imported }), "application/json");
     },
 
     async openProjectBundle(file) {
@@ -403,7 +514,8 @@ export const useStore = create<State>()((set, get) => {
         set({ importWarnings: parsed.errors.map((e) => `${file.name}: ${e}`) });
         return false;
       }
-      setProject({ name: file.name.replace(/(\.linden)?\.json$/i, ""), datasets: parsed.value.datasets, spec: parsed.value.spec, specText: prettySpec(parsed.value.spec), importWarnings: [] });
+      const { datasets, imported, spec } = parsed.value;
+      setProject({ name: file.name.replace(/(\.linden)?\.json$/i, ""), datasets, imported: imported ?? datasets, spec, specText: prettySpec(spec), importWarnings: [] });
       return true;
     },
 
@@ -420,6 +532,7 @@ export const useStore = create<State>()((set, get) => {
       const ids = new Set(imported.map((d) => d.id));
       rerender({
         datasets: [...get().datasets.filter((d) => !ids.has(d.id)), ...imported],
+        imported: [...get().imported.filter((d) => !ids.has(d.id)), ...imported],
         importWarnings: warnings.map((w) => `${file.name}: ${w}`),
       });
       const spec = imported.reduce((s, d) => ensureDatasetInSpec(s, d), get().spec);
@@ -428,7 +541,7 @@ export const useStore = create<State>()((set, get) => {
     },
 
     removeDataset(id) {
-      rerender({ datasets: get().datasets.filter((d) => d.id !== id) });
+      rerender({ datasets: get().datasets.filter((d) => d.id !== id), imported: get().imported.filter((d) => d.id !== id) });
       const spec = removeDatasetFromSpec(get().spec, id);
       if (!sameSpec(spec, get().spec)) commitSpec(spec);
     },
@@ -443,17 +556,25 @@ function startAutosave(): void {
   autosaveStarted = true;
   let timer: ReturnType<typeof setTimeout> | undefined;
   useStore.subscribe((s, prev) => {
-    if (s.datasets === prev.datasets && s.spec === prev.spec && s.specText === prev.specText && s.importWarnings === prev.importWarnings && s.projectName === prev.projectName) return;
+    if (
+      s.datasets === prev.datasets &&
+      s.imported === prev.imported &&
+      s.spec === prev.spec &&
+      s.specText === prev.specText &&
+      s.importWarnings === prev.importWarnings &&
+      s.projectName === prev.projectName
+    )
+      return;
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const { projectName: name, datasets, spec, specText, importWarnings } = useStore.getState();
-      saveProject({ name, datasets, spec, specText, importWarnings }).then(
+      const { projectName: name, datasets, imported, spec, specText, importWarnings } = useStore.getState();
+      saveProject({ name, datasets, imported, spec, specText, importWarnings }).then(
         () => useStore.setState({ storageWarnings: [] }),
         (e: unknown) => useStore.setState({ storageWarnings: [`Could not save the project in browser storage: ${(e as Error).message}`] }),
       );
     }, 500);
   });
   // Save once right away so a migrated project is persisted too.
-  const { projectName: name, datasets, spec, specText, importWarnings } = useStore.getState();
-  void saveProject({ name, datasets, spec, specText, importWarnings }).catch(() => undefined);
+  const { projectName: name, datasets, imported, spec, specText, importWarnings } = useStore.getState();
+  void saveProject({ name, datasets, imported, spec, specText, importWarnings }).catch(() => undefined);
 }

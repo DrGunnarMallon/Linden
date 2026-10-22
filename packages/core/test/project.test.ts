@@ -19,7 +19,24 @@ describe("project bundle (.linden.json)", () => {
     expect(back.value.spec).toEqual(spec.value);
     expect(back.value.datasets).toEqual([ds]);
     expect(back.value.datasets[0]!.values[0]!.slice(0, 2)).toEqual([0, null]);
-    expect(JSON.parse(text)).toMatchObject({ format: "linden-project", bundleVersion: 1, generator: "Linden 0.0.0" });
+    expect(JSON.parse(text)).toMatchObject({ format: "linden-project", bundleVersion: 2, generator: "Linden 0.0.0" });
+  });
+
+  it("keeps the imported snapshot apart from the edited data (bundle v2)", () => {
+    const edited = { ...datasets[0]!, values: datasets[0]!.values.map((r, i) => (i === 0 ? [7, ...r.slice(1)] : r)) };
+    const back = parseProject(serializeProject({ spec: spec.value, datasets: [edited], imported: datasets }));
+    expect(back.ok && back.value.datasets).toEqual([edited]);
+    expect(back.ok && back.value.imported).toEqual(datasets);
+    // A blank project has an empty snapshot.
+    const blank = parseProject(serializeProject({ spec: spec.value, datasets: [edited], imported: [] }));
+    expect(blank.ok && blank.value.imported).toEqual([]);
+  });
+
+  it("migrates a version-1 bundle: its datasets become the imported snapshot", () => {
+    const v1 = { format: "linden-project", bundleVersion: 1, spec: spec.value, datasets };
+    const back = parseProject(JSON.stringify(v1));
+    expect(back.ok && back.value.imported).toEqual(datasets);
+    expect(back.ok && back.value.datasets).toEqual(datasets);
   });
 
   it("migrates an old spec inside a bundle", () => {

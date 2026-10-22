@@ -15,13 +15,14 @@ Linden is a free, client-side web app (plus a headless TypeScript core) for publ
 5. **Zero ≠ null.** `0` = looked and found none; `null` = not assessed. Keep the distinction through every stage.
 6. **Never silently break the common x-scale** in percentage diagrams; emit a warning instead.
 7. **Spec changes are versioned.** Any change to the spec shape bumps `specVersion` and adds a migration with a test.
+8. **Licensing.** Linden is distributed under MIT. Every runtime dependency — including transitive ones — must have an OSI-approved licence compatible with MIT: MIT, BSD-2/3-Clause, ISC, Apache-2.0 (also accepted: 0BSD, Zlib; OFL-1.1 for font packages only). Check a package's licence before adding it and report it to the maintainer. `npm run check:licenses` must pass.
 
 ## How to work
 
 - **Minimal, targeted patches.** Change only what the task needs, in the existing files. Do not restructure, rename or reformat code you weren't asked to touch — the maintainer wants to keep an overview of his own codebase. If a refactor seems worthwhile, propose it in a sentence and wait.
 - Spec first: if a task contradicts `SPEC.md`, stop and say so; if the spec needs to change, edit `SPEC.md` in the same change and point it out.
 - New module = register it in `core/src/registry.ts`, export it from `core/src/index.ts`, add tests.
-- Ask before adding a new runtime dependency. Current allowed deps: `d3-scale`, `d3-shape`, `zod` (core); `react`, `react-dom`, `zustand`, `jspdf`, `svg2pdf.js`, `xlsx`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` (app).
+- Ask before adding a new runtime dependency. Current allowed deps: `d3-scale`, `d3-shape`, `zod` (core); `react`, `react-dom`, `zustand`, `jspdf`, `svg2pdf.js`, `xlsx`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `@glideapps/glide-data-grid` with its peers `lodash`, `marked`, `react-responsive-carousel` (app).
 - Keep functions small and typed; no `any` in `core` public APIs.
 - After a change, summarise in 2–4 lines what changed and which files — no long recap.
 
@@ -34,6 +35,7 @@ npm test               # vitest across workspaces
 npm run test -w @linden/core -- --update   # update golden SVG snapshots (only when change is intentional)
 npm run dev -w @linden/app                 # run the app (Vite) once the app package exists
 npm run typecheck
+npm run check:licenses # fails on any runtime dependency outside the allowed licences (rule 8)
 ```
 
 ## Testing expectations

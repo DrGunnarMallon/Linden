@@ -78,6 +78,24 @@ export function markupToSvg(text: string): string {
   return out + escapeXml(text.slice(last));
 }
 
+/** The same reading of "*italic*" markup as markupToSvg, as plain runs (e.g. for drawing on a canvas). */
+export function markupRuns(text: string): { text: string; italic: boolean }[] {
+  const out: { text: string; italic: boolean }[] = [];
+  const push = (t: string, italic: boolean) => {
+    if (t !== "") out.push({ text: t, italic });
+  };
+  let last = 0;
+  for (const m of text.matchAll(/\*([^*]+)\*/g)) {
+    push(text.slice(last, m.index), false);
+    const [, italic, suffix = ""] = /^(.+?)([- ]type)?$/.exec(m[1]!)!;
+    push(italic!, true);
+    push(suffix, false);
+    last = m.index + m[0].length;
+  }
+  push(text.slice(last), false);
+  return out;
+}
+
 /** Plain text of a label with markup removed (for width estimates). */
 export function stripMarkup(text: string): string {
   return text.replace(/\*([^*]+)\*/g, "$1");

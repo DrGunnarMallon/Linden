@@ -1,12 +1,13 @@
-import { TreeDeciduous } from "lucide-react";
-import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { ChartColumnBig, Sheet, TreeDeciduous } from "lucide-react";
+import { lazy, Suspense, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { copyStyle, pasteStyle } from "./actions";
 import { Inspector } from "./Inspector";
+import { NewProjectDialog } from "./NewProjectDialog";
 import { Preview } from "./Preview";
 import { StatusBar } from "./StatusBar";
 import { useStore } from "./store";
 import { TopBar } from "./TopBar";
-import { cn, Toaster, TooltipProvider } from "./ui";
+import { cn, Tabs, TabsList, TabsTrigger, Toaster, TooltipProvider } from "./ui";
 import { VariableList } from "./VariableList";
 import { SIDEBAR_WIDTH, useView, type Side } from "./view";
 
@@ -102,6 +103,51 @@ function Sidebar({ open, side, width, label, children }: { open: boolean; side: 
   );
 }
 
+/** The data sheet (and its grid library) loads on first use of the Data tab. */
+const DataView = lazy(() => import("./DataView").then((m) => ({ default: m.DataView })));
+
+/**
+ * Diagram | Data tabs. The preview stays mounted while the sheet is shown and the sheet once opened;
+ * the hidden one keeps its size (visibility, not display), so switching is instant and keeps zoom,
+ * scroll and selections.
+ */
+function Workspace() {
+  const tab = useView((s) => s.workspaceTab);
+  const setTab = useView((s) => s.setWorkspaceTab);
+  const hasData = useStore((s) => s.datasets.length > 0);
+  const current = hasData ? tab : "diagram";
+  const [dataOpened, setDataOpened] = useState(current === "data");
+  useEffect(() => {
+    if (current === "data") setDataOpened(true);
+  }, [current]);
+  return (
+    <Tabs value={current} onValueChange={(v) => setTab(v === "data" ? "data" : "diagram")} className="flex h-full flex-col">
+      {hasData && (
+        <TabsList className="bg-surface-1">
+          <TabsTrigger value="diagram">
+            <ChartColumnBig /> Diagram
+          </TabsTrigger>
+          <TabsTrigger value="data">
+            <Sheet /> Data
+          </TabsTrigger>
+        </TabsList>
+      )}
+      <div className="relative min-h-0 flex-1">
+        <div role="tabpanel" aria-label="Diagram" inert={current !== "diagram"} className={cn("absolute inset-0", current !== "diagram" && "invisible")}>
+          <Preview />
+        </div>
+        {dataOpened && hasData && (
+          <div role="tabpanel" aria-label="Data" inert={current !== "data"} className={cn("absolute inset-0", current !== "data" && "invisible")}>
+            <Suspense fallback={<p className="p-8 text-sm text-fg-muted">Loading the data sheet…</p>}>
+              <DataView />
+            </Suspense>
+          </div>
+        )}
+      </div>
+    </Tabs>
+  );
+}
+
 export function App() {
   const ready = useStore((s) => s.ready);
   const { leftOpen, rightOpen, leftWidth, rightWidth } = useView();
@@ -113,6 +159,8 @@ export function App() {
     const onKey = (e: KeyboardEvent) => {
       if (isTextField(document.activeElement)) return;
       const view = useView.getState();
+      // In the data sheet, keys type into cells: only undo / redo stay global.
+      if (view.workspaceTab === "data" && !((e.ctrlKey || e.metaKey) && !e.altKey && ["z", "y"].includes(e.key.toLowerCase()))) return;
       if ((e.ctrlKey || e.metaKey) && e.altKey) {
         // By key position: with Alt (Option) held, e.key is another character on many layouts.
         if (e.code !== "KeyC" && e.code !== "KeyV") return;
@@ -152,7 +200,7 @@ export function App() {
             <VariableList />
           </Sidebar>
           <main className="min-w-0 flex-1">
-            <Preview />
+            <Workspace />
           </main>
           <Sidebar open={rightOpen} side="right" width={rightWidth} label="Inspector">
             <Inspector />
@@ -160,6 +208,7 @@ export function App() {
         </div>
         <StatusBar />
       </div>
+      <NewProjectDialog />
       <Toaster />
     </TooltipProvider>
   );

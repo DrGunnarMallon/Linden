@@ -3,7 +3,8 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 7;
+export const SPEC_VERSION = 8;
+export const PRESET_VERSION = 2;
 
 export const MeasurementKindSchema = z.enum([
   "count",
@@ -142,23 +143,169 @@ export const XTitleSchema = z.strictObject({
   show: z.enum(["panel", "column", "none"]).optional(),
 });
 
+// Curve styles — SPEC.md §4 "Curve styles". CurveStyleSchema is the full (resolved) style of one
+// curve; the spec stores only partial overrides (CurveStyleOverrideSchema) at each cascade level.
+// Colours: a CSS colour or "group" (the variable's group colour); exaggeration.colour may also be
+// "curve" (the main curve's colour) and baseline.colour "axis" (the figure's axis colour).
+// Line widths: null = the figure's curve line width (baseline: its axis line width).
+
+/** "solid" | "dashed" | "dotted" or a custom dash array in mm. */
+export const DashSchema = z.union([z.enum(["solid", "dashed", "dotted"]), z.array(z.number().positive()).min(1)]);
+
+/** Fill pattern for black-and-white figures; angle in degrees, spacing in mm. */
+export const FillPatternSchema = z.strictObject({
+  type: z.enum(["solid", "hatch", "crosshatch", "dots"]),
+  angle: z.number(),
+  spacing: z.number().positive(),
+});
+
+export const FillSchema = z.strictObject({
+  colour: z.string(),
+  opacity: z.number().min(0).max(1),
+  pattern: FillPatternSchema,
+});
+
+export const OutlineSchema = z.strictObject({
+  show: z.boolean(),
+  colour: z.string(),
+  width: z.number().positive().nullable(),
+  dash: DashSchema,
+});
+
+export const LineStyleSchema = z.strictObject({
+  colour: z.string(),
+  width: z.number().positive().nullable(),
+  dash: DashSchema,
+});
+
+/** Point mark at each sample; size = diameter / side in mm. */
+export const PointMarkSchema = z.strictObject({
+  shape: z.enum(["circle", "square", "triangle", "diamond", "cross"]),
+  size: z.number().positive(),
+  filled: z.boolean(),
+  colour: z.string(),
+});
+
+/** Options every curve type has. */
+const curveShared = {
+  /** Lighter curve at value × factor behind the main one. */
+  exaggeration: z.strictObject({
+    show: z.boolean(),
+    factor: z.number().positive(),
+    style: z.enum(["filled", "line"]),
+    colour: z.string(),
+    opacity: z.number().min(0).max(1),
+  }),
+  /** Zero line at x = 0 along each run of values. */
+  baseline: z.strictObject({
+    show: z.boolean(),
+    colour: z.string(),
+    width: z.number().positive().nullable(),
+    dash: DashSchema,
+  }),
+  /** null values: break the curve ("gap") or join the neighbouring values ("connect"). */
+  nulls: z.enum(["gap", "connect"]),
+  /** "+" right of non-zero values below the threshold; size in mm. */
+  plus: z.strictObject({ show: z.boolean(), threshold: z.number().min(0), size: z.number().positive() }),
+  /** Value text right of each value; "{value}" in `format` is replaced by the number. */
+  valueLabels: z.strictObject({
+    show: z.enum(["off", "all", "aboveThreshold"]),
+    threshold: z.number(),
+    format: z.string(),
+    decimals: z.number().int().min(0).max(6),
+  }),
+};
+
+const curveLine = { line: LineStyleSchema, interpolation: z.enum(["linear", "step"]) };
+
+export const PolygonCurveSchema = z.strictObject({
+  type: z.literal("polygon"),
+  ...curveShared,
+  filled: z.boolean(),
+  fill: FillSchema,
+  outline: OutlineSchema,
+  /** "step": each sample a block reaching halfway to its neighbours (histogram). */
+  shape: z.enum(["linear", "step"]),
+});
+
+export const LineCurveSchema = z.strictObject({
+  type: z.literal("line"),
+  ...curveShared,
+  ...curveLine,
+  points: PointMarkSchema.extend({ show: z.boolean() }),
+});
+
+export const LinePointsCurveSchema = z.strictObject({ type: z.literal("linePoints"), ...curveShared, ...curveLine, points: PointMarkSchema });
+
+export const PointsCurveSchema = z.strictObject({ type: z.literal("points"), ...curveShared, points: PointMarkSchema });
+
+export const BarsCurveSchema = z.strictObject({
+  type: z.literal("bars"),
+  ...curveShared,
+  /** Bar thickness along the depth axis: fixed mm, or a fraction of the local sample spacing. */
+  barWidth: z.strictObject({ mode: z.enum(["mm", "fraction"]), value: z.number().positive() }),
+  fill: FillSchema,
+  outline: OutlineSchema,
+  /** Bars are centred on the sample depth. */
+  align: z.literal("centre"),
+});
+
+/** Presence/absence marks where the value is > 0; size in mm. */
+export const PresenceCurveSchema = z.strictObject({
+  type: z.literal("presence"),
+  ...curveShared,
+  presence: z.strictObject({ symbol: z.enum(["dot", "plus", "bar", "square"]), size: z.number().positive(), colour: z.string() }),
+});
+
+/** No curve; the column (width, axis, label, value labels) stays. */
+export const NoneCurveSchema = z.strictObject({ type: z.literal("none"), ...curveShared });
+
+export const CurveStyleSchema = z.discriminatedUnion("type", [
+  PolygonCurveSchema,
+  LineCurveSchema,
+  LinePointsCurveSchema,
+  PointsCurveSchema,
+  BarsCurveSchema,
+  PresenceCurveSchema,
+  NoneCurveSchema,
+]);
+
+export const CURVE_TYPES = ["polygon", "line", "linePoints", "points", "bars", "presence", "none"] as const;
+
+/** Every key at every depth optional; objects stay strict. */
+function partialDeep(schema: z.ZodType): z.ZodType {
+  if (!(schema instanceof z.ZodObject)) return schema;
+  const shape = schema.shape as Record<string, z.ZodType>;
+  return z.strictObject(Object.fromEntries(Object.keys(shape).map((k) => [k, partialDeep(shape[k]!).optional()])));
+}
+
+/**
+ * One cascade level (preset, panel, group, variable): options of any type, all optional. Options the
+ * resolved type lacks are ignored; a `type` discards inherited options the new type lacks.
+ */
+export const CurveStyleOverrideSchema = partialDeep(
+  z.strictObject({
+    type: z.enum(CURVE_TYPES),
+    ...curveShared,
+    ...PolygonCurveSchema.omit({ type: true }).shape,
+    ...BarsCurveSchema.omit({ type: true }).shape,
+    ...PresenceCurveSchema.omit({ type: true }).shape,
+    // Last, so `points` is the line variant's (with `show`), a superset of the others.
+    ...LineCurveSchema.omit({ type: true }).shape,
+  }),
+) as z.ZodType<CurveStyleOverride>;
+
 export const TaxonCurvesStyleSchema = z.strictObject({
-  mode: z.enum(["silhouette", "bars", "line", "linePoints"]).optional(),
-  /** "group" = group colour, otherwise a CSS colour. */
-  fill: z.string().optional(),
-  exaggeration: z.number().min(0).optional(),
+  /** Curve style of every column (cascade level "panel"). */
+  curve: CurveStyleOverrideSchema.optional(),
   commonScale: z.boolean().optional(),
   minWidth: z.number().min(0).optional(),
   /** Column width in mm for columns without a common scale (before page fitting). */
   columnWidth: z.number().positive().optional(),
-  /** Draw "+" for non-zero values below this; 0 = off. */
-  plusBelow: z.number().min(0).optional(),
   /** Extra space in mm between adjacent columns of different groups. */
   groupGap: z.number().min(0).optional(),
   xTicks: XTicksSchema.optional(),
   xTitle: XTitleSchema.optional(),
-  /** Mark for kind "presence" (value > 0): a dot or a full-width bar. */
-  presence: z.enum(["dot", "bar"]).optional(),
 });
 
 export const YAxisPanelSchema = z.strictObject({
@@ -171,8 +318,8 @@ export const TaxonCurvesPanelSchema = z.strictObject({
   dataset: z.string(),
   variables: SelectionSchema.optional(),
   style: TaxonCurvesStyleSchema.optional(),
-  /** Per-variable style overrides (panel-level layout keys excluded). */
-  overrides: z.record(z.string(), TaxonCurvesStyleSchema.omit({ groupGap: true, xTitle: true })).optional(),
+  /** Per-variable column layout overrides (panel-level keys excluded; curve styles: spec.curveStyles). */
+  overrides: z.record(z.string(), TaxonCurvesStyleSchema.omit({ curve: true, groupGap: true, xTitle: true })).optional(),
   width: z.number().positive().optional(),
 });
 
@@ -256,10 +403,14 @@ export const SpecSchema = z.strictObject({
   groupHeaders: GroupHeadersSchema.optional(),
   /** Explicit group headers; omitted or empty = one header per group (if groupHeaders.show). */
   headers: z.array(HeaderSchema).optional(),
+  /** Curve style per group id (cascade level "group"), in every dataset with that group. */
+  groupStyles: z.record(z.string(), CurveStyleOverrideSchema).optional(),
+  /** Curve style per variable id (cascade level "variable"). */
+  curveStyles: z.record(z.string(), CurveStyleOverrideSchema).optional(),
 });
 
 export const PresetSchema = z.strictObject({
-  presetVersion: z.literal(1),
+  presetVersion: z.literal(PRESET_VERSION),
   name: z.string(),
   description: z.string().optional(),
   page: PageSchema.optional(),
@@ -286,6 +437,17 @@ export type ScaleMapTransformParams = z.infer<typeof ScaleMapTransformSchema>;
 export type ScaleSpec = z.infer<typeof ScaleSchema>;
 export type Selection = z.infer<typeof SelectionSchema>;
 export type TaxonCurvesStyle = z.infer<typeof TaxonCurvesStyleSchema>;
+export type CurveStyle = z.infer<typeof CurveStyleSchema>;
+export type CurveType = CurveStyle["type"];
+export type Dash = z.infer<typeof DashSchema>;
+export type FillStyle = z.infer<typeof FillSchema>;
+export type PointMark = z.infer<typeof PointMarkSchema>;
+
+type DeepPartial<T> = T extends readonly unknown[] ? T : T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
+type CurveOptions<U> = U extends unknown ? Omit<U, "type"> : never;
+type Intersect<U> = (U extends unknown ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
+/** One cascade level: any option of any curve type, all optional (see CurveStyleOverrideSchema). */
+export type CurveStyleOverride = DeepPartial<Intersect<CurveOptions<CurveStyle>> & { type: CurveType }>;
 export type XTicks = z.infer<typeof XTicksSchema>;
 export type XTitle = z.infer<typeof XTitleSchema>;
 export type TitleSpec = z.infer<typeof TitleSchema>;

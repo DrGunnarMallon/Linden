@@ -1,6 +1,6 @@
 // Core defaults — the first layer of resolution (core → preset → spec → per-variable override).
 
-import type { Selection, TaxonCurvesStyle, TitleSpec, YAxisSpec } from "./spec.js";
+import type { CurveStyle, CurveType, Selection, TaxonCurvesStyle, TitleSpec, YAxisSpec } from "./spec.js";
 
 export interface ResolvedPage {
   width: number;
@@ -19,7 +19,8 @@ export type ResolvedYAxis = Required<Pick<YAxisSpec, "primary" | "reverse">> & {
 
 export type ResolvedSelection = Required<Pick<Selection, "minMax" | "order">> & Pick<Selection, "ids" | "groups" | "kinds">;
 
-export type ResolvedTaxonCurvesStyle = Required<Omit<TaxonCurvesStyle, "xTicks" | "xTitle">> & {
+/** Column layout of a taxonCurves panel; the curve style resolves separately (resolveCurveStyle). */
+export type ResolvedTaxonCurvesStyle = Required<Omit<TaxonCurvesStyle, "curve" | "xTicks" | "xTitle">> & {
   xTicks: { step: number | null; minSpacing: number; unitSuffix: boolean };
   /** `text` absent = default from the variables' kind and unit. */
   xTitle: { text?: string; show: "panel" | "column" | "none" };
@@ -71,7 +72,25 @@ export interface CoreDefaults {
   groupHeaders: ResolvedGroupHeaders;
   selection: ResolvedSelection;
   taxonCurves: ResolvedTaxonCurvesStyle;
+  /** Full curve style of each type: the first cascade level (SPEC §4 "Curve styles"). */
+  curve: { [T in CurveType]: Extract<CurveStyle, { type: T }> };
 }
+
+/** Type of a curve whose cascade sets none. */
+export const DEFAULT_CURVE_TYPE: CurveType = "polygon";
+
+const solid = { type: "solid", angle: 45, spacing: 1 } as const;
+const fill = { colour: "group", opacity: 1, pattern: solid } as const;
+const outline = { show: true, colour: "#000000", width: null, dash: "solid" } as const;
+const line = { colour: "group", width: null, dash: "solid" } as const;
+const points = { shape: "circle", size: 1, filled: true, colour: "group" } as const;
+const shared = {
+  exaggeration: { show: false, factor: 10, style: "filled", colour: "curve", opacity: 0.35 },
+  baseline: { show: true, colour: "axis", width: null, dash: "solid" },
+  nulls: "gap",
+  plus: { show: false, threshold: 0.5, size: 1.2 },
+  valueLabels: { show: "off", threshold: 0, format: "{value}", decimals: 1 },
+} as const;
 
 export const coreDefaults: CoreDefaults = {
   page: { width: 180, height: 240, units: "mm", font: { family: "Arial", size: 7 } },
@@ -83,16 +102,20 @@ export const coreDefaults: CoreDefaults = {
   groupHeaders: { show: true, line: "line" },
   selection: { minMax: 0, order: "data" },
   taxonCurves: {
-    mode: "silhouette",
-    fill: "group",
-    exaggeration: 0,
     commonScale: true,
     minWidth: 0,
     columnWidth: 15,
-    plusBelow: 0,
     groupGap: 2,
     xTicks: { step: null, minSpacing: 6, unitSuffix: false },
     xTitle: { show: "panel" },
-    presence: "dot",
+  },
+  curve: {
+    polygon: { type: "polygon", ...shared, filled: true, fill, outline, shape: "linear" },
+    line: { type: "line", ...shared, line, interpolation: "linear", points: { ...points, show: false } },
+    linePoints: { type: "linePoints", ...shared, line, interpolation: "linear", points },
+    points: { type: "points", ...shared, points },
+    bars: { type: "bars", ...shared, barWidth: { mode: "mm", value: 0.6 }, fill, outline, align: "centre" },
+    presence: { type: "presence", ...shared, presence: { symbol: "dot", size: 1.2, colour: "group" } },
+    none: { type: "none", ...shared },
   },
 };

@@ -1,5 +1,5 @@
 {
-  "specVersion": 5,
+  "specVersion": 8,
   "preset": "pollen-percent",
   "page": { "width": 180, "height": 120, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "yAxis": { "primary": "depth", "secondary": "age", "reverse": true, "ticks": { "major": 20, "minor": 10 } },
@@ -36,7 +36,10 @@
       "type": "taxonCurves",
       "dataset": "demo-bryophytes",
       "variables": { "groups": ["trees", "shrubs", "herbs", "bryophytes"], "order": "data" },
-      "style": { "mode": "silhouette", "fill": "group", "exaggeration": 10, "commonScale": true, "minWidth": 4 }
+      "style": {
+        "commonScale": true, "minWidth": 4,
+        "curve": { "type": "polygon", "exaggeration": { "show": true, "factor": 10 } }
+      }
     }
   ],
   "overlays": [

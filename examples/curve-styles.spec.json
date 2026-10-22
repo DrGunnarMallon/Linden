@@ -1,0 +1,37 @@
+{
+  "specVersion": 8,
+  "title": { "text": "Curve styles", "subtitle": "Synthetic data" },
+  "page": { "width": 180, "height": 120, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 10, "minor": 5 } },
+  "datasets": [
+    {
+      "dataset": "curve-styles",
+      "groups": [
+        { "id": "trees", "name": "Trees", "colour": "#2f6b3a", "order": 1 },
+        { "id": "herbs", "name": "Herbs", "colour": "#c9a227", "order": 2 },
+        { "id": "other", "name": "Other", "colour": "#555555", "order": 3 }
+      ]
+    }
+  ],
+  "panels": [
+    { "type": "yAxis" },
+    {
+      "type": "taxonCurves",
+      "dataset": "curve-styles",
+      "variables": { "kinds": ["percent"] },
+      "style": { "minWidth": 4, "curve": { "type": "polygon", "plus": { "show": true, "threshold": 0.5 } } }
+    },
+    { "type": "taxonCurves", "dataset": "curve-styles", "variables": { "kinds": ["presence"] }, "style": { "xTitle": { "show": "none" } } }
+  ],
+  "groupStyles": {
+    "herbs": { "type": "bars" }
+  },
+  "curveStyles": {
+    "Betula": { "fill": { "colour": "#000000", "pattern": { "type": "hatch", "angle": 45, "spacing": 0.8 } } },
+    "Ulmus": { "exaggeration": { "show": true, "factor": 10, "style": "line", "colour": "#000000", "opacity": 0.6 } },
+    "Alnus": { "type": "linePoints", "line": { "colour": "#000000", "width": 0.2 }, "points": { "shape": "diamond", "size": 1.2, "filled": false } },
+    "Poaceae": { "barWidth": { "mode": "mm", "value": 1 } },
+    "Cyperaceae": { "barWidth": { "mode": "fraction", "value": 0.8 } },
+    "Charcoal": { "type": "presence", "presence": { "symbol": "square", "size": 1.4 } }
+  }
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parsePreset, parseSpec } from "../src/io/spec.js";
 import { coreDefaults } from "../src/model/defaults.js";
-import { mergeLayers, resolveSpec, resolveVariableStyle, type ResolvedTaxonCurvesPanel } from "../src/model/resolve.js";
+import { mergeLayers, resolveColumnCurve, resolveSpec, resolveVariableStyle, type ResolvedTaxonCurvesPanel } from "../src/model/resolve.js";
 import type { Preset, Spec } from "../src/model/spec.js";
 import { readRepoJson } from "./fixtures.js";
 
@@ -40,14 +40,15 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
 
   it("preset beats core defaults", () => {
     const p = curves(spec({ ...base, panels: [{ type: "taxonCurves", dataset: "d" }] }));
-    expect(p.style.exaggeration).toBe(10); // preset (core: 0)
-    expect(p.style.plusBelow).toBe(0.5); // preset (core: 0)
+    const { style } = resolveColumnCurve(p, "x");
+    expect(style.exaggeration).toMatchObject({ show: true, factor: 10 }); // preset (core: off)
+    expect(style.plus).toMatchObject({ show: true, threshold: 0.5 }); // preset (core: off)
     expect(p.style.minWidth).toBe(4);
   });
 
   it("spec beats preset", () => {
-    const p = curves(spec({ ...base, panels: [{ type: "taxonCurves", dataset: "d", style: { exaggeration: 5 } }] }));
-    expect(p.style.exaggeration).toBe(5);
+    const p = curves(spec({ ...base, panels: [{ type: "taxonCurves", dataset: "d", style: { curve: { exaggeration: { factor: 5 } } } }] }));
+    expect(resolveColumnCurve(p, "x").style.exaggeration).toMatchObject({ show: true, factor: 5 }); // show: preset
     expect(p.style.minWidth).toBe(4); // untouched preset value survives
   });
 
@@ -55,12 +56,14 @@ describe("resolveSpec — order core → preset → spec → per-variable overri
     const p = curves(
       spec({
         ...base,
-        panels: [{ type: "taxonCurves", dataset: "d", style: { exaggeration: 5 }, overrides: { Pinus: { exaggeration: 0 } } }],
+        panels: [{ type: "taxonCurves", dataset: "d", style: { curve: { exaggeration: { factor: 5 } } }, overrides: { Pinus: { minWidth: 2 } } }],
+        curveStyles: { Pinus: { exaggeration: { show: false } } },
       }),
     );
-    expect(resolveVariableStyle(p, "Pinus").exaggeration).toBe(0);
-    expect(resolveVariableStyle(p, "Pinus").minWidth).toBe(4);
-    expect(resolveVariableStyle(p, "Betula").exaggeration).toBe(5);
+    expect(resolveColumnCurve(p, "Pinus").style.exaggeration).toMatchObject({ show: false, factor: 5 });
+    expect(resolveVariableStyle(p, "Pinus").minWidth).toBe(2);
+    expect(resolveVariableStyle(p, "Betula").minWidth).toBe(4);
+    expect(resolveColumnCurve(p, "Betula").style.exaggeration).toMatchObject({ show: true, factor: 5 });
   });
 
   it("selection defaults follow the same order", () => {

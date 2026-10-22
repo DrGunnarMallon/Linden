@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="120mm" height="70mm" viewBox="0 0 120 70">
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: f1962772c7649c7c0d7eb1f3829304ee6bb0dd80e11844951afe5105081287df</metadata>
+  <rect id="background" x="0" y="0" width="120" height="70" fill="#ffffff"/>
+  <g fill="#000000" font-family="Arial" font-size="2.47">
+    <g id="panel-0-taxonCurves" transform="translate(5,8.42)">
+      <g id="panel-0-taxonCurves-a" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <path d="M4,0L10,1.61L16,4.04L12,7.27L8,11.3L14,16.15L20,21.8L18,28.26L12,35.52L6,43.6L2,52.48" fill="none" stroke="#2f6b3a" stroke-width="0.1"/>
+          <g class="points">
+            <circle cx="4" cy="0" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="10" cy="1.61" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="16" cy="4.04" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="12" cy="7.27" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="8" cy="11.3" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="14" cy="16.15" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="20" cy="21.8" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="18" cy="28.26" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="12" cy="35.52" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="6" cy="43.6" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <circle cx="2" cy="52.48" r="0.5" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+          </g>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="20" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="16" y1="52.48" x2="16" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="16" y="55.66" font-size="2.1" text-anchor="middle">40</text>
+        </g>
+        <text class="label" x="10.75" y="-0.57" transform="rotate(-60,10.75,-0.57)">a</text>
+      </g>
+      <g id="panel-0-taxonCurves-b" class="column" transform="translate(21,0)">
+        <g class="curve">
+          <path d="M2,0L3.2,1.61L4.8,4.04L8,7.27L12,11.3L10,16.15L6,21.8L4,28.26L3.2,35.52L1.6,43.6L0.8,52.48" fill="none" stroke="#2f6b3a" stroke-width="0.1"/>
+          <g class="points">
+            <rect x="1.5" y="-0.5" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="2.7" y="1.11" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="4.3" y="3.54" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="7.5" y="6.77" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="11.5" y="10.8" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="9.5" y="15.65" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="5.5" y="21.3" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="3.5" y="27.76" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="2.7" y="35.02" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="1.1" y="43.1" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+            <rect x="0.3" y="51.98" width="1" height="1" fill="#ffffff" stroke="#2f6b3a" stroke-width="0.1"/>
+          </g>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="12" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="6.75" y="-0.57" transform="rotate(-60,6.75,-0.57)">b</text>
+      </g>
+      <g id="panel-0-taxonCurves-c" class="column" transform="translate(34,0)">
+        <g class="curve">
+          <path d="M8,0L6,1.61" fill="none" stroke="#2f6b3a" stroke-width="0.1"/>
+          <path d="M4,11.3L4.8,16.15L7.2,21.8" fill="none" stroke="#2f6b3a" stroke-width="0.1"/>
+          <path d="M8.8,35.52L10,43.6L8,52.48" fill="none" stroke="#2f6b3a" stroke-width="0.1"/>
+          <g class="points">
+            <path d="M8,-0.7L8.7,0.7L7.3,0.7Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M6,0.91L6.7,2.31L5.3,2.31Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M4,10.6L4.7,12L3.3,12Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M4.8,15.45L5.5,16.85L4.1,16.85Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M7.2,21.1L7.9,22.5L6.5,22.5Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M8.8,34.82L9.5,36.22L8.1,36.22Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M10,42.9L10.7,44.3L9.3,44.3Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+            <path d="M8,51.78L8.7,53.18L7.3,53.18Z" fill="#2f6b3a" stroke="#2f6b3a" stroke-width="0.1"/>
+          </g>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="1.61" stroke="#000000" stroke-width="0.15"/>
+        <line x1="0" y1="11.3" x2="0" y2="21.8" stroke="#000000" stroke-width="0.15"/>
+        <line x1="0" y1="35.52" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="10" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="5.75" y="-0.57" transform="rotate(-60,5.75,-0.57)">c</text>
+      </g>
+      <g id="panel-0-taxonCurves-d" class="column" transform="translate(45,0)">
+        <g class="curve">
+          <path d="M0.08,0L0.16,1.61L0,4.04L0.4,7.27L1.2,11.3L0.12,16.15L0,21.8L0.8,28.26L0.32,35.52L0.04,43.6L0,52.48" fill="none" stroke="#2f6b3a" stroke-width="0.1"/>
+          <g class="points">
+            <path d="M0.08,-0.5L0.58,0L0.08,0.5L-0.42,0Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0.16,1.11L0.66,1.61L0.16,2.11L-0.34,1.61Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0,3.54L0.5,4.04L0,4.54L-0.5,4.04Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0.4,6.77L0.9,7.27L0.4,7.77L-0.1,7.27Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M1.2,10.8L1.7,11.3L1.2,11.8L0.7,11.3Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0.12,15.65L0.62,16.15L0.12,16.65L-0.38,16.15Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0,21.3L0.5,21.8L0,22.3L-0.5,21.8Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0.8,27.76L1.3,28.26L0.8,28.76L0.3,28.26Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0.32,35.02L0.82,35.52L0.32,36.02L-0.18,35.52Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0.04,43.1L0.54,43.6L0.04,44.1L-0.46,43.6Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+            <path d="M0,51.98L0.5,52.48L0,52.98L-0.5,52.48Z" fill="#000000" stroke="#000000" stroke-width="0.1"/>
+          </g>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="1.2" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="1.35" y="-0.57" transform="rotate(-60,1.35,-0.57)">d</text>
+      </g>
+      <g id="panel-0-taxonCurves-e" class="column" transform="translate(49.2,0)">
+        <g class="curve">
+          <path d="M0,0L0,0.81L2,0.81L2,2.83L4,2.83L4,5.65L6,5.65L6,9.28L4,9.28L4,13.72L2,13.72L2,18.97L0,18.97L0,25.03L2,25.03L2,31.89L4,31.89L4,39.56L2,39.56L2,48.04L0,48.04L0,52.48" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+          <g class="points">
+            <path d="M-0.5,-0.5L0.5,0.5M-0.5,0.5L0.5,-0.5" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M1.5,1.11L2.5,2.11M1.5,2.11L2.5,1.11" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M3.5,3.54L4.5,4.54M3.5,4.54L4.5,3.54" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M5.5,6.77L6.5,7.77M5.5,7.77L6.5,6.77" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M3.5,10.8L4.5,11.8M3.5,11.8L4.5,10.8" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M1.5,15.65L2.5,16.65M1.5,16.65L2.5,15.65" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M-0.5,21.3L0.5,22.3M-0.5,22.3L0.5,21.3" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M1.5,27.76L2.5,28.76M1.5,28.76L2.5,27.76" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M3.5,35.02L4.5,36.02M3.5,36.02L4.5,35.02" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M1.5,43.1L2.5,44.1M1.5,44.1L2.5,43.1" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+            <path d="M-0.5,51.98L0.5,52.98M-0.5,52.98L0.5,51.98" fill="none" stroke="#c9a227" stroke-width="0.1"/>
+          </g>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="6" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)">e</text>
+      </g>
+    </g>
+  </g>
+</svg>

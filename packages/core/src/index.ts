@@ -8,7 +8,7 @@ export { describeSchema, defaultValue, formNodes, humanize, matchesNode } from "
 export type { FormField, FormHint, FormHints, FormNode, FormNodeKind, FormSection, ObjectNode } from "./model/schemaForm.js";
 export { SPEC_FORM_HINTS, SPEC_FORM_SECTIONS, specForm } from "./model/specForm.js";
 export { parseSpec, parsePreset, specJsonSchema } from "./io/spec.js";
-export { migrateSpec } from "./model/migrate.js";
+export { migratePreset, migrateSpec } from "./model/migrate.js";
 export { loadPresets } from "./io/presets.js";
 export type { PresetFile } from "./io/presets.js";
 export type { ParseResult } from "./io/spec.js";

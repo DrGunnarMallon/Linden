@@ -5,7 +5,7 @@ import { SPEC_VERSION } from "../src/model/spec.js";
 import { importDelimited } from "../src/io/delimited.js";
 import { loadPresets } from "../src/io/presets.js";
 import { render } from "../src/pipeline.js";
-import { readRepoFile, readRepoJson } from "./fixtures.js";
+import { readRepoFile, readRepoJson, withoutMetadata } from "./fixtures.js";
 
 describe("parseSpec", () => {
   it("accepts the demo spec (as string or object)", () => {
@@ -24,13 +24,13 @@ describe("parseSpec", () => {
 
   it("reports errors with readable paths", () => {
     const r = parseSpec({
-      specVersion: 1,
-      panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "p", style: { mode: "wiggly" } }],
+      specVersion: 8,
+      panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "p", style: { curve: { type: "wiggly" } } }],
     });
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errors).toHaveLength(1);
-      expect(r.errors[0]).toMatch(/^panels\[1\]\.style\.mode: /);
+      expect(r.errors[0]).toMatch(/^panels\[1\]\.style\.curve\.type: /);
     }
   });
 
@@ -59,8 +59,8 @@ describe("spec migration", () => {
     const v1 = { specVersion: 1, page: { width: 100 }, panels: [{ type: "yAxis" }] };
     const r = parseSpec(JSON.stringify(v1));
     expect(r).toEqual({ ok: true, value: { specVersion: SPEC_VERSION, page: { width: 100 }, panels: [{ type: "yAxis" }] } });
-    expect(SPEC_VERSION).toBe(7);
-    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 7 });
+    expect(SPEC_VERSION).toBe(8);
+    expect(migrateSpec(v1)).toEqual({ ...v1, specVersion: 8 });
     expect(v1.specVersion).toBe(1); // input not mutated
   });
 
@@ -78,8 +78,8 @@ describe("spec migration", () => {
       yAxis: { titles: { depth: "Depth (m below surface)", age: "" } },
       panels: [{ type: "taxonCurves", dataset: "d", style: { xTitle: { text: "%", show: "column" }, xTicks: { unitSuffix: true } } }],
     };
-    expect(migrateSpec(v5)).toEqual({ ...v5, specVersion: 7 });
-    expect(parseSpec(v5)).toEqual({ ok: true, value: { ...v5, specVersion: 7 } });
+    expect(migrateSpec(v5)).toEqual({ ...v5, specVersion: 8 });
+    expect(parseSpec(v5)).toEqual({ ok: true, value: { ...v5, specVersion: 8 } });
     // xTitle is panel-level: not allowed in per-variable overrides.
     const bad = parseSpec({ specVersion: 7, panels: [{ type: "taxonCurves", dataset: "d", overrides: { a: { xTitle: { show: "none" } } } }] });
     expect(bad.ok).toBe(false);
@@ -87,15 +87,15 @@ describe("spec migration", () => {
 
   it("migrates v6 → v7 and accepts the v7 fields (global xScale, taxonCurves columnWidth)", () => {
     const v6 = { specVersion: 6, panels: [{ type: "taxonCurves", dataset: "d", style: { commonScale: false, columnWidth: 12.5 } }] };
-    expect(migrateSpec(v6)).toEqual({ ...v6, specVersion: 7 });
-    expect(parseSpec(v6)).toEqual({ ok: true, value: { ...v6, specVersion: 7 } });
+    expect(migrateSpec(v6)).toEqual({ ...v6, specVersion: 8 });
+    expect(parseSpec(v6)).toEqual({ ok: true, value: { ...v6, specVersion: 8 } });
     expect(parseSpec({ ...v6, specVersion: 7, xScale: 0.55 }).ok).toBe(true);
     expect(parseSpec({ specVersion: 7, xScale: 0, panels: [] }).ok).toBe(false);
     expect(parseSpec({ specVersion: 7, panels: [{ type: "taxonCurves", dataset: "d", style: { columnWidth: -1 } }] }).ok).toBe(false);
   });
 
   it("leaves current, unknown and non-object input to validation", () => {
-    const current = { specVersion: 7, panels: [] };
+    const current = { specVersion: 8, panels: [] };
     expect(migrateSpec(current)).toBe(current);
     expect(migrateSpec({ specVersion: 0, panels: [] })).toEqual({ specVersion: 0, panels: [] });
     expect(migrateSpec("x")).toBe("x");
@@ -108,13 +108,14 @@ describe("spec migration", () => {
       panels: [{ type: "taxonCurves", dataset: "m", variables: { kinds: ["presence"] }, style: { presence: "bar" } }],
     };
     const r = parseSpec(v3);
-    expect(r).toEqual({ ok: true, value: { ...v3, specVersion: 7 } });
+    const panels = [{ ...v3.panels[0], style: { curve: { presence: { symbol: "bar", size: 0.6 } } } }]; // v8: into the curve style
+    expect(r).toEqual({ ok: true, value: { ...v3, panels, specVersion: 8 } });
   });
 
   it("migrates v2 → v3 and accepts the v3 grouping fields (top-level groups end up in the dataset entries)", () => {
     const entry = { dataset: "d", assignments: { Sphagnum: "bryophytes" }, order: ["Sphagnum"], transforms: [{ type: "merge", id: "M", name: "M", from: ["a", "b"] }] };
     const v2 = { specVersion: 2, groups: [{ id: "bryophytes", name: "Bryophytes" }], datasets: [entry], panels: [] };
-    const expected = { specVersion: 7, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
+    const expected = { specVersion: 8, datasets: [{ ...entry, groups: [{ id: "bryophytes", name: "Bryophytes" }] }], panels: [] };
     const r = parseSpec(v2);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value).toEqual(expected);
@@ -142,7 +143,7 @@ describe("spec migration", () => {
       };
       const groups = pollenGroups.map((g) => (g.id === "herbs" ? { ...g, name: "Herbs (upland)" } : g));
       expect(migrateSpec(v4)).toEqual({
-        specVersion: 7,
+        specVersion: 8,
         preset: "pollen-percent",
         datasets: [
           {
@@ -167,7 +168,7 @@ describe("spec migration", () => {
     it("creates entries (without transforms, as before) for panel datasets that had none", () => {
       const out = migrateSpec({ specVersion: 4, groups: [{ id: "g", name: "G" }], panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }] });
       expect(out).toEqual({
-        specVersion: 7,
+        specVersion: 8,
         panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "d" }],
         datasets: [{ dataset: "d", transforms: [], groups: [{ id: "g", name: "G" }] }],
       });
@@ -178,7 +179,7 @@ describe("spec migration", () => {
       expect(migrateSpec({ specVersion: 4, panels: [] })).not.toHaveProperty("groupHeaders");
     });
 
-    it("a v4 project that relied on preset groups renders exactly as before (golden SVG unchanged)", async () => {
+    it("a v4 project that relied on preset groups renders exactly as before (golden SVG unchanged apart from the spec hash)", () => {
       const v4 = {
         specVersion: 4,
         preset: "pollen-percent",
@@ -219,7 +220,8 @@ describe("spec migration", () => {
       const datasets = importDelimited(readRepoFile("examples/demo-bryophytes.csv"), { name: "demo-bryophytes" }).datasets;
       const r = render(datasets, spec.value, presets);
       expect(r.warnings).toEqual([]);
-      await expect(r.svg).toMatchFileSnapshot("./__snapshots__/demo-bryophytes.svg");
+      // The migrated spec is not the example file, so only its hash in <metadata> differs.
+      expect(withoutMetadata(r.svg)).toBe(withoutMetadata(readRepoFile("packages/core/test/__snapshots__/demo-bryophytes.svg")));
     });
   });
 

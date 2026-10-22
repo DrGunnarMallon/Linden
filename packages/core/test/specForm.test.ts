@@ -48,8 +48,11 @@ describe("spec form description", () => {
     expect(byPath("yAxis.range")[0]).toMatchObject({ kind: "nullable", inner: { kind: "tuple" } });
   });
 
-  it("overrides reuse the panel style hints through the alias", () => {
-    expect(byPath("panels[].overrides{}.mode")[0]?.hint.optionLabels).toMatchObject({ silhouette: "Silhouette" });
+  it("overrides reuse the panel style hints, group and variable curve styles the panel curve hints, through aliases", () => {
+    expect(byPath("panels[].overrides{}.minWidth")[0]?.hint.label).toBe("Min. column width");
+    for (const path of ["panels[].style.curve.type", "groupStyles{}.type", "curveStyles{}.type"]) {
+      expect(byPath(path)[0]?.hint.optionLabels).toMatchObject({ polygon: "Polygon", none: "None (hidden)" });
+    }
   });
 
   it("orders object fields by hint, then schema order", () => {
@@ -71,7 +74,7 @@ describe("defaultValue", () => {
     const transforms = byPath("datasets[].transforms[]").find((n) => n.kind === "variants")!;
     if (panels.kind !== "variants" || overlays.kind !== "variants" || transforms.kind !== "variants") throw new Error();
     const spec = {
-      specVersion: 7,
+      specVersion: 8,
       panels: panels.variants.map((v) => defaultValue(v.node)),
       overlays: overlays.variants.map((v) => defaultValue(v.node)),
       datasets: [{ dataset: "d", transforms: transforms.variants.map((v) => defaultValue(v.node)) }],

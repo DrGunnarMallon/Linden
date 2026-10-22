@@ -1,12 +1,12 @@
 // Spec / preset (de)serialisation with readable validation errors — see SPEC.md §4.
 
 import { z } from "zod/v4";
-import { migrateSpec } from "../model/migrate.js";
+import { migratePreset, migrateSpec } from "../model/migrate.js";
 import { PresetSchema, SpecSchema, type Preset, type Spec } from "../model/spec.js";
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
-/** "panels[1].style.mode" style path. */
+/** "panels[1].style.curve.type" style path. */
 export function formatPath(path: readonly PropertyKey[]): string {
   let out = "";
   for (const key of path) {
@@ -38,8 +38,9 @@ export function parseSpec(json: unknown): ParseResult<Spec> {
   return parseWith(SpecSchema, json, migrateSpec);
 }
 
+/** Version-1 presets are migrated first. */
 export function parsePreset(json: unknown): ParseResult<Preset> {
-  return parseWith(PresetSchema, json);
+  return parseWith(PresetSchema, json, migratePreset);
 }
 
 /** JSON Schema (draft 2020-12) of the spec, e.g. for editor validation. */

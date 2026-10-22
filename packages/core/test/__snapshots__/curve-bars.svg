@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="120mm" height="70mm" viewBox="0 0 120 70">
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: 0f6d20ffa88becb606c383ea546ae4da803276392d2cf3f708025729346c4839</metadata>
+  <rect id="background" x="0" y="0" width="120" height="70" fill="#ffffff"/>
+  <g fill="#000000" font-family="Arial" font-size="2.47">
+    <g id="panel-0-taxonCurves" transform="translate(5,8.42)">
+      <g id="panel-0-taxonCurves-a" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="4" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="1.31" width="10" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="3.74" width="16" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.97" width="12" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="11" width="8" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="15.85" width="14" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.5" width="20" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="27.96" width="18" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="35.22" width="12" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.3" width="6" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="52.18" width="2" height="0.6" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="20" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="16" y1="52.48" x2="16" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="16" y="55.66" font-size="2.1" text-anchor="middle">40</text>
+        </g>
+        <text class="label" x="10.75" y="-0.57" transform="rotate(-60,10.75,-0.57)">a</text>
+      </g>
+      <g id="panel-0-taxonCurves-b" class="column" transform="translate(21,0)">
+        <g class="curve">
+          <rect x="0" y="-0.75" width="2" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="0.86" width="3.2" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="3.29" width="4.8" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.52" width="8" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="10.55" width="12" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="15.4" width="10" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.05" width="6" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="27.51" width="4" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.77" width="3.2" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="42.85" width="1.6" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="51.73" width="0.8" height="1.5" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="12" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="6.75" y="-0.57" transform="rotate(-60,6.75,-0.57)">b</text>
+      </g>
+      <g id="panel-0-taxonCurves-c" class="column" transform="translate(34,0)">
+        <g class="curve">
+          <rect x="0" y="0" width="8" height="0.81" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="0.81" width="6" height="1.61" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.28" width="4" height="4.04" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.72" width="4.8" height="4.84" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="18.97" width="7.2" height="5.65" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="31.89" width="8.8" height="7.27" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="39.56" width="10" height="8.07" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.04" width="8" height="4.44" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="1.61" stroke="#000000" stroke-width="0.15"/>
+        <line x1="0" y1="11.3" x2="0" y2="21.8" stroke="#000000" stroke-width="0.15"/>
+        <line x1="0" y1="35.52" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="10" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="5.75" y="-0.57" transform="rotate(-60,5.75,-0.57)">c</text>
+      </g>
+      <g id="panel-0-taxonCurves-d" class="column" transform="translate(45,0)">
+        <g class="curve">
+          <rect x="0" y="0" width="0.08" height="0.4" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="1.21" width="0.16" height="0.81" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.46" width="0.4" height="1.61" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="10.29" width="1.2" height="2.02" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="14.94" width="0.12" height="2.42" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="26.64" width="0.8" height="3.23" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="33.71" width="0.32" height="3.63" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="41.58" width="0.04" height="4.04" fill="url(#panel-0-taxonCurves-d-fill)" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <defs>
+          <pattern id="panel-0-taxonCurves-d-fill" width="0.6" height="0.6" patternTransform="rotate(45,0,0)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0.3" x2="0.6" y2="0.3" stroke="#000000" stroke-width="0.1"/>
+          </pattern>
+        </defs>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="1.2" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="1.35" y="-0.57" transform="rotate(-60,1.35,-0.57)">d</text>
+      </g>
+      <g id="panel-0-taxonCurves-e" class="column" transform="translate(49.2,0)">
+        <g class="curve">
+          <rect x="0" y="1.31" width="2" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="3.74" width="4" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="6.97" width="6" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="11" width="4" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="15.85" width="2" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="27.96" width="2" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="35.22" width="4" height="0.6" fill="#c9a227"/>
+          <rect x="0" y="43.3" width="2" height="0.6" fill="#c9a227"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="6" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)">e</text>
+      </g>
+    </g>
+  </g>
+</svg>

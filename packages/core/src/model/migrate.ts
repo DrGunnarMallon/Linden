@@ -17,7 +17,95 @@ const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   5: (spec) => ({ ...spec, specVersion: 6 }),
   // v7 added the global xScale and taxonCurves style.columnWidth, both optional (defaults = the former constants).
   6: (spec) => ({ ...spec, specVersion: 7 }),
+  7: toV8,
 };
+
+const MODE_TYPES: Record<string, string> = { silhouette: "polygon", bars: "bars", line: "line", linePoints: "linePoints" };
+
+/**
+ * Splits a v7 taxonCurves style (panel style, per-variable override or preset panelDefaults) into the
+ * v8 curve style and the remaining layout keys. Only keys that were set are written; values the old
+ * schema would not accept stay where they were, so validation still reports them.
+ */
+function splitV7Style(style: JsonObject): { curve: JsonObject; rest: JsonObject } {
+  const { mode, fill, exaggeration, plusBelow, presence, ...rest } = style;
+  const curve: JsonObject = {};
+  const type = typeof mode === "string" ? MODE_TYPES[mode] : undefined;
+  if (type) curve.type = type;
+  else if (mode !== undefined) rest.mode = mode;
+  if (typeof fill === "string") {
+    // `fill` coloured the mode's shape and the presence marks.
+    if (type === "line" || type === "linePoints") curve.line = { colour: fill };
+    else curve.fill = { colour: fill };
+    if (type === "linePoints") curve.points = { colour: fill };
+    curve.presence = { colour: fill };
+  } else if (fill !== undefined) rest.fill = fill;
+  if (typeof exaggeration === "number") curve.exaggeration = exaggeration > 1 ? { show: true, factor: exaggeration } : { show: false };
+  else if (exaggeration !== undefined) rest.exaggeration = exaggeration;
+  if (typeof plusBelow === "number") curve.plus = plusBelow > 0 ? { show: true, threshold: plusBelow } : { show: false };
+  else if (plusBelow !== undefined) rest.plusBelow = plusBelow;
+  // The old presence bar was 0.6 mm thick (the new presence size default fits the dot).
+  if (presence === "dot" || presence === "bar") curve.presence = { ...(curve.presence as JsonObject | undefined), symbol: presence, ...(presence === "bar" ? { size: 0.6 } : {}) };
+  else if (presence !== undefined) rest.presence = presence;
+  return { curve, rest };
+}
+
+/** Deep merge of plain JSON objects; `b` wins. */
+function mergeJson(a: JsonObject, b: JsonObject): JsonObject {
+  const out: JsonObject = { ...a };
+  for (const [k, v] of Object.entries(b)) out[k] = isObject(out[k]) && isObject(v) ? mergeJson(out[k] as JsonObject, v) : v;
+  return out;
+}
+
+/**
+ * v8: curve styles (SPEC §4 "Curve styles"). taxonCurves `style.mode`, `fill`, `exaggeration`,
+ * `plusBelow` and `presence` move into `style.curve`; the same keys in per-variable `overrides` move
+ * into top-level `curveStyles` (variable id → style; for a variable overridden in several panels,
+ * later panels win); the layout keys stay in `overrides`.
+ */
+function toV8(spec: JsonObject): JsonObject {
+  const curveStyles: JsonObject = isObject(spec.curveStyles) ? { ...spec.curveStyles } : {};
+  const panels = Array.isArray(spec.panels)
+    ? spec.panels.map((p) => {
+        if (!isObject(p) || p.type !== "taxonCurves") return p;
+        const out: JsonObject = { ...p };
+        if (isObject(p.style)) {
+          const { curve, rest } = splitV7Style(p.style);
+          out.style = Object.keys(curve).length > 0 ? { ...rest, curve } : rest;
+        }
+        if (isObject(p.overrides)) {
+          const overrides: JsonObject = {};
+          for (const [id, o] of Object.entries(p.overrides)) {
+            if (!isObject(o)) {
+              overrides[id] = o;
+              continue;
+            }
+            const { curve, rest } = splitV7Style(o);
+            if (Object.keys(curve).length > 0) curveStyles[id] = mergeJson(isObject(curveStyles[id]) ? curveStyles[id] : {}, curve);
+            if (Object.keys(rest).length > 0) overrides[id] = rest;
+          }
+          if (Object.keys(overrides).length > 0) out.overrides = overrides;
+          else delete out.overrides;
+        }
+        return out;
+      })
+    : spec.panels;
+  const out: JsonObject = { ...spec, panels, specVersion: 8 };
+  if (Object.keys(curveStyles).length > 0) out.curveStyles = curveStyles;
+  return out;
+}
+
+/** Preset v2 (spec v8): curve keys of `panelDefaults.taxonCurves` move into its `curve`. */
+export function migratePreset(input: unknown): unknown {
+  if (!isObject(input) || input.presetVersion !== 1) return input;
+  const out: JsonObject = { ...input, presetVersion: 2 };
+  const defaults = input.panelDefaults;
+  if (isObject(defaults) && isObject(defaults.taxonCurves)) {
+    const { curve, rest } = splitV7Style(defaults.taxonCurves);
+    out.panelDefaults = { ...defaults, taxonCurves: Object.keys(curve).length > 0 ? { ...rest, curve } : rest };
+  }
+  return out;
+}
 
 /**
  * Groups, sums and outsideSum the bundled presets defined up to spec v4 (frozen copy). Presets no

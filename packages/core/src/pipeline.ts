@@ -179,6 +179,14 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
   resolved.warnings.forEach(warn);
   const rs = resolved.spec;
   const byId = applyTransforms(datasets, rs, warn);
+  // Curve styles for variables / groups no dataset has (typos) do nothing.
+  const all = [...byId.values()];
+  for (const id of Object.keys(spec.curveStyles ?? {})) {
+    if (!all.some((d) => d.variables.some((v) => v.id === id))) warn(`curveStyles: "${id}" is not a variable of any dataset.`);
+  }
+  for (const id of Object.keys(spec.groupStyles ?? {})) {
+    if (!all.some((d) => d.groups.some((g) => g.id === id))) warn(`groupStyles: "${id}" is not a group of any dataset.`);
+  }
   const theme = makeTheme(rs.page, rs.style, rs.xScale);
   const axisDs = axisDataset(byId, rs);
 

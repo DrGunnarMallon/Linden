@@ -183,15 +183,20 @@ describe("per-variable overrides", () => {
     values: [[10, 10], [5, 5]],
   };
 
-  it("switch exaggeration off for one taxon only; unknown ids warn", () => {
-    const { svg, warnings } = render([ds], {
+  it("switch exaggeration off for one taxon only (old overrides migrate to curveStyles); unknown ids warn", () => {
+    const spec = parseSpec({
       specVersion: 2,
       panels: [{ type: "taxonCurves", dataset: "o", style: { exaggeration: 10 }, overrides: { a: { exaggeration: 0 }, zz: { mode: "bars" } } }],
     });
+    if (!spec.ok) throw new Error(spec.errors.join("\n"));
+    expect(spec.value.curveStyles).toEqual({ a: { exaggeration: { show: false } }, zz: { type: "bars" } });
+    const { svg, warnings } = render([ds], spec.value);
     const [, a, b] = svg.split('class="column"');
     expect(a).not.toContain('class="exaggeration"');
     expect(b).toContain('class="exaggeration"');
-    expect(warnings).toEqual(['taxonCurves: override for "zz", which is not in dataset "o".']);
+    expect(warnings).toEqual(['curveStyles: "zz" is not a variable of any dataset.']);
+    const layoutOverride = render([ds], { specVersion: 8, panels: [{ type: "taxonCurves", dataset: "o", overrides: { zz: { minWidth: 3 } } }] });
+    expect(layoutOverride.warnings).toEqual(['taxonCurves: override for "zz", which is not in dataset "o".']);
   });
 
   it("panel-level layout keys cannot be overridden per variable", () => {

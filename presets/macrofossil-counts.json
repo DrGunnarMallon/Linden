@@ -1,5 +1,5 @@
 {
-  "presetVersion": 1,
+  "presetVersion": 2,
   "name": "macrofossil-counts",
   "description": "Plant macrofossils: counts per volume, abundance classes (1–5 or DAFOR) and presence; bars, independent scales.",
   "scales": {
@@ -9,6 +9,9 @@
   },
   "transforms": [{ "type": "scaleMap", "scale": ["classes", "dafor", "presence"] }],
   "panelDefaults": {
-    "taxonCurves": { "mode": "bars", "fill": "group", "commonScale": false, "minWidth": 6, "exaggeration": 0, "presence": "dot" }
+    "taxonCurves": {
+      "commonScale": false, "minWidth": 6,
+      "curve": { "type": "bars", "presence": { "symbol": "dot" } }
+    }
   }
 }

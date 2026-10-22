@@ -153,7 +153,7 @@ describe("presence columns", () => {
   it("dot (default) or bar at present samples only; fixed width, no ticks; null and 0 draw nothing", () => {
     const spec = (presence?: "bar") => ({
       specVersion: 4,
-      panels: [{ type: "taxonCurves" as const, dataset: "x", variables: { kinds: ["presence" as const] }, style: presence ? { presence } : {} }],
+      panels: [{ type: "taxonCurves" as const, dataset: "x", variables: { kinds: ["presence" as const] }, style: presence ? { curve: { presence: { symbol: presence } } } : {} }],
     });
     const dots = render([mixed], spec()).svg;
     expect(dots.match(/<circle /g)).toHaveLength(2);

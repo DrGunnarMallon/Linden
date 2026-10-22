@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="120mm" height="70mm" viewBox="0 0 120 70">
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: d02b4ea35b2ce9e1420c534ff8f85ab962d496f8a1b1c6015fdedc8628e5788a</metadata>
+  <rect id="background" x="0" y="0" width="120" height="70" fill="#ffffff"/>
+  <g fill="#000000" font-family="Arial" font-size="2.47">
+    <g id="panel-0-taxonCurves" transform="translate(5,8.42)">
+      <g id="panel-0-taxonCurves-a" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <path d="M0,0L4,0L10,1.61L16,4.04L12,7.27L8,11.3L14,16.15L20,21.8L18,28.26L12,35.52L6,43.6L2,52.48L0,52.48Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="value-labels" font-size="2.1">
+          <text x="5.2" y="0.73">10</text>
+          <text x="11.2" y="2.35">25</text>
+          <text x="17.2" y="4.77">40</text>
+          <text x="13.2" y="8">30</text>
+          <text x="9.2" y="12.04">20</text>
+          <text x="15.2" y="16.88">35</text>
+          <text x="21.2" y="22.53">50</text>
+          <text x="19.2" y="28.99">45</text>
+          <text x="13.2" y="36.26">30</text>
+          <text x="7.2" y="44.33">15</text>
+          <text x="3.2" y="53.21">5</text>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="20" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="16" y1="52.48" x2="16" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="16" y="55.66" font-size="2.1" text-anchor="middle">40</text>
+        </g>
+        <text class="label" x="10.75" y="-0.57" transform="rotate(-60,10.75,-0.57)">a</text>
+      </g>
+      <g id="panel-0-taxonCurves-b" class="column" transform="translate(21,0)">
+        <g class="curve">
+          <path d="M0,0L2,0L3.2,1.61L4.8,4.04L8,7.27L12,11.3L10,16.15L6,21.8L4,28.26L3.2,35.52L1.6,43.6L0.8,52.48L0,52.48Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="value-labels" font-size="2.1">
+          <text x="6" y="4.77">12.0%</text>
+          <text x="9.2" y="8">20.0%</text>
+          <text x="13.2" y="12.04">30.0%</text>
+          <text x="11.2" y="16.88">25.0%</text>
+          <text x="7.2" y="22.53">15.0%</text>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="12" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="6.75" y="-0.57" transform="rotate(-60,6.75,-0.57)">b</text>
+      </g>
+      <g id="panel-0-taxonCurves-c" class="column" transform="translate(34,0)">
+        <g class="curve">
+          <path d="M0,0L8,0L6,1.61L0,1.61Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <path d="M0,11.3L4,11.3L4.8,16.15L7.2,21.8L0,21.8Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+          <path d="M0,35.52L8.8,35.52L10,43.6L8,52.48L0,52.48Z" fill="#2f6b3a" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="1.61" stroke="#000000" stroke-width="0.15"/>
+        <line x1="0" y1="11.3" x2="0" y2="21.8" stroke="#000000" stroke-width="0.15"/>
+        <line x1="0" y1="35.52" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="10" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="8" y1="52.48" x2="8" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="8" y="55.66" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="5.75" y="-0.57" transform="rotate(-60,5.75,-0.57)">c</text>
+      </g>
+      <g id="panel-0-taxonCurves-d" class="column" transform="translate(45,0)">
+        <g class="value-labels" font-size="2.1">
+          <text x="1.28" y="0.73">0.2</text>
+          <text x="1.36" y="2.35">0.4</text>
+          <text x="1.6" y="8">1.0</text>
+          <text x="2.4" y="12.04">3.0</text>
+          <text x="1.32" y="16.88">0.3</text>
+          <text x="2" y="28.99">2.0</text>
+          <text x="1.52" y="36.26">0.8</text>
+          <text x="1.24" y="44.33">0.1</text>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="1.2" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="1.35" y="-0.57" transform="rotate(-60,1.35,-0.57)">d</text>
+      </g>
+      <g id="panel-0-taxonCurves-e" class="column" transform="translate(49.2,0)">
+        <g class="curve">
+          <path d="M0,0L0,0L2,1.61L4,4.04L6,7.27L4,11.3L2,16.15L0,21.8L2,28.26L4,35.52L2,43.6L0,52.48L0,52.48Z" fill="#c9a227" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="52.48" x2="6" y2="52.48" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="52.48" x2="0" y2="53.48" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="55.66" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)">e</text>
+      </g>
+    </g>
+  </g>
+</svg>

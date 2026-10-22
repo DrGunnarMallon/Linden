@@ -134,6 +134,13 @@ export class SvgGroup {
     return g;
   }
 
+  /** Appends a child container element other than <g> (e.g. <defs>, <pattern>) and returns it. */
+  element(tag: string, attrs: Attrs = {}): SvgGroup {
+    const g = new SvgGroup(attrs, tag);
+    this.children.push(g);
+    return g;
+  }
+
   path(d: string | PathBuilder, attrs: Attrs = {}): this {
     this.children.push(`<path${attrString({ ...attrs, d: String(d) })}/>`);
     return this;

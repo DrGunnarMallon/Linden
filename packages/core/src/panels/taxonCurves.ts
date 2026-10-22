@@ -2,16 +2,19 @@
 // Common scale: column width = max(minWidth, max value × scale); the curve always uses that scale,
 // so minWidth widens the column but never distorts it. The scale is shared only within a scale
 // family (kind|unit, see scaleKey): percentages and counts never share one.
-// Kind "presence" has no scale: a fixed-width column with a dot or bar where the value is > 0.
+// Kind "presence" has no scale: a fixed-width column with presence marks where the value is > 0.
+// The curve style (type, colours, exaggeration, …) comes from the curve cascade and only changes
+// what is drawn inside the columns, never their widths or the x-scale.
 // x-axis titles sit under the tick labels: once per run of one scale family, or under every column.
 
 import { clean, formatNumber, scaleKey, ticksAt } from "../layout/scales.js";
 import { estimateTextWidth, familyAttr, footerHeight, footerHeightWithTitle } from "../layout/theme.js";
-import type { ResolvedTaxonCurvesStyle } from "../model/defaults.js";
-import { resolveVariableStyle, type ResolvedTaxonCurvesPanel } from "../model/resolve.js";
+import { coreDefaults, type ResolvedTaxonCurvesStyle } from "../model/defaults.js";
+import { resolveColumnCurve, resolveVariableStyle, type ResolvedTaxonCurvesPanel } from "../model/resolve.js";
+import type { CurveStyle, Dash, FillStyle, PointMark } from "../model/spec.js";
 import type { MeasurementKind, Variable } from "../model/types.js";
 import { columnMax } from "../layout/select.js";
-import { PathBuilder, rotate, translate, type SvgGroup } from "../render/svg.js";
+import { fmt, PathBuilder, rotate, translate, type Attrs, type SvgGroup } from "../render/svg.js";
 import { LABEL_OFFSET, TEXT_ASCENT, type HeaderColumn } from "../layout/header.js";
 import { compactLength, GAP_FLOOR, MIN_WIDTH_FLOOR } from "../layout/layout.js";
 import type { ColumnLayout, Panel, PanelContext, PanelMeasure } from "./types.js";
@@ -20,6 +23,8 @@ export interface TaxonColumn {
   index: number;
   variable: Variable;
   style: ResolvedTaxonCurvesStyle;
+  /** Resolved curve style (cascade, SPEC §4); never affects the geometry. */
+  curve: CurveStyle;
   max: number;
   /** Left edge relative to the panel. */
   x: number;
@@ -75,10 +80,11 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
     const resolved = resolveVariableStyle(spec, variable.id);
     const style = { ...resolved, minWidth: compactLength(resolved.minWidth, MIN_WIDTH_FLOOR, ctx.fit.compact) };
     const key = scaleKey(variable);
+    const curve = resolveColumnCurve(spec, variable.id, variable.group, variable.kind).style;
     if (variable.kind === "presence" || variable.codes) {
       // No scale: presence marks, or text codes no scaleMap has mapped (drawn empty, see measure).
       const width = compactLength(Math.max(resolved.minWidth, ctx.theme.presenceWidth), MIN_WIDTH_FLOOR, ctx.fit.compact);
-      cols.push({ index: j, variable, style, max: 0, x, width, scale: 0, key });
+      cols.push({ index: j, variable, style, curve, max: 0, x, width, scale: 0, key });
     } else {
       // Class scales span the whole scale (top class), so all class columns read alike.
       const top = variable.scaleLabels?.reduce((m, l) => Math.max(m, l.value), 0);
@@ -87,7 +93,7 @@ export function taxonColumns(ctx: PanelContext): TaxonColumn[] {
       // Independent columns shrink with the global x factor like everything else.
       const independent = resolved.columnWidth * (ctx.xScale / ctx.theme.naturalXScale);
       const { width, scale, step } = columnGeometry(max, style, common, independent, top !== undefined, integerKind(variable.kind));
-      const col: TaxonColumn = { index: j, variable, style, max, x, width, scale, key };
+      const col: TaxonColumn = { index: j, variable, style, curve, max, x, width, scale, key };
       if (step !== undefined) col.step = step;
       cols.push(col);
     }
@@ -276,124 +282,343 @@ export function xAxisTitles(ctx: PanelContext, cols: readonly TaxonColumn[]): { 
   return { titles, skipped };
 }
 
-function fillColour(ctx: PanelContext, col: TaxonColumn): string {
-  if (col.style.fill !== "group") return col.style.fill;
+/** The variable's group colour (theme default fill without a group colour). */
+function groupColour(ctx: PanelContext, col: TaxonColumn): string {
   const g = col.variable.group;
   if (g === undefined) return ctx.theme.defaultFill;
   return ctx.data?.dataset.groups.find((x) => x.id === g)?.colour ?? ctx.theme.defaultFill;
 }
 
+/** A style colour: a CSS colour or "group". */
+function colourOf(ctx: PanelContext, col: TaxonColumn, colour: string): string {
+  return colour === "group" ? groupColour(ctx, col) : colour;
+}
+
+/** Main colour of the curve (what exaggeration colour "curve" means). */
+function curveColour(ctx: PanelContext, col: TaxonColumn): string {
+  const s = col.curve;
+  switch (s.type) {
+    case "polygon":
+    case "bars":
+      return colourOf(ctx, col, s.fill.colour);
+    case "line":
+    case "linePoints":
+      return colourOf(ctx, col, s.line.colour);
+    case "points":
+      return colourOf(ctx, col, s.points.colour);
+    case "presence":
+      return colourOf(ctx, col, s.presence.colour);
+    case "none":
+      return groupColour(ctx, col);
+  }
+}
+
+/** stroke-dasharray for a dash style (mm); undefined = solid. */
+function dashArray(dash: Dash): string | undefined {
+  if (dash === "solid") return undefined;
+  const d = dash === "dashed" ? [1, 0.5] : dash === "dotted" ? [0.2, 0.4] : dash;
+  return d.map(fmt).join(" ");
+}
+
 interface Point {
   y: number;
   v: number;
+  /** Halfway to the previous and to the next sample (in depth order), clamped to the plot. */
+  y0: number;
+  y1: number;
+  /** Local sample spacing in mm: distance to the nearest neighbouring sample; 0 = single sample. */
+  spacing: number;
 }
 
-/** Runs of consecutive non-null values in depth order; null breaks a run (gap). */
-function runs(ctx: PanelContext, j: number): Point[][] {
+/** Runs of consecutive non-null values in depth order; null breaks a run (gap) unless nulls "connect". */
+function runs(ctx: PanelContext, col: TaxonColumn): Point[][] {
   const ds = ctx.data!.dataset;
   const order = ds.samples.map((s, i) => ({ d: s.depth, i })).sort((a, b) => a.d - b.d || a.i - b.i);
+  const depths = [...new Set(order.map((o) => o.d))];
+  const h = ctx.y.height;
+  const clamp = (y: number) => Math.min(Math.max(y, Math.min(0, h)), Math.max(0, h));
+  const extent = new Map<number, [number, number, number]>();
+  depths.forEach((d, k) => {
+    const y = ctx.y.toMm(d);
+    const prev = k > 0 ? ctx.y.toMm(depths[k - 1]!) : undefined;
+    const next = k < depths.length - 1 ? ctx.y.toMm(depths[k + 1]!) : undefined;
+    const a = prev !== undefined ? (prev + y) / 2 : next !== undefined ? y - (next - y) / 2 : y;
+    const b = next !== undefined ? (y + next) / 2 : prev !== undefined ? y + (y - prev) / 2 : y;
+    const near = Math.min(prev === undefined ? Infinity : Math.abs(y - prev), next === undefined ? Infinity : Math.abs(next - y));
+    extent.set(d, [clamp(a), clamp(b), Number.isFinite(near) ? near : 0]);
+  });
+  const connect = col.curve.nulls === "connect";
   const out: Point[][] = [];
   let cur: Point[] = [];
   for (const { d, i } of order) {
-    const v = ds.values[i]![j];
+    const v = ds.values[i]![col.index];
     if (v === null || v === undefined) {
+      if (connect) continue;
       if (cur.length) out.push(cur);
       cur = [];
-    } else cur.push({ y: ctx.y.toMm(d), v });
+    } else {
+      const [y0, y1, spacing] = extent.get(d)!;
+      cur.push({ y: ctx.y.toMm(d), v, y0, y1, spacing });
+    }
   }
   if (cur.length) out.push(cur);
   return out;
 }
 
-/** Silhouette or bars for one run; `factor` = exaggeration (1 for the main curve). x is capped at the column width. */
-function drawShape(
-  g: SvgGroup,
-  ctx: PanelContext,
-  col: TaxonColumn,
-  run: Point[],
-  factor: number,
-  attrs: Record<string, string | number>,
-): void {
-  const t = ctx.theme.barThickness;
-  const xOf = (v: number) => Math.min(v * factor * col.scale, col.width);
-  if (col.style.mode === "bars" || run.length === 1) {
-    for (const p of run) {
-      if (p.v > 0) g.rect(0, p.y - t / 2, xOf(p.v), t, attrs);
-    }
-    return;
-  }
-  const d = new PathBuilder().moveTo(0, run[0]!.y);
-  for (const p of run) d.lineTo(xOf(p.v), p.y);
-  d.lineTo(0, run[run.length - 1]!.y).close();
-  g.path(d, attrs);
+/** Bar thickness along the depth axis at a sample. */
+function barThickness(ctx: PanelContext, col: TaxonColumn, p: Point): number {
+  const s = col.curve;
+  if (s.type !== "bars") return ctx.theme.barThickness;
+  if (s.barWidth.mode === "mm") return s.barWidth.value;
+  return p.spacing > 0 ? s.barWidth.value * p.spacing : ctx.theme.barThickness;
 }
 
-/** Presence: a dot at the column centre, or a full-width bar, where the value is > 0. */
-function renderPresence(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, fill: string): void {
+/**
+ * Bars centred on the sample depth, from 0 to the value. Bars as a fraction of the spacing never
+ * overlap (fraction ≤ 1) and are kept within the plot.
+ */
+function drawBars(g: SvgGroup, ctx: PanelContext, col: TaxonColumn, run: Point[], xOf: (v: number) => number, attrs: Attrs): void {
+  const fraction = col.curve.type === "bars" && col.curve.barWidth.mode === "fraction";
+  const h = ctx.y.height;
+  for (const p of run) {
+    if (!(p.v > 0)) continue;
+    const t = barThickness(ctx, col, p);
+    const top = fraction ? Math.max(p.y - t / 2, Math.min(0, h)) : p.y - t / 2;
+    const bottom = fraction ? Math.min(p.y + t / 2, Math.max(0, h)) : p.y + t / 2;
+    g.rect(0, top, xOf(p.v), bottom - top, attrs);
+  }
+}
+
+/**
+ * Curve path through a run: linear through the samples, or steps reaching halfway to the neighbours.
+ * Appends to `d` if given (an area outline), otherwise starts a new path.
+ */
+function curvePath(run: Point[], xOf: (v: number) => number, step: boolean, d?: PathBuilder): PathBuilder {
+  const path = d ?? new PathBuilder();
+  run.forEach((p, i) => {
+    const to = (x: number, y: number) => (i === 0 && !d ? path.moveTo(x, y) : path.lineTo(x, y));
+    if (step) to(xOf(p.v), p.y0).lineTo(xOf(p.v), p.y1);
+    else to(xOf(p.v), p.y);
+  });
+  return path;
+}
+
+/** Filled area between 0 and the curve; a single linear sample is a thin bar. */
+function drawArea(g: SvgGroup, ctx: PanelContext, run: Point[], xOf: (v: number) => number, step: boolean, attrs: Attrs): void {
+  if (!step && run.length === 1) {
+    const t = ctx.theme.barThickness;
+    if (run[0]!.v > 0) g.rect(0, run[0]!.y - t / 2, xOf(run[0]!.v), t, attrs);
+    return;
+  }
+  const first = run[0]!;
+  const last = run[run.length - 1]!;
+  const d = new PathBuilder().moveTo(0, step ? first.y0 : first.y);
+  curvePath(run, xOf, step, d);
+  g.path(d.lineTo(0, step ? last.y1 : last.y).close(), attrs);
+}
+
+/** Whether the type's curve is stepped (polygon shape, line interpolation). */
+function stepped(s: CurveStyle): boolean {
+  if (s.type === "polygon") return s.shape === "step";
+  if (s.type === "line" || s.type === "linePoints") return s.interpolation === "step";
+  return false;
+}
+
+/** Fill attribute for a fill style: a colour, or a <pattern> defined in the column's <defs>. */
+function fillPaint(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, fill: FillStyle, id: string): string {
+  const c = colourOf(ctx, col, fill.colour);
+  const { type, angle, spacing: sp } = fill.pattern;
+  if (type === "solid") return c;
+  const pattern = g.element("defs").element("pattern", {
+    id,
+    width: sp,
+    height: sp,
+    patternUnits: "userSpaceOnUse",
+    patternTransform: angle === 0 ? undefined : rotate(angle, 0, 0),
+  });
+  const stroke = { stroke: c, "stroke-width": ctx.theme.curveLineWidth };
+  if (type === "dots") pattern.circle(sp / 2, sp / 2, sp * 0.15, { fill: c });
+  else pattern.line(0, sp / 2, sp, sp / 2, stroke);
+  if (type === "crosshatch") pattern.line(sp / 2, 0, sp / 2, sp, stroke);
+  return `url(#${id})`;
+}
+
+/** Point marks at the values. Open marks are filled with the page background. */
+function drawPoints(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, rs: Point[][], mark: PointMark, xOf: (v: number) => number): void {
   const { theme } = ctx;
+  const c = colourOf(ctx, col, mark.colour);
+  const pg = g.group({ class: "points" });
+  const attrs = { fill: mark.filled ? c : (theme.background ?? "none"), stroke: c, "stroke-width": theme.curveLineWidth };
+  const r = mark.size / 2;
+  for (const run of rs) {
+    for (const p of run) {
+      const x = xOf(p.v);
+      switch (mark.shape) {
+        case "circle":
+          pg.circle(x, p.y, r, attrs);
+          break;
+        case "square":
+          pg.rect(x - r, p.y - r, mark.size, mark.size, attrs);
+          break;
+        case "triangle":
+          pg.path(new PathBuilder().moveTo(x, p.y - r).lineTo(x + r, p.y + r).lineTo(x - r, p.y + r).close(), attrs);
+          break;
+        case "diamond":
+          pg.path(new PathBuilder().moveTo(x, p.y - r).lineTo(x + r, p.y).lineTo(x, p.y + r).lineTo(x - r, p.y).close(), attrs);
+          break;
+        case "cross":
+          pg.path(new PathBuilder().moveTo(x - r, p.y - r).lineTo(x + r, p.y + r).moveTo(x - r, p.y + r).lineTo(x + r, p.y - r), { fill: "none", stroke: c, "stroke-width": theme.curveLineWidth });
+          break;
+      }
+    }
+  }
+}
+
+/** Presence marks at the column centre (bar: full width) where the value is > 0; marks never exceed the column. */
+function renderPresence(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, rs: Point[][]): void {
+  const { theme } = ctx;
+  const style = col.curve.type === "presence" ? col.curve.presence : coreDefaults.curve.presence.presence;
+  const c = colourOf(ctx, col, style.colour);
+  const size = Math.min(style.size, col.width);
+  const x = col.width / 2;
   const mg = g.group({ class: "presence" });
-  for (const run of runs(ctx, col.index)) {
+  for (const run of rs) {
     for (const p of run) {
       if (!(p.v > 0)) continue;
-      if (col.style.presence === "bar") mg.rect(0, p.y - theme.barThickness / 2, col.width, theme.barThickness, { fill });
-      else mg.circle(col.width / 2, p.y, theme.presenceDotRadius, { fill, stroke: theme.stroke, "stroke-width": theme.curveLineWidth });
+      if (style.symbol === "bar") mg.rect(0, p.y - style.size / 2, col.width, style.size, { fill: c });
+      else if (style.symbol === "dot") mg.circle(x, p.y, size / 2, { fill: c, stroke: theme.stroke, "stroke-width": theme.curveLineWidth });
+      else if (style.symbol === "square") mg.rect(x - size / 2, p.y - size / 2, size, size, { fill: c, stroke: theme.stroke, "stroke-width": theme.curveLineWidth });
+      else {
+        const d = new PathBuilder().moveTo(x - size / 2, p.y).lineTo(x + size / 2, p.y).moveTo(x, p.y - size / 2).lineTo(x, p.y + size / 2);
+        mg.path(d, { fill: "none", stroke: c, "stroke-width": theme.lineWidth });
+      }
     }
   }
 }
 
-function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, ticks: readonly Tick[]): void {
-  const { theme, y } = ctx;
-  const h = y.height;
-  const fill = fillColour(ctx, col);
-  const line = { stroke: theme.axisColour, "stroke-width": theme.lineWidth };
-  if (col.variable.kind === "presence" && !col.variable.codes) {
-    renderPresence(ctx, g, col, fill);
-    g.group({ class: "x-axis" }).line(0, h, col.width, h, line);
-    renderLabel(ctx, g, col);
+/** Value label text for a value (valueLabels); undefined = none. */
+function valueLabel(col: TaxonColumn, v: number): string | undefined {
+  const { show, threshold, format, decimals } = col.curve.valueLabels;
+  if (show === "off" || (show === "aboveThreshold" && !(v > threshold))) return undefined;
+  return format.split("{value}").join(v.toFixed(decimals));
+}
+
+/** Left edge of a value label: right of the value (presence columns: right of the column). */
+function valueLabelX(ctx: PanelContext, col: TaxonColumn, v: number): number {
+  return (col.scale > 0 ? Math.min(v * col.scale, col.width) : col.width) + ctx.theme.plusOffset;
+}
+
+function renderValueLabels(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, rs: Point[][]): void {
+  const { theme } = ctx;
+  if (col.curve.valueLabels.show === "off") return;
+  const lg = g.group({ class: "value-labels", "font-family": familyAttr(theme.tickFontFamily, theme.fontFamily), "font-size": theme.tickFontSize });
+  for (const p of rs.flat()) {
+    const text = valueLabel(col, p.v);
+    if (text !== undefined) lg.text(valueLabelX(ctx, col, p.v), p.y + LABEL_OFFSET * theme.tickFontSize, text);
+  }
+}
+
+/** Exaggeration (×factor) behind the main curve: filled area (bars for bars) or a line, in a lighter colour. */
+function renderExaggeration(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, rs: Point[][]): void {
+  const { exaggeration: e } = col.curve;
+  if (!e.show) return;
+  const c = e.colour === "curve" ? curveColour(ctx, col) : colourOf(ctx, col, e.colour);
+  const xOf = (v: number) => Math.min(v * e.factor * col.scale, col.width);
+  const eg = g.group({ class: "exaggeration" });
+  const step = stepped(col.curve);
+  for (const run of rs) {
+    if (e.style === "line") {
+      if (run.length > 1 || step) eg.path(curvePath(run, xOf, step), { fill: "none", stroke: c, "stroke-opacity": e.opacity, "stroke-width": ctx.theme.curveLineWidth });
+    } else if (col.curve.type === "bars") drawBars(eg, ctx, col, run, xOf, { fill: c, "fill-opacity": e.opacity });
+    else drawArea(eg, ctx, run, xOf, step, { fill: c, "fill-opacity": e.opacity });
+  }
+}
+
+/** The main curve of a scaled column. */
+function renderCurve(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, rs: Point[][], id: string): void {
+  const { theme } = ctx;
+  const s = col.curve;
+  const xOf = (v: number) => Math.min(v * col.scale, col.width);
+  const mg = g.group({ class: "curve" });
+  if (s.type === "polygon" || s.type === "bars") {
+    const filled = s.type === "bars" || s.filled;
+    const fill = filled ? fillPaint(ctx, g, col, s.fill, `${id}-fill`) : "none";
+    const attrs: Attrs = { fill, "fill-opacity": filled && s.fill.opacity < 1 ? s.fill.opacity : undefined };
+    if (s.outline.show) {
+      attrs.stroke = colourOf(ctx, col, s.outline.colour);
+      attrs["stroke-width"] = s.outline.width ?? theme.curveLineWidth;
+      attrs["stroke-dasharray"] = dashArray(s.outline.dash);
+    }
+    for (const run of rs) {
+      if (s.type === "bars") drawBars(mg, ctx, col, run, xOf, attrs);
+      else drawArea(mg, ctx, run, xOf, s.shape === "step", attrs);
+    }
     return;
   }
+  if (s.type === "line" || s.type === "linePoints") {
+    const step = s.interpolation === "step";
+    const attrs = { fill: "none", stroke: colourOf(ctx, col, s.line.colour), "stroke-width": s.line.width ?? theme.curveLineWidth, "stroke-dasharray": dashArray(s.line.dash) };
+    for (const run of rs) if (run.length > 1 || step) mg.path(curvePath(run, xOf, step), attrs);
+  }
+  if (s.type === "linePoints" || s.type === "points" || (s.type === "line" && s.points.show)) drawPoints(ctx, mg, col, rs, s.points, xOf);
+}
+
+function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, ticks: readonly Tick[], id: string): void {
+  const { theme, y } = ctx;
+  const h = y.height;
+  const s = col.curve;
+  const line = { stroke: theme.axisColour, "stroke-width": theme.lineWidth };
   if (col.variable.codes) {
     g.group({ class: "x-axis" }).line(0, h, col.width, h, line);
     renderLabel(ctx, g, col);
     return;
   }
-  const rs = runs(ctx, col.index);
-
-  if (col.style.mode !== "silhouette" && col.style.mode !== "bars") {
-    ctx.warn(`taxonCurves mode "${col.style.mode}" is not supported yet; using silhouette.`);
+  const rs = runs(ctx, col);
+  if (col.variable.kind === "presence") {
+    if (s.type !== "none") renderPresence(ctx, g, col, rs);
+    renderValueLabels(ctx, g, col, rs);
+    g.group({ class: "x-axis" }).line(0, h, col.width, h, line);
+    renderLabel(ctx, g, col);
+    return;
   }
 
-  // Exaggeration behind the main curve, lighter fill.
-  const exag = col.style.exaggeration;
-  if (exag > 1) {
-    const eg = g.group({ class: "exaggeration" });
-    for (const run of rs) drawShape(eg, ctx, col, run, exag, { fill, "fill-opacity": theme.exaggerationOpacity });
-  }
+  // Presence marks and "none" draw no exaggeration, baseline or "+".
+  const scaled = s.type !== "presence" && s.type !== "none";
+  if (scaled) renderExaggeration(ctx, g, col, rs);
+  if (s.type === "presence") renderPresence(ctx, g, col, rs);
+  else if (scaled) renderCurve(ctx, g, col, rs, id);
 
-  const mg = g.group({ class: "curve" });
-  for (const run of rs) {
-    drawShape(mg, ctx, col, run, 1, { fill, stroke: theme.stroke, "stroke-width": theme.curveLineWidth });
-  }
-
-  // Zero baseline over each run; nulls leave a gap.
-  for (const run of rs) {
-    if (run.length > 1) g.line(0, run[0]!.y, 0, run[run.length - 1]!.y, line);
+  // Zero baseline along each run; nulls leave a gap (unless connected).
+  if (scaled && s.baseline.show) {
+    const step = stepped(s);
+    const attrs = {
+      stroke: s.baseline.colour === "axis" ? theme.axisColour : colourOf(ctx, col, s.baseline.colour),
+      "stroke-width": s.baseline.width ?? theme.lineWidth,
+      "stroke-dasharray": dashArray(s.baseline.dash),
+    };
+    for (const run of rs) {
+      const first = run[0]!;
+      const last = run[run.length - 1]!;
+      if (step) g.line(0, first.y0, 0, last.y1, attrs);
+      else if (run.length > 1) g.line(0, first.y, 0, last.y, attrs);
+    }
   }
 
   // "+" for small non-zero values.
-  if (col.style.plusBelow > 0) {
-    const s = theme.plusSize;
+  if (scaled && s.plus.show && s.plus.threshold > 0) {
+    const r = s.plus.size / 2;
     const d = new PathBuilder();
     for (const run of rs) {
       for (const p of run) {
-        if (p.v > 0 && p.v < col.style.plusBelow) {
+        if (p.v > 0 && p.v < s.plus.threshold) {
           const x = theme.plusOffset + p.v * col.scale;
-          d.moveTo(x - s, p.y).lineTo(x + s, p.y).moveTo(x, p.y - s).lineTo(x, p.y + s);
+          d.moveTo(x - r, p.y).lineTo(x + r, p.y).moveTo(x, p.y - r).lineTo(x, p.y + r);
         }
       }
     }
     if (!d.isEmpty()) g.path(d, { class: "plus", fill: "none", ...line });
   }
+  renderValueLabels(ctx, g, col, rs);
 
   // x axis in the footer band.
   const xg = g.group({ class: "x-axis" });
@@ -408,23 +633,31 @@ function renderColumn(ctx: PanelContext, g: SvgGroup, col: TaxonColumn, ticks: r
   renderLabel(ctx, g, col);
 }
 
-/** Horizontal extent (relative to the column) of everything renderColumn draws below the header band. */
+/**
+ * Horizontal extent (relative to the column) of what renderColumn draws below the header band and the
+ * layout reserves: tick labels, "+" markers and value labels. It depends only on the data, the column
+ * geometry and options every curve type shares — never on the type, so a type change never moves a column.
+ */
 function columnInk(ctx: PanelContext, col: TaxonColumn, ticks: readonly Tick[]): [number, number] {
   const { theme } = ctx;
   let left = 0;
   let right = col.width;
-  if (col.variable.kind === "presence" && col.style.presence === "dot") {
-    left = Math.min(left, col.width / 2 - theme.presenceDotRadius);
-    right = Math.max(right, col.width / 2 + theme.presenceDotRadius);
-  }
   for (const t of ticks) {
     if (!t.label) continue;
     const [l, r] = tickExtent(t, col, theme.tickFontSize);
     left = Math.min(left, l);
     right = Math.max(right, r);
   }
-  if (col.style.plusBelow > 0 && col.scale > 0) {
-    right = Math.max(right, theme.plusOffset + col.style.plusBelow * col.scale + theme.plusSize);
+  const { plus } = col.curve;
+  if (plus.show && plus.threshold > 0 && col.scale > 0) {
+    right = Math.max(right, theme.plusOffset + plus.threshold * col.scale + plus.size / 2);
+  }
+  if (!col.variable.codes && ctx.data) {
+    for (const row of ctx.data.dataset.values) {
+      const v = row[col.index];
+      const text = typeof v === "number" ? valueLabel(col, v) : undefined;
+      if (text !== undefined) right = Math.max(right, valueLabelX(ctx, col, v!) + estimateTextWidth(text, theme.tickFontSize));
+    }
   }
   return [left, right];
 }
@@ -515,8 +748,9 @@ export const taxonCurvesPanel: Panel = {
     const cols = taxonColumns(ctx);
     const ticks = panelTicks(ctx, cols);
     cols.forEach((col, i) => {
-      const cg = g.group({ id: `${ctx.id}-${slug(col.variable.id)}`, class: "column", transform: translate(col.x, 0) });
-      renderColumn(ctx, cg, col, ticks[i]!);
+      const id = `${ctx.id}-${slug(col.variable.id)}`;
+      const cg = g.group({ id, class: "column", transform: translate(col.x, 0) });
+      renderColumn(ctx, cg, col, ticks[i]!, id);
     });
     const { titles } = xAxisTitles(ctx, cols);
     if (titles.length > 0) {

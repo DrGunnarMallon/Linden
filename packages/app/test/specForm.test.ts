@@ -159,7 +159,7 @@ describe("form → JSON → form", () => {
     const newPanel = { ...(defaultValue(panels.item.variants.find((v) => v.value === "taxonCurves")!.node) as object), dataset: "demo-pollen" };
 
     let s: Spec = complex;
-    s = setIn(s, ["panels", 1, "style", "exaggeration"], 5);
+    s = setIn(s, ["panels", 1, "style", "curve", "exaggeration", "factor"], 5);
     s = setIn(s, ["title", "text"], "Lake *Linden* (rev.)");
     s = removeIn(s, ["style", "background"]);
     s = setIn(s, ["yAxis", "range"], [0, 200]);

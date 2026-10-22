@@ -2,6 +2,8 @@
 // (and age) columns are frozen; every variable has a three-tier header: group ▾, kind ▾ and its name
 // (double-click to rename). Every edit is one store edit (one undo step) through core's edit operations;
 // the figure follows debounced. null shows as a muted "—", 0 as 0; edited cells carry an accent mark.
+// A column can be declared the error of another ("Use as error for…"); ages can come from an imported
+// age–depth model (toolbar "Age model…").
 
 import "@glideapps/glide-data-grid/dist/index.css";
 import {
@@ -21,6 +23,7 @@ import {
 import {
   addSample,
   addVariable,
+  applyAgeModel,
   cleanupSpec,
   danglingReferences,
   datasetFromClipboard,
@@ -28,10 +31,12 @@ import {
   deleteVariable,
   markupRuns,
   MeasurementKindSchema,
+  parseAgeModel,
   parseClipboard,
   provenance,
   renameVariable,
   revertCell,
+  setCompanion,
   setVariableKind,
   setVariableUnit,
   sortSamplesByDepth,
@@ -40,11 +45,14 @@ import {
   type ClipboardTable,
   type Dataset,
   type EditResult,
+  type ErrorRole,
   type MeasurementKind,
+  type Variable,
 } from "@linden/core";
-import { ArrowDownWideNarrow, ClipboardPaste, Columns3, Download, Rows3 } from "lucide-react";
+import { ArrowDownWideNarrow, ClipboardPaste, Columns3, Download, History, Rows3 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent as ReactClipboardEvent, type RefObject } from "react";
 import { exportData } from "./actions";
+import { AgeModelDialog, type PendingAgeModel } from "./AgeModelDialog";
 import { assignGroup, editSheetCell, effectiveGroup, hasAgeColumn, insertDepth, pasteIntoSheet, pasteNeeds, sheetColumns, type SheetColumn } from "./dataEdit";
 import { PasteDialog } from "./PasteDialog";
 import { variableTree } from "./specEdit";
@@ -73,6 +81,20 @@ import { useView } from "./view";
 const TIER = 22;
 const KINDS = MeasurementKindSchema.options;
 const NEW_GROUP = "__new__";
+const ERROR_ROLES: { role: ErrorRole; label: string }[] = [
+  { role: "se", label: "± SE" },
+  { role: "sd", label: "± SD" },
+  { role: "lower", label: "Lower bound" },
+  { role: "upper", label: "Upper bound" },
+];
+
+/** "se of WTD" for the header's kind tier. */
+function companionText(ds: Dataset, v: Variable): string {
+  if (!v.companion) return "";
+  const target = ds.variables.find((x) => x.id === v.companion!.errorOf);
+  const role = ERROR_ROLES.find((r) => r.role === v.companion!.role)?.label ?? v.companion.role;
+  return ` · ${role} of ${target ? stripMarkup(target.name) : v.companion.errorOf}`;
+}
 
 /** Shows edit warnings: the first one, and how many more. */
 function report(warnings: readonly string[]): void {
@@ -147,7 +169,18 @@ async function readClipboard(): Promise<string | undefined> {
 }
 
 function DataToolbar({ ds, datasets, onChoose }: { ds: Dataset; datasets: Dataset[]; onChoose(id: string): void }) {
+  const [ageModel, setAgeModel] = useState<PendingAgeModel | null>(null);
+  const file = useRef<HTMLInputElement>(null);
   const addRow = () => edit(ds.id, (d) => addSample(d, { depth: insertDepth(d, d.samples.length) }, d.samples.length));
+  const openAgeModel = async (f: File | undefined) => {
+    if (!f) return;
+    const table = parseAgeModel(await f.text());
+    if (table.rows.length === 0 || table.columns.length < 2) {
+      toast("Not an age–depth model", { variant: "error", description: table.warnings[0] ?? "Expected a table with a depth and an age column." });
+      return;
+    }
+    setAgeModel({ table, source: f.name });
+  };
   const addColumn = () => {
     const name = prompt("Name of the new variable (*italic* for genera and species):")?.trim();
     if (name) edit(ds.id, (d) => addVariable(d, { name }));
@@ -177,13 +210,37 @@ function DataToolbar({ ds, datasets, onChoose }: { ds: Dataset; datasets: Datase
       >
         <ClipboardPaste /> Paste
       </Button>
+      <Button variant="ghost" size="sm" disabled={ds.samples.length === 0} onClick={() => file.current?.click()} title="Ages from an age–depth model (e.g. Bacon's *_ages.txt), interpolated to the sample depths">
+        <History /> Age model…
+      </Button>
+      <input
+        ref={file}
+        type="file"
+        accept=".csv,.tsv,.txt"
+        className="hidden"
+        onChange={(e) => {
+          void openAgeModel(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
       <span className="flex-1" />
-      <span className="mr-2 text-xs text-fg-muted tabular-nums">
+      <span className="mr-2 truncate text-xs text-fg-muted tabular-nums" title={ds.ageSource ? `Ages: ${ds.ageSource}` : undefined}>
         {ds.samples.length} samples × {ds.variables.length} variables · depth in {ds.depthUnit}
+        {ds.ageSource ? " · ages from an age–depth model" : ""}
       </span>
       <Button variant="secondary" size="sm" onClick={exportData} disabled={ds.variables.length === 0 && ds.samples.length === 0}>
         <Download /> Export CSV
       </Button>
+      <AgeModelDialog
+        ds={ds}
+        pending={ageModel}
+        onCancel={() => setAgeModel(null)}
+        onApply={(choice) => {
+          const table = ageModel!.table;
+          setAgeModel(null);
+          edit(ds.id, (d) => applyAgeModel(d, table, choice));
+        }}
+      />
     </div>
   );
 }
@@ -315,7 +372,7 @@ function DataSheet({ ds }: { ds: Dataset }) {
         const v = ds.variables[c.index]!;
         const group = effectiveGroup(spec, ds.id, ds, v.id);
         dropdown(0, group === undefined ? "no group" : (groupNames.get(group) ?? group), group === undefined);
-        dropdown(1, v.unit ? `${v.kind} · ${v.unit}` : v.kind, false);
+        dropdown(1, (v.unit ? `${v.kind} · ${v.unit}` : v.kind) + companionText(ds, v), false);
         // The name with *italic* markup rendered.
         let x = rect.x + pad;
         ctx.fillStyle = fg;
@@ -630,6 +687,32 @@ function SheetMenu({
     </MenuRadioGroup>
   );
   const vIndex = v ? ds.variables.indexOf(v) : -1;
+  // Columns this one can be an error of: not itself, not other error columns.
+  const errorTargets = v ? ds.variables.filter((x) => x.id !== v.id && !x.companion) : [];
+  const errorItems = v && (
+    <MenuSub>
+      <MenuSubTrigger disabled={errorTargets.length === 0 || ds.variables.some((x) => x.companion?.errorOf === v.id)}>Use as error for…</MenuSubTrigger>
+      <MenuSubContent className="max-h-80 overflow-y-auto">
+        {errorTargets.map((t) => (
+          <MenuSub key={t.id}>
+            <MenuSubTrigger>{stripMarkup(t.name)}</MenuSubTrigger>
+            <MenuSubContent>
+              <MenuRadioGroup
+                value={v.companion?.errorOf === t.id ? v.companion.role : ""}
+                onValueChange={(role) => edit(ds.id, (d) => setCompanion(d, v.id, { errorOf: t.id, role: ERROR_ROLES.find((r) => r.role === role)!.role }))}
+              >
+                {ERROR_ROLES.map((r) => (
+                  <MenuRadioItem key={r.role} value={r.role}>
+                    {r.label}
+                  </MenuRadioItem>
+                ))}
+              </MenuRadioGroup>
+            </MenuSubContent>
+          </MenuSub>
+        ))}
+      </MenuSubContent>
+    </MenuSub>
+  );
   const columnItems = v && (
     <>
       <MenuLabel>
@@ -646,6 +729,8 @@ function SheetMenu({
         <MenuSubTrigger>Group</MenuSubTrigger>
         <MenuSubContent>{groupItems(v.id)}</MenuSubContent>
       </MenuSub>
+      {errorItems}
+      {v.companion && <MenuItem onSelect={() => edit(ds.id, (d) => setCompanion(d, v.id, undefined))}>Not an error column</MenuItem>}
       <MenuItem className="text-danger-text" onSelect={() => deleteColumn(v.id)}>
         Delete variable
       </MenuItem>

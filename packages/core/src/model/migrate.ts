@@ -20,6 +20,8 @@ const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   7: toV8,
   // v9 added the optional styleLibrary (saved curve styles).
   8: (spec) => ({ ...spec, specVersion: 9 }),
+  // v10 added the curve style options `axis` (per-column x axis) and `error` (envelope / bars), both optional.
+  9: (spec) => ({ ...spec, specVersion: 10 }),
 };
 
 const MODE_TYPES: Record<string, string> = { silhouette: "polygon", bars: "bars", line: "line", linePoints: "linePoints" };

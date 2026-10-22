@@ -16,7 +16,9 @@ for (const file of readdirSync(new URL("examples/", root)).filter((f) => f.endsW
   const name = file.replace(/\.spec\.json$/, "");
   const spec = parseSpec(read(`examples/${file}`));
   if (!spec.ok) throw new Error(`${file}:\n${spec.errors.join("\n")}`);
-  const { datasets, warnings: importWarnings } = importDelimited(read(`examples/${name}.csv`), { name });
+  // A spec may reuse another example's data (e.g. testate-percent-age): its first dataset names the CSV.
+  const data = spec.value.datasets?.[0]?.dataset ?? name;
+  const { datasets, warnings: importWarnings } = importDelimited(read(`examples/${data}.csv`), { name: data });
   const { svg, warnings, info } = render(datasets, spec.value, presets);
   writeFileSync(new URL(`examples/out/${name}.svg`, root), svg);
   for (const i of info) console.log(`info (${name}): ${i}`);

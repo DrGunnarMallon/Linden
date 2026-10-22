@@ -92,11 +92,19 @@ export function selectVariables(
     if (!ds.variables.some((v) => v.id === id)) warn(`Variable "${id}" not found in dataset "${ds.id}".`);
   }
 
+  // Error columns (companions) are drawn with the variable they belong to, never as curves of their own.
+  for (const v of ds.variables) {
+    if (v.companion && !ds.variables.some((x) => x.id === v.companion!.errorOf)) {
+      warn(`"${v.id}" is an error of "${v.companion.errorOf}", which is not in dataset "${ds.id}"; not drawn.`);
+    }
+  }
   let idx = ds.variables
     .map((v, j) => ({ v, j }))
+    .filter(({ v }) => !v.companion)
     .filter(({ v }) => all || ids.has(v.id) || (v.group !== undefined && groups.has(v.group)))
     .filter(({ v }) => sel.kinds === undefined || sel.kinds.includes(v.kind))
-    .filter(({ j }) => columnMax(ds, j) >= sel.minMax)
+    // minMax is a rare-taxon threshold; continuous values (LOI, δ13C) are measured, not counted.
+    .filter(({ v, j }) => v.kind === "continuous" || columnMax(ds, j) >= sel.minMax)
     .map(({ j }) => j);
 
   const order = sel.order;

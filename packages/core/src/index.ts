@@ -15,6 +15,8 @@ export type { ParseResult } from "./io/spec.js";
 export { csvImporter, importDelimited, parseDelimited, detectDelimiter, exportDelimited } from "./io/delimited.js";
 export type { Delimiter, DelimitedImportOptions, DelimitedExportOptions } from "./io/delimited.js";
 export { parseClipboard, datasetFromClipboard } from "./io/paste.js";
+export { parseAgeModel, applyAgeModel } from "./io/ageModel.js";
+export type { AgeModelChoice, AgeModelTable } from "./io/ageModel.js";
 export type { ClipboardColumn, ClipboardImport, ClipboardTable } from "./io/paste.js";
 export {
   addSample,
@@ -25,6 +27,7 @@ export {
   parseCellText,
   renameVariable,
   setCell,
+  setCompanion,
   setCells,
   setSampleAge,
   setSampleDepth,
@@ -46,8 +49,19 @@ export { scaleMapTransform } from "./transforms/scaleMap.js";
 export type { DiagramLayout, PanelLayout, RenderResult } from "./pipeline.js";
 export type { ColumnLayout, Panel, PanelContext, PanelData, PanelMeasure, Overlay, OverlayContext } from "./panels/types.js";
 export { yAxisPanel } from "./panels/yAxis.js";
-export { taxonCurvesPanel, taxonColumns, columnGeometry, columnTicks, autoTickStep, defaultXTitle, xAxisTitles } from "./panels/taxonCurves.js";
-export type { TaxonColumn, Tick, XAxisTitle } from "./panels/taxonCurves.js";
+export {
+  taxonCurvesPanel,
+  taxonColumns,
+  columnAxis,
+  columnGeometry,
+  columnTicks,
+  autoTickStep,
+  defaultXTitle,
+  errorBounds,
+  valueX,
+  xAxisTitles,
+} from "./panels/taxonCurves.js";
+export type { AxisRequest, ColumnAxis, ErrorBounds, TaxonColumn, Tick, XAxisTitle } from "./panels/taxonCurves.js";
 export { zonesOverlay } from "./overlays/zones.js";
 export { computeLayout, compactLength, MIN_WIDTH_FLOOR, GAP_FLOOR, X_FACTOR_FLOOR } from "./layout/layout.js";
 export type { FitState, HeaderMeasure, LayoutOptions, LayoutResult, Rect } from "./layout/layout.js";
@@ -57,6 +71,8 @@ export { layoutTitle, renderTitle, SUBTITLE_RATIO, TITLE_GAP } from "./layout/ti
 export type { TitleLayout, TitleLine } from "./layout/title.js";
 export { charWidth, textWidthEm } from "./layout/metrics.js";
 export { makeYScale, niceStep, ticksAt, interpolate } from "./layout/scales.js";
+export { ageAtDepth, ageDepthPairs, ageInversionAt, samplePosition } from "./layout/ageDepth.js";
+export type { AgeDepthPairs, AxisKind } from "./layout/ageDepth.js";
 export type { YScale } from "./layout/scales.js";
 export { makeTheme, estimateTextWidth, PT_TO_MM } from "./layout/theme.js";
 export type { Theme } from "./layout/theme.js";

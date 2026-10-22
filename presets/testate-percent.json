@@ -1,7 +1,7 @@
 {
   "presetVersion": 2,
   "name": "testate-percent",
-  "description": "Testate amoebae: % of total tests, bars, common scale. (Inferred water-table depth needs the continuous panel, M3.)",
+  "description": "Testate amoebae: % of total tests, bars, common scale. Inferred water-table depth goes in a continuous column (independent scale, reversed axis, error envelope).",
   "transforms": [{ "type": "percent" }],
   "panelDefaults": {
     "taxonCurves": {

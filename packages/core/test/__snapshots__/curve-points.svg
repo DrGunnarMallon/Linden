@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="120mm" height="70mm" viewBox="0 0 120 70">
-  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: 8f06c2a42e59d340ad02eeceea902940d505beb0c755b065bc2e07e20f6b9369</metadata>
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: a8946bcc68a7f761e51b88adeaa02854c2319e555839a664ff49c0ea2c33a412</metadata>
   <rect id="background" x="0" y="0" width="120" height="70" fill="#ffffff"/>
   <g fill="#000000" font-family="Arial" font-size="2.47">
     <g id="panel-0-taxonCurves" transform="translate(5,8.42)">

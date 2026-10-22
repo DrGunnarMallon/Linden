@@ -257,8 +257,12 @@ export function manualZones(spec: Spec): ZoneRef[] {
   return (spec.overlays ?? []).flatMap((o, overlay) => (o.type === "zones" ? o.manual.map((z, index) => ({ overlay, index, depth: z.depth })) : []));
 }
 
-/** Zone boundary within `tolerance` mm of the page point (across the panels), nearest first. */
+/**
+ * Zone boundary within `tolerance` mm of the page point (across the panels), nearest first. Boundaries
+ * are depths, so they are dragged on a depth axis only (on an age axis they sit at interpolated ages).
+ */
 export function hitZone(layout: DiagramLayout, spec: Spec, x: number, y: number, tolerance: number): ZoneRef | null {
+  if (layout.y.primary !== "depth") return null;
   if (x < layout.plot.x || x > layout.plot.x + layout.plot.width) return null;
   const [lo, hi] = [Math.min(...layout.y.domain), Math.max(...layout.y.domain)];
   let best: ZoneRef | null = null;

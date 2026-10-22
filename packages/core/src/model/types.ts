@@ -21,6 +21,17 @@ export interface Variable {
   codes?: string[];
   /** Axis labels at plotted values, e.g. class codes after a scaleMap. */
   scaleLabels?: { value: number; label: string }[];
+  /** This column is an error of another variable (drawn as its envelope or bars, never as a curve of its own). */
+  companion?: Companion;
+}
+
+/** lower / upper = bounds; se / sd = ± half-width around the value. */
+export type ErrorRole = "lower" | "upper" | "se" | "sd";
+
+export interface Companion {
+  /** Id of the variable this column is an error of. */
+  errorOf: string;
+  role: ErrorRole;
 }
 
 export interface Group {
@@ -65,6 +76,8 @@ export interface Dataset {
   name: string;
   depthUnit: "cm" | "m" | "mm";
   ageUnit?: "cal BP" | "BP" | "CE/BCE" | "b2k";
+  /** Where the sample ages came from, e.g. an imported age–depth model (applyAgeModel). */
+  ageSource?: string;
   samples: Sample[];
   variables: Variable[];
   groups: Group[];

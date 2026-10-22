@@ -2,6 +2,7 @@
 // Pure: same inputs → identical SVG string. Problems become warnings.
 
 import { autoGroupSpans, groupRowHeight, groupSpans, groupSpansExtent, layoutLabels, renderGroupHeaders, type HeaderColumn } from "./layout/header.js";
+import { ageAtDepth, ageDepthPairs, ageInversionAt, samplePosition, type AxisKind } from "./layout/ageDepth.js";
 import { computeLayout, type FitState, type Rect } from "./layout/layout.js";
 import { makeYScale, referenceRange, scaleKey, type YScale } from "./layout/scales.js";
 import { columnMax, selectVariables } from "./layout/select.js";
@@ -50,8 +51,8 @@ export interface DiagramLayout {
   slack: number;
   panelGap: number;
   panels: PanelLayout[];
-  /** Shared y scale: depth = domain[0] at the plot top unless reverse is false. */
-  y: { domain: [number, number]; reverse: boolean };
+  /** Shared y scale in primary-axis units (depth or age): domain[0] at the plot top unless reverse is false. */
+  y: { domain: [number, number]; reverse: boolean; primary: AxisKind };
   /** Distinct sample depths of the plotted datasets, ascending. */
   depths: number[];
 }
@@ -110,14 +111,34 @@ function plottedDatasets(rs: ResolvedSpec, data: (PanelData | undefined)[], byId
   return used.length ? used : [...byId.values()];
 }
 
-function yDomain(rs: ResolvedSpec, data: (PanelData | undefined)[], byId: Map<string, Dataset>, warn: (m: string) => void): [number, number] {
+/**
+ * The primary y axis actually used: "age" needs sample ages in the plotted datasets (else depth, with
+ * a warning). On an age axis, samples without an age are left out and ages that decrease with depth
+ * are reported.
+ */
+function primaryAxis(rs: ResolvedSpec, plotted: readonly Dataset[], warn: (m: string) => void): AxisKind {
+  if (rs.yAxis.primary !== "age") return "depth";
+  if (!plotted.some((d) => d.samples.some((s) => s.age !== undefined))) {
+    warn('Primary y axis "age" needs sample ages (an age column or an imported age–depth model); depth used.');
+    return "depth";
+  }
+  for (const ds of plotted) {
+    const missing = ds.samples.filter((s) => s.age === undefined).length;
+    if (missing > 0) warn(`Dataset "${ds.id}": ${missing} sample(s) without an age are not drawn on the age axis.`);
+    const at = ageInversionAt(ageDepthPairs(ds));
+    if (at !== undefined) warn(`Dataset "${ds.id}": ages do not increase with depth (at ${at} ${ds.depthUnit}); samples are placed by their ages.`);
+  }
+  return "age";
+}
+
+function yDomain(rs: ResolvedSpec, plotted: readonly Dataset[], primary: AxisKind, warn: (m: string) => void): [number, number] {
   if (rs.yAxis.range) return rs.yAxis.range;
-  const depths = plottedDatasets(rs, data, byId).flatMap((d) => d.samples.map((s) => s.depth));
-  if (depths.length === 0) {
+  const values = plotted.flatMap((d) => d.samples.map((s) => samplePosition(s, primary))).filter((v): v is number => v !== undefined);
+  if (values.length === 0) {
     warn("No samples to plot; y-axis range set to 0–1.");
     return [0, 1];
   }
-  return [Math.min(...depths), Math.max(...depths)];
+  return [Math.min(...values), Math.max(...values)];
 }
 
 /**
@@ -201,7 +222,10 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     return { dataset: ds, variables: selectVariables(ds, p.variables, warn, order) };
   });
 
-  const domain = yDomain(rs, data, byId, warn);
+  const plotted = plottedDatasets(rs, data, byId);
+  const primary = primaryAxis(rs, plotted, warn);
+  const yAxis = { ...rs.yAxis, primary };
+  const domain = yDomain(rs, plotted, primary, warn);
   const scaleRatios = commonScaleRatios(data);
   const provisionalHeader = { fontSize: theme.fontSize, angle: rs.headerBand.angle };
   const ctxFor = (i: number, fit: FitState, y: YScale, header = provisionalHeader): PanelContext => ({
@@ -209,7 +233,7 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
     spec: rs.panels[i]!,
     data: data[i],
     y,
-    yAxis: rs.yAxis,
+    yAxis,
     xScale: fit.xScale,
     scaleRatios,
     fit,
@@ -222,7 +246,10 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
 
   // Measuring never depends on the y range's height, so a provisional scale is enough.
   const provisionalY = makeYScale(domain, 100, rs.yAxis.reverse);
-  const overlayCtx = (i: number, y: YScale, width: number) => ({ spec: rs.overlays[i]!, y, theme, width, warn });
+  // Overlays give depths (zone boundaries); on an age axis they sit at the interpolated age.
+  const pairs = ageDepthPairs(axisDs);
+  const toAxis = (depth: number) => (primary === "depth" ? depth : ageAtDepth(pairs, depth));
+  const overlayCtx = (i: number, y: YScale, width: number) => ({ spec: rs.overlays[i]!, y, theme, width, toAxis, warn });
   const extraRight = rs.overlays.reduce(
     (m, o, i) => Math.max(m, overlays.get(o.type).measure(overlayCtx(i, provisionalY, 0)).width),
     0,
@@ -335,8 +362,8 @@ export function render(datasets: readonly Dataset[], spec: Spec, presets: readon
       },
       columns: panels.get(p.type).columnLayout?.(ctxFor(i, layout.fit, y, labelStyle)) ?? [],
     })),
-    y: { domain, reverse: rs.yAxis.reverse },
-    depths: [...new Set(plottedDatasets(rs, data, byId).flatMap((d) => d.samples.map((s) => s.depth)))].sort((a, b) => a - b),
+    y: { domain, reverse: rs.yAxis.reverse, primary },
+    depths: [...new Set(plotted.flatMap((d) => d.samples.map((s) => s.depth)))].sort((a, b) => a - b),
   };
 
   return { svg, warnings: [...warnings], info: [...title.info, ...layout.info], layout: meta };

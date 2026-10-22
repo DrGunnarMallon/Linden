@@ -143,7 +143,7 @@ const SPEC_HINTS: Record<string, FormHint> = {
   // Curve style (one cascade level); groupStyles and curveStyles reuse these hints.
   "panels[].style.curve": {
     label: "Curve style",
-    order: ["type", "filled", "fill", "outline", "shape", "line", "interpolation", "points", "barWidth", "align", "presence", "exaggeration", "baseline", "plus", "valueLabels", "nulls"],
+    order: ["type", "filled", "fill", "outline", "shape", "line", "interpolation", "points", "barWidth", "align", "presence", "error", "exaggeration", "baseline", "plus", "valueLabels", "nulls", "axis"],
   },
   "panels[].style.curve.type": {
     optionLabels: { polygon: "Polygon", line: "Line", linePoints: "Line + points", points: "Points", bars: "Bars", presence: "Presence", none: "None (hidden)" },
@@ -180,6 +180,24 @@ const SPEC_HINTS: Record<string, FormHint> = {
   "panels[].style.curve.valueLabels.show": { optionLabels: { off: "Off", all: "All values", aboveThreshold: "Above threshold" } },
   "panels[].style.curve.valueLabels.format": { help: "{value} is replaced by the number, e.g. \"{value}%\"." },
   "panels[].style.curve.nulls": { label: "Missing values", advanced: true, optionLabels: { gap: "Gap", connect: "Connect" } },
+  "panels[].style.curve.error": { help: "Error from companion columns (Data tab: \"Use as error for…\"): lower / upper bounds, or ± SE / SD." },
+  "panels[].style.curve.error.show": { label: "Show", optionLabels: { off: "Off", envelope: "Envelope", bars: "Error bars" } },
+  "panels[].style.curve.error.envelope.colour": { help: "CSS colour, \"group\", or \"curve\" = the curve colour.", widget: "exaggerationColour" },
+  "panels[].style.curve.error.bars.colour": { help: "CSS colour, \"group\", or \"curve\" = the curve colour.", widget: "exaggerationColour" },
+  "panels[].style.curve.error.bars.width": lineWidth,
+  "panels[].style.curve.error.bars.cap": { unit: "mm", step: 0.1, label: "Cap width", help: "Width of the end ticks; 0 = none." },
+  "panels[].style.curve.axis": {
+    label: "x axis",
+    order: ["title", "min", "max", "reverse", "scale", "step", "width"],
+    help: "Range, reverse, log, step and width apply to columns without a common scale.",
+  },
+  "panels[].style.curve.axis.title": { nullLabel: "Default", help: "x-axis title under this column, e.g. \"WTD (cm)\"; empty = none." },
+  "panels[].style.curve.axis.min": { nullLabel: "Auto" },
+  "panels[].style.curve.axis.max": { nullLabel: "Auto" },
+  "panels[].style.curve.axis.reverse": { label: "Reversed", help: "Values increase to the left (e.g. water-table depth)." },
+  "panels[].style.curve.axis.scale": { optionLabels: { linear: "Linear", log: "Logarithmic" } },
+  "panels[].style.curve.axis.step": { label: "Tick interval", nullLabel: "Panel default" },
+  "panels[].style.curve.axis.width": { ...mm, label: "Column width", nullLabel: "Panel column width" },
   groupStyles: { label: "Group curve styles", advanced: true, help: "Group id → curve style, between the panel and the variable styles." },
   curveStyles: { label: "Variable curve styles", advanced: true, help: "Variable id → curve style; wins over panel and group styles." },
   styleLibrary: { label: "Saved curve styles", advanced: true, itemLabel: "style", itemTitle: ["name"], help: "Named curve styles, applied from the curve menu or the Curve tab." },
@@ -199,9 +217,11 @@ export const CURVE_FORM_SECTIONS: FormSection[] = [
   { id: "line", title: "Line", fields: ["line", "interpolation"] },
   { id: "points", title: "Points", fields: ["points"] },
   { id: "bars", title: "Bars", fields: ["barWidth", "align"] },
+  { id: "error", title: "Error", fields: ["error"] },
   { id: "exaggeration", title: "Exaggeration", fields: ["exaggeration"] },
   { id: "markers", title: "Markers & labels", fields: ["presence", "plus", "valueLabels", "baseline"] },
   { id: "nulls", title: "Missing values", fields: ["nulls"] },
+  { id: "axis", title: "Axis & scale", fields: ["axis"] },
 ];
 
 /** Hints for the spec form; overrides reuse the panel style hints, group and variable curve styles the panel curve hints. */

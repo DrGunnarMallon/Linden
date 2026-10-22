@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="180mm" height="140mm" viewBox="0 0 180 140">
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: 3e09c130f3c543d2da06a2f3e65b14abf74da708bb474e9e3e46099d3a920fdd</metadata>
+  <rect id="background" x="0" y="0" width="180" height="140" fill="#ffffff"/>
+  <g fill="#000000" font-family="Arial" font-size="2.47">
+    <g id="title">
+      <text class="title" x="5" y="7.65" font-size="3.53">Testate amoebae on the age axis</text>
+      <text class="subtitle" x="5" y="11.49" font-size="2.82">Synthetic data; ages from an invented age–depth model</text>
+    </g>
+    <g id="panel-0-yAxis" transform="translate(5,42.1)">
+      <g class="axis-primary" transform="translate(0,0)">
+        <text x="1.98" y="43.17" transform="rotate(-90,1.98,43.17)" text-anchor="middle">Age (cal BP)</text>
+        <line x1="9.74" y1="0" x2="9.74" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="9.05" x2="9.74" y2="9.05" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="20.36" x2="9.74" y2="20.36" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="31.67" x2="9.74" y2="31.67" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="42.98" x2="9.74" y2="42.98" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="54.3" x2="9.74" y2="54.3" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="65.61" x2="9.74" y2="65.61" stroke="#000000" stroke-width="0.15"/>
+        <line x1="9.14" y1="76.92" x2="9.74" y2="76.92" stroke="#000000" stroke-width="0.15"/>
+        <line x1="8.74" y1="3.39" x2="9.74" y2="3.39" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="4.13" font-size="2.1" text-anchor="end">0</text>
+        <line x1="8.74" y1="14.71" x2="9.74" y2="14.71" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="15.44" font-size="2.1" text-anchor="end">200</text>
+        <line x1="8.74" y1="26.02" x2="9.74" y2="26.02" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="26.75" font-size="2.1" text-anchor="end">400</text>
+        <line x1="8.74" y1="37.33" x2="9.74" y2="37.33" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="38.06" font-size="2.1" text-anchor="end">600</text>
+        <line x1="8.74" y1="48.64" x2="9.74" y2="48.64" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="49.37" font-size="2.1" text-anchor="end">800</text>
+        <line x1="8.74" y1="59.95" x2="9.74" y2="59.95" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="60.69" font-size="2.1" text-anchor="end">1000</text>
+        <line x1="8.74" y1="71.26" x2="9.74" y2="71.26" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="72" font-size="2.1" text-anchor="end">1200</text>
+        <line x1="8.74" y1="82.58" x2="9.74" y2="82.58" stroke="#000000" stroke-width="0.15"/>
+        <text x="8.14" y="83.31" font-size="2.1" text-anchor="end">1400</text>
+      </g>
+      <g class="axis-secondary" transform="translate(11.74,0)">
+        <text x="1.98" y="43.17" transform="rotate(-90,1.98,43.17)" text-anchor="middle">Depth (cm)</text>
+        <line x1="7.4" y1="0" x2="7.4" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <line x1="6.4" y1="0" x2="7.4" y2="0" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="0.73" font-size="2.1" text-anchor="end">0</text>
+        <line x1="6.4" y1="8.42" x2="7.4" y2="8.42" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="9.15" font-size="2.1" text-anchor="end">10</text>
+        <line x1="6.4" y1="17.65" x2="7.4" y2="17.65" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="18.38" font-size="2.1" text-anchor="end">20</text>
+        <line x1="6.4" y1="27.87" x2="7.4" y2="27.87" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="28.61" font-size="2.1" text-anchor="end">30</text>
+        <line x1="6.4" y1="38.91" x2="7.4" y2="38.91" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="39.65" font-size="2.1" text-anchor="end">40</text>
+        <line x1="6.4" y1="50.95" x2="7.4" y2="50.95" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="51.68" font-size="2.1" text-anchor="end">50</text>
+        <line x1="6.4" y1="63.8" x2="7.4" y2="63.8" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="64.53" font-size="2.1" text-anchor="end">60</text>
+        <line x1="6.4" y1="77.64" x2="7.4" y2="77.64" stroke="#000000" stroke-width="0.15"/>
+        <text x="5.8" y="78.38" font-size="2.1" text-anchor="end">70</text>
+      </g>
+    </g>
+    <g id="panel-1-taxonCurves" transform="translate(26.14,42.1)">
+      <g id="panel-1-taxonCurves-Trigonopyxis_arcula_type" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="6.28" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="4.53" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="4.59" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="4.05" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="1.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="0.94" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,25.75L2.04,25.75M1.44,25.15L1.44,26.35M0.84,30L2.04,30M1.44,29.4L1.44,30.6" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="6.28" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.89" y="-0.57" transform="rotate(-60,3.89,-0.57)"><tspan font-style="italic">Trigonopyxis arcula</tspan> type</text>
+      </g>
+      <g id="panel-1-taxonCurves-Trinema_lineare" class="column" transform="translate(7.28,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="2.66" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="2.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="2.17" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="1.43" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="1.43" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="1.65" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="1.19" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="0.72" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="0.72" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,38.91L2.04,38.91M1.44,38.31L1.44,39.51M0.84,43.62L2.04,43.62M1.44,43.02L1.44,44.22" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.75" y="-0.57" transform="rotate(-60,2.75,-0.57)"><tspan font-style="italic">Trinema lineare</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Corythion_dubium" class="column" transform="translate(12.28,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="4.59" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="4.29" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="4.35" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="3.57" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="4.76" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="4.23" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="2.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="2.16" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="0.96" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,38.91L2.04,38.91M1.44,38.31L1.44,39.51" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4.76" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.13" y="-0.57" transform="rotate(-60,3.13,-0.57)"><tspan font-style="italic">Corythion dubium</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Assulina_muscorum" class="column" transform="translate(18.04,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="8.93" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="9.77" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="10.62" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="10" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="6.43" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="6.11" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="7.15" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="5.99" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="3.6" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="2.4" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="2.4" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="0.95" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,53.44L2.04,53.44M1.44,52.84L1.44,54.04M0.84,58.55L2.04,58.55M1.44,57.95L1.44,59.15" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="10.62" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="7.15" y1="86.33" x2="7.15" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.15" y="89.51" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="6.06" y="-0.57" transform="rotate(-60,6.06,-0.57)"><tspan font-style="italic">Assulina muscorum</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Bullinularia_indica" class="column" transform="translate(29.66,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="1.21" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="1.67" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="1.69" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="1.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="2.62" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="1.88" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="1.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="1.92" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="0.72" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,38.91L2.04,38.91M1.44,38.31L1.44,39.51M0.84,43.62L2.04,43.62M1.44,43.02L1.44,44.22" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.75" y="-0.57" transform="rotate(-60,2.75,-0.57)"><tspan font-style="italic">Bullinularia indica</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Assulina_seminulum" class="column" transform="translate(34.66,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="3.14" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="2.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="4.35" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="4.05" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="5.72" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="5.41" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="4.05" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="5.04" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="2.64" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="2.4" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="1.2" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="0.95" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,58.55L2.04,58.55M1.44,57.95L1.44,59.15" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="5.72" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.61" y="-0.57" transform="rotate(-60,3.61,-0.57)"><tspan font-style="italic">Assulina seminulum</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Cyclopyxis_arcelloides_type" class="column" transform="translate(41.38,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="3.38" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="3.1" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="1.93" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="3.33" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="3.81" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="2.35" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="3.57" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="3.12" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="3.84" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="4.08" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="3.36" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="2.14" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="1.89" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="0.95" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,69.23L2.04,69.23M1.44,68.63L1.44,69.83M0.84,74.79L2.04,74.79M1.44,74.19L1.44,75.39M0.84,80.49L2.04,80.49M1.44,79.89L1.44,81.09M0.84,86.33L2.04,86.33M1.44,85.73L1.44,86.93" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4.08" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.79" y="-0.57" transform="rotate(-60,2.79,-0.57)"><tspan font-style="italic">Cyclopyxis arcelloides</tspan> type</text>
+      </g>
+      <g id="panel-1-taxonCurves-Euglypha_tuberculata_type" class="column" transform="translate(46.45,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="2.9" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="3.81" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="2.9" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="3.81" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="3.33" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="4.23" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="5.95" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="4.8" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="5.04" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="6.23" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="4.08" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="4.29" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="3.31" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="3.33" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="2.35" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="1.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="1.44" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="1.21" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="1.43" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="0.95" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="6.23" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.87" y="-0.57" transform="rotate(-60,3.87,-0.57)"><tspan font-style="italic">Euglypha tuberculata</tspan> type</text>
+      </g>
+      <g id="panel-1-taxonCurves-Nebela_tincta_type" class="column" transform="translate(53.69,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="2.66" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="2.96" width="2.62" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="2.9" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="2.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="4.76" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="7.29" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="5.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="6.47" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="9.83" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="8.39" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="9.59" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="6.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="5.68" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="4.76" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="3.06" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="1.67" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="0.96" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="1.21" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="9.83" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="7.15" y1="86.33" x2="7.15" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.15" y="89.51" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="5.66" y="-0.57" transform="rotate(-60,5.66,-0.57)"><tspan font-style="italic">Nebela tincta</tspan> type</text>
+      </g>
+      <g id="panel-1-taxonCurves-Difflugia_pulex" class="column" transform="translate(64.52,0)">
+        <g class="curve">
+          <rect x="0" y="9.88" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="0.47" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="1.44" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="1.44" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="2.16" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="1.92" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="3.1" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="2.13" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="2.38" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="1.65" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="1.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="1.44" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="0.97" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,10.18L2.04,10.18M1.44,9.58L1.44,10.78M0.84,13.85L2.04,13.85M1.44,13.25L1.44,14.45" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="2.75" y="-0.57" transform="rotate(-60,2.75,-0.57)"><tspan font-style="italic">Difflugia pulex</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Arcella_discoides_type" class="column" transform="translate(69.52,0)">
+        <g class="curve">
+          <rect x="0" y="2.96" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.35" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="9.88" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="13.55" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="17.35" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="1.43" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="2.4" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="3.12" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="2.64" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="2.88" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="4.53" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="4.97" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="4.76" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="4.94" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="4.29" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="2.4" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="3.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="2.38" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="2.14" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,3.26L2.04,3.26M1.44,2.66L1.44,3.86M0.84,6.65L2.04,6.65M1.44,6.05L1.44,7.25" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4.97" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.23" y="-0.57" transform="rotate(-60,3.23,-0.57)"><tspan font-style="italic">Arcella discoides</tspan> type</text>
+      </g>
+      <g id="panel-1-taxonCurves-Heleopera_sphagni" class="column" transform="translate(75.49,0)">
+        <g class="curve">
+          <rect x="0" y="17.35" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="1.2" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="1.44" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="2.88" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="3.57" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="4.73" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="4.29" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="3.06" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="2.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="3.84" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="3.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="2.86" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="2.38" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,17.65L2.04,17.65M1.44,17.05L1.44,18.25M0.84,21.63L2.04,21.63M1.44,21.03L1.44,22.23" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="4.73" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.11" y="-0.57" transform="rotate(-60,3.11,-0.57)"><tspan font-style="italic">Heleopera sphagni</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Hyalosphenia_papilio" class="column" transform="translate(81.22,0)">
+        <g class="curve">
+          <rect x="0" y="17.35" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="21.33" width="0.48" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.45" width="0.72" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="2.16" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="3.84" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="4.8" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="6.19" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="7.1" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="6.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="10.11" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="11.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="9.83" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="9.17" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="7.62" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="8.81" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,17.65L2.04,17.65M1.44,17.05L1.44,18.25" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="11.91" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="7.15" y1="86.33" x2="7.15" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.15" y="89.51" font-size="2.1" text-anchor="middle">20</text>
+        </g>
+        <text class="label" x="6.7" y="-0.57" transform="rotate(-60,6.7,-0.57)"><tspan font-style="italic">Hyalosphenia papilio</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Archerella_flava" class="column" transform="translate(94.13,0)">
+        <g class="curve">
+          <rect x="0" y="25.45" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="29.7" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="34.09" width="0.72" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.61" width="1.92" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="43.32" width="2.38" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="4.26" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="6.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="8.46" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="8.81" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="13.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="12.55" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="16.2" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="14.29" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,25.75L2.04,25.75M1.44,25.15L1.44,26.35M0.84,30L2.04,30M1.44,29.4L1.44,30.6" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="16.2" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+          <line x1="7.15" y1="86.33" x2="7.15" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.15" y="89.51" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="14.29" y1="86.33" x2="14.29" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="14.29" y="89.51" font-size="2.1" text-anchor="middle">40</text>
+        </g>
+        <text class="label" x="8.85" y="-0.57" transform="rotate(-60,8.85,-0.57)"><tspan font-style="italic">Archerella flava</tspan></text>
+      </g>
+      <g id="panel-1-taxonCurves-Amphitrema_wrightianum" class="column" transform="translate(111.32,0)">
+        <g class="curve">
+          <rect x="0" y="43.32" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="48.16" width="0.24" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="53.14" width="0.71" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="58.25" width="0.94" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="63.5" width="1.91" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="68.93" width="1.68" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="74.49" width="2.66" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="80.19" width="3.57" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="86.03" width="5.95" height="0.6" fill="#7d5a3c" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <path class="plus" d="M0.84,43.62L2.04,43.62M1.44,43.02L1.44,44.22M0.84,48.46L2.04,48.46M1.44,47.86L1.44,49.06" fill="none" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="5.95" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="3.73" y="-0.57" transform="rotate(-60,3.73,-0.57)"><tspan font-style="italic">Amphitrema wrightianum</tspan></text>
+      </g>
+      <g class="x-title">
+        <text x="58.64" y="92.28" text-anchor="middle">% of total tests</text>
+      </g>
+    </g>
+    <g id="panel-2-taxonCurves" transform="translate(145.42,42.1)">
+      <g id="panel-2-taxonCurves-WTD" class="column" transform="translate(0,0)">
+        <g class="error">
+          <path d="M1.1,0L1.31,3.26L1.67,6.65L2.2,10.18L2.94,13.85L3.8,17.65L4.7,21.63L5.55,25.75L6.25,30L6.7,34.39L6.9,38.91L7.02,43.62L7.15,48.46L7.35,53.44L7.72,58.55L8.25,63.8L8.94,69.23L9.64,74.79L10.21,80.49L10.57,86.33L12.7,86.33L12.41,80.49L11.92,74.79L11.31,69.23L10.7,63.8L10.25,58.55L9.96,53.44L9.76,48.46L9.72,43.62L9.6,38.91L9.39,34.39L9.02,30L8.41,25.75L7.72,21.63L6.9,17.65L6.21,13.85L5.55,10.18L5.1,6.65L4.82,3.26L4.61,0Z" fill="#808080" fill-opacity="0.25"/>
+        </g>
+        <g class="curve">
+          <path d="M2.86,0L3.06,3.26L3.39,6.65L3.88,10.18L4.57,13.85L5.35,17.65L6.21,21.63L6.98,25.75L7.64,30L8.04,34.39L8.25,38.91L8.37,43.62L8.45,48.46L8.66,53.44L8.98,58.55L9.47,63.8L10.13,69.23L10.78,74.79L11.31,80.49L11.64,86.33" fill="none" stroke="#808080" stroke-width="0.1"/>
+          <g class="points">
+            <circle cx="2.86" cy="0" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="3.06" cy="3.26" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="3.39" cy="6.65" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="3.88" cy="10.18" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="4.57" cy="13.85" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="5.35" cy="17.65" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="6.21" cy="21.63" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="6.98" cy="25.75" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="7.64" cy="30" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.04" cy="34.39" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.25" cy="38.91" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.37" cy="43.62" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.45" cy="48.46" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.66" cy="53.44" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.98" cy="58.55" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="9.47" cy="63.8" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.13" cy="69.23" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.78" cy="74.79" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="11.31" cy="80.49" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="11.64" cy="86.33" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+          </g>
+        </g>
+        <line x1="12.25" y1="0" x2="12.25" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="14.29" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="start">30</text>
+          <line x1="4.08" y1="86.33" x2="4.08" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="4.08" y="89.51" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="8.17" y1="86.33" x2="8.17" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="8.17" y="89.51" font-size="2.1" text-anchor="middle">10</text>
+          <line x1="12.25" y1="86.33" x2="12.25" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="12.25" y="89.51" font-size="2.1" text-anchor="middle">0</text>
+        </g>
+        <text class="label" x="7.89" y="-0.57" transform="rotate(-60,7.89,-0.57)">Inferred WTD (synthetic)</text>
+      </g>
+      <g id="panel-2-taxonCurves-LOI" class="column" transform="translate(15.29,0)">
+        <g class="curve">
+          <path d="M10.72,0L10.57,3.26L10.29,6.65L9.72,10.18L9.15,13.85L8.43,17.65L7.72,21.63L7,25.75L6,30L4.29,34.39L2,38.91L1,43.62L2.72,48.46L5.72,53.44L7.86,58.55L9.15,63.8L9.86,69.23L10.29,74.79L10.57,80.49L10.72,86.33" fill="none" stroke="#808080" stroke-width="0.1"/>
+          <g class="points">
+            <circle cx="10.72" cy="0" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.57" cy="3.26" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.29" cy="6.65" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="9.72" cy="10.18" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="9.15" cy="13.85" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="8.43" cy="17.65" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="7.72" cy="21.63" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="7" cy="25.75" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="6" cy="30" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="4.29" cy="34.39" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="2" cy="38.91" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="1" cy="43.62" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="2.72" cy="48.46" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="5.72" cy="53.44" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="7.86" cy="58.55" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="9.15" cy="63.8" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="9.86" cy="69.23" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.29" cy="74.79" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.57" cy="80.49" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+            <circle cx="10.72" cy="86.33" r="0.5" fill="#808080" stroke="#808080" stroke-width="0.1"/>
+          </g>
+        </g>
+        <g class="x-axis">
+          <line x1="0" y1="86.33" x2="14.29" y2="86.33" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="86.33" x2="0" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="89.51" font-size="2.1" text-anchor="start">90</text>
+          <line x1="7.15" y1="86.33" x2="7.15" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.15" y="89.51" font-size="2.1" text-anchor="middle">95</text>
+          <line x1="14.29" y1="86.33" x2="14.29" y2="87.33" stroke="#000000" stroke-width="0.15"/>
+          <text x="14.29" y="89.51" font-size="2.1" text-anchor="end">100</text>
+        </g>
+        <text class="label" x="7.89" y="-0.57" transform="rotate(-60,7.89,-0.57)">LOI (synthetic)</text>
+      </g>
+      <g class="x-title">
+        <text x="7.15" y="92.28" text-anchor="middle">WTD (cm)</text>
+        <text x="22.44" y="92.28" text-anchor="middle">LOI (%)</text>
+      </g>
+    </g>
+  </g>
+</svg>

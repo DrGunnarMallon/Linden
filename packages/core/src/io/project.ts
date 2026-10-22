@@ -29,6 +29,7 @@ const VariableSchema = z.strictObject({
   meta: z.record(z.string(), z.unknown()).optional(),
   codes: z.array(z.string()).optional(),
   scaleLabels: z.array(z.strictObject({ value: z.number(), label: z.string() })).optional(),
+  companion: z.strictObject({ errorOf: z.string(), role: z.enum(["lower", "upper", "se", "sd"]) }).optional(),
 });
 
 const DatasetSchema = z
@@ -37,6 +38,7 @@ const DatasetSchema = z
     name: z.string(),
     depthUnit: z.enum(["cm", "m", "mm"]),
     ageUnit: z.enum(["cal BP", "BP", "CE/BCE", "b2k"]).optional(),
+    ageSource: z.string().optional(),
     samples: z.array(
       z.strictObject({
         id: z.string(),

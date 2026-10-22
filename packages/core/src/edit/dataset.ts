@@ -3,7 +3,7 @@
 // (or is refused) returns the input dataset itself, so callers can skip work by reference equality.
 // 0 and null stay distinct throughout: null = not assessed.
 
-import type { Dataset, MeasurementKind, Sample, Variable } from "../model/types.js";
+import type { Companion, Dataset, MeasurementKind, Sample, Variable } from "../model/types.js";
 import { sampleId as newSampleId, variableId as newVariableId } from "./ids.js";
 
 export interface EditResult {
@@ -216,14 +216,45 @@ export function addVariable(ds: Dataset, spec: NewVariable, at = ds.variables.le
   return { dataset: { ...ds, variables, values, groups }, warnings: [], id };
 }
 
-/** Removes a variable and its column. Spec references to it are not touched: see danglingReferences / cleanupSpec. */
+/**
+ * Removes a variable and its column. Spec references to it are not touched: see danglingReferences /
+ * cleanupSpec. Its error columns (companions) become ordinary columns again.
+ */
 export function deleteVariable(ds: Dataset, id: string): EditResult {
   const i = varIndex(ds, id);
   if (i === -1) return same(ds, `Unknown variable "${id}".`);
-  return {
-    dataset: { ...ds, variables: ds.variables.filter((_, k) => k !== i), values: ds.values.map((row) => row.filter((_, k) => k !== i)) },
-    warnings: [],
-  };
+  const freed = ds.variables.filter((v) => v.companion?.errorOf === id);
+  const variables = ds.variables
+    .filter((_, k) => k !== i)
+    .map((v) => {
+      if (v.companion?.errorOf !== id) return v;
+      const { companion: _c, ...rest } = v;
+      return rest;
+    });
+  const warnings = freed.length > 0 ? [`${freed.map((v) => `"${v.name}"`).join(", ")} ${freed.length > 1 ? "were error columns" : "was an error column"} of "${ds.variables[i]!.name}" and ${freed.length > 1 ? "are" : "is"} now drawn as ${freed.length > 1 ? "curves" : "a curve"}.`] : [];
+  return { dataset: { ...ds, variables, values: ds.values.map((row) => row.filter((_, k) => k !== i)) }, warnings };
+}
+
+/**
+ * Declares a column an error of another variable (`companion`: lower / upper bound, ± SE or ± SD), or
+ * an ordinary column again (undefined). Error columns are drawn with their variable, never as curves.
+ * Refused: an unknown target, the column itself, a target that is an error column, a column that
+ * other columns are errors of.
+ */
+export function setCompanion(ds: Dataset, id: string, companion: Companion | undefined): EditResult {
+  if (companion) {
+    const target = ds.variables.find((v) => v.id === companion.errorOf);
+    if (!target) return same(ds, `Unknown variable "${companion.errorOf}".`);
+    if (target.id === id) return same(ds, "A column cannot be an error of itself.");
+    if (target.companion) return same(ds, `"${target.name}" is itself an error column.`);
+    if (ds.variables.some((v) => v.companion?.errorOf === id)) return same(ds, "Other columns are errors of this one; release them first.");
+  }
+  return updateVariable(ds, id, (v) => {
+    if (v.companion?.errorOf === companion?.errorOf && v.companion?.role === companion?.role) return v;
+    if (companion) return { ...v, companion: { ...companion } };
+    const { companion: _c, ...rest } = v;
+    return rest;
+  });
 }
 
 /** Moves a variable (and its column) to position `toIndex` (clamped). */

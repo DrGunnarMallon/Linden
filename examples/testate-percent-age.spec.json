@@ -1,0 +1,17 @@
+{
+  "specVersion": 10,
+  "preset": "testate-percent",
+  "title": { "text": "Testate amoebae on the age axis", "subtitle": "Synthetic data; ages from an invented age–depth model" },
+  "page": { "width": 180, "height": 140, "units": "mm", "font": { "family": "Arial", "size": 7 } },
+  "yAxis": { "primary": "age", "secondary": "depth", "reverse": true, "ticks": { "major": 200, "minor": 100 } },
+  "datasets": [{ "dataset": "testate-percent" }],
+  "panels": [
+    { "type": "yAxis" },
+    { "type": "taxonCurves", "dataset": "testate-percent", "variables": { "kinds": ["percent"], "order": "weightedAverageDepth" } },
+    { "type": "taxonCurves", "dataset": "testate-percent", "variables": { "kinds": ["continuous"] }, "style": { "commonScale": false, "columnWidth": 16 } }
+  ],
+  "curveStyles": {
+    "WTD": { "axis": { "reverse": true, "min": -5, "max": 30, "step": 10, "title": "WTD (cm)" }, "error": { "show": "envelope" } },
+    "LOI": { "axis": { "title": "LOI (%)" } }
+  }
+}

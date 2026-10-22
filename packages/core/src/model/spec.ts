@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 9;
+export const SPEC_VERSION = 10;
 export const PRESET_VERSION = 2;
 
 export const MeasurementKindSchema = z.enum([
@@ -213,6 +213,31 @@ const curveShared = {
     threshold: z.number(),
     format: z.string(),
     decimals: z.number().int().min(0).max(6),
+  }),
+  /**
+   * The column's own x axis. Range, reverse, log, step and width apply only to columns without a
+   * common scale (ignored with a warning otherwise); the title applies to every column.
+   */
+  axis: z.strictObject({
+    /** Axis ends in data units; null = automatic (data extent rounded to whole ticks). */
+    min: z.number().nullable(),
+    max: z.number().nullable(),
+    /** Values increase to the left (e.g. water-table depth). */
+    reverse: z.boolean(),
+    scale: z.enum(["linear", "log"]),
+    /** Tick interval in data units; null = panel xTicks. */
+    step: z.number().positive().nullable(),
+    /** Column width in mm before page fitting; null = panel columnWidth. */
+    width: z.number().positive().nullable(),
+    /** x-axis title under this column; null = panel xTitle / from kind and unit; "" = none. */
+    title: z.string().nullable(),
+  }),
+  /** Error of the value from companion columns (variable.companion): a shaded envelope or error bars. */
+  error: z.strictObject({
+    show: z.enum(["off", "envelope", "bars"]),
+    envelope: z.strictObject({ colour: z.string(), opacity: z.number().min(0).max(1) }),
+    /** Whiskers; cap = width of the end ticks in mm (0 = none). */
+    bars: z.strictObject({ colour: z.string(), width: z.number().positive().nullable(), cap: z.number().min(0) }),
   }),
 };
 

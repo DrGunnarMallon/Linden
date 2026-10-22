@@ -75,7 +75,7 @@ describe("layout metadata (render().layout)", () => {
   it("lists the distinct sample depths (ascending) and the y domain", () => {
     const { layout } = render([ds], spec());
     expect(layout.depths).toEqual([10, 20, 30, 40]);
-    expect(layout.y).toEqual({ domain: [10, 40], reverse: true });
+    expect(layout.y).toEqual({ domain: [10, 40], reverse: true, primary: "depth" });
   });
 });
 

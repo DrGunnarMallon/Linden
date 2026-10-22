@@ -63,6 +63,12 @@ describe("hit-testing on the layout metadata", () => {
     expect(hitZone(layout, spec, layout.plot.x - 1, y, 1)).toBeNull();
     expect(depthAtY(layout, y)).toBeCloseTo(25, 9);
   });
+
+  it("zone lines are not dragged on an age axis (boundaries are depths, drawn at interpolated ages)", () => {
+    const { layout, spec } = setup();
+    const aged = { ...layout, y: { ...layout.y, primary: "age" as const } };
+    expect(hitZone(aged, spec, layout.plot.x + 5, yOfDepth(layout, 25), 1)).toBeNull();
+  });
 });
 
 describe("clicks on curves, group headers and panel backgrounds", () => {

@@ -97,7 +97,7 @@ describe("paste into an existing sheet", () => {
 describe("group assignment of a merge source", () => {
   it("writes and removes an assignment", () => {
     const ds = { ...sheet(), variables: [{ id: "a", name: "A", kind: "count" as const, group: "g" }, sheet().variables[1]!] };
-    const spec = assignGroup({ specVersion: 9, panels: [] }, ds, "a", "h");
+    const spec = assignGroup({ specVersion: 10, panels: [] }, ds, "a", "h");
     expect(spec.datasets).toEqual([{ dataset: "d", assignments: { a: "h" } }]);
     expect(assignGroup(spec, ds, "a", "g").datasets).toEqual([{ dataset: "d" }]);
   });

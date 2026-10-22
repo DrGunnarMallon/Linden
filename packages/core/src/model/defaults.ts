@@ -1,6 +1,7 @@
 // Core defaults — the first layer of resolution (core → preset → spec → per-variable override).
 
-import type { CurveStyle, CurveType, Selection, TaxonCurvesStyle, TitleSpec, YAxisSpec } from "./spec.js";
+import type { CurveStyle, CurveStyleOverride, CurveType, Selection, TaxonCurvesStyle, TitleSpec, YAxisSpec } from "./spec.js";
+import type { MeasurementKind } from "./types.js";
 
 export interface ResolvedPage {
   width: number;
@@ -74,6 +75,8 @@ export interface CoreDefaults {
   taxonCurves: ResolvedTaxonCurvesStyle;
   /** Full curve style of each type: the first cascade level (SPEC §4 "Curve styles"). */
   curve: { [T in CurveType]: Extract<CurveStyle, { type: T }> };
+  /** Curve style level of a measurement kind, between the preset and the panel (cascade level "kind"). */
+  kindCurves: Partial<Record<MeasurementKind, CurveStyleOverride>>;
 }
 
 /** Type of a curve whose cascade sets none. */
@@ -90,6 +93,8 @@ const shared = {
   nulls: "gap",
   plus: { show: false, threshold: 0.5, size: 1.2 },
   valueLabels: { show: "off", threshold: 0, format: "{value}", decimals: 1 },
+  axis: { min: null, max: null, reverse: false, scale: "linear", step: null, width: null, title: null },
+  error: { show: "off", envelope: { colour: "curve", opacity: 0.25 }, bars: { colour: "curve", width: null, cap: 1 } },
 } as const;
 
 export const coreDefaults: CoreDefaults = {
@@ -117,5 +122,9 @@ export const coreDefaults: CoreDefaults = {
     bars: { type: "bars", ...shared, barWidth: { mode: "mm", value: 0.6 }, fill, outline, align: "centre" },
     presence: { type: "presence", ...shared, presence: { symbol: "dot", size: 1.2, colour: "group" } },
     none: { type: "none", ...shared },
+  },
+  // Continuous values (LOI, δ13C, inferred WTD) are read as a line through the samples, not as abundances.
+  kindCurves: {
+    continuous: { type: "linePoints", exaggeration: { show: false }, plus: { show: false } },
   },
 };

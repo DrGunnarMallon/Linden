@@ -1,12 +1,14 @@
 // CSV / TSV importer — see SPEC.md §9.
 // Wide format: depth[, age], then one column per variable.
-// Optional header rows directly below the first: "group", "kind", "unit" and/or "id" (variable ids
-// other than the header without markup, written by exportDelimited after a rename).
+// Optional header rows directly below the first: "group", "kind", "unit", "id" (variable ids
+// other than the header without markup, written by exportDelimited after a rename) and/or "error"
+// (error columns: "se of WTD" = this column is the SE of variable WTD; roles lower, upper, se, sd).
+// An age header may carry the unit: "age (cal BP)".
 // Lines starting with "#" before the header are comments (e.g. provenance notes).
 // Ordinal columns (kind abundanceClass / presence) may hold text codes (DAFOR letters, "+"): they
 // are kept as `variable.codes`, values = indices into it, for a scaleMap transform to map.
 
-import type { Dataset, Group, Importer, ImportResult, MeasurementKind, Sample, Variable } from "../model/types.js";
+import type { Dataset, ErrorRole, Group, Importer, ImportResult, MeasurementKind, Sample, Variable } from "../model/types.js";
 
 export type Delimiter = "," | "\t" | ";";
 
@@ -31,6 +33,10 @@ const MEASUREMENT_KINDS: readonly MeasurementKind[] = [
 ];
 
 const DELIMITERS: readonly Delimiter[] = [",", "\t", ";"];
+
+const AGE_UNITS: readonly NonNullable<Dataset["ageUnit"]>[] = ["cal BP", "BP", "CE/BCE", "b2k"];
+/** "se of WTD" in an "error" row. */
+const ERROR_CELL = /^(lower|upper|se|sd) of (.+)$/i;
 
 /** Text without leading "#" comment lines. */
 function skipComments(text: string): string {
@@ -132,12 +138,14 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
   }
   const hasAge = /^age\b/i.test(head[1] ?? "");
   const firstVar = hasAge ? 2 : 1;
+  const ageUnit = hasAge ? AGE_UNITS.find((u) => /\((.*)\)/.exec(head[1]!)?.[1]?.trim().toLowerCase() === u.toLowerCase()) : undefined;
 
-  // Optional "group" / "kind" / "unit" / "id" rows.
+  // Optional "group" / "kind" / "unit" / "id" / "error" rows.
   let idRow: string[] | undefined;
   let groupRow: string[] | undefined;
   let kindRow: string[] | undefined;
   let unitRow: string[] | undefined;
+  let errorRow: string[] | undefined;
   let r = 1;
   for (; r < rows.length; r++) {
     const row = rows[r]!;
@@ -154,6 +162,9 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
     } else if (label === "id") {
       if (idRow) warnings.push(`Row ${row.rowNo}: duplicate "id" row ignored.`);
       else idRow = row.cells;
+    } else if (label === "error") {
+      if (errorRow) warnings.push(`Row ${row.rowNo}: duplicate "error" row ignored.`);
+      else errorRow = row.cells;
     } else break;
   }
 
@@ -188,6 +199,18 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
     const unit = unitRow?.[c] ?? "";
     if (unit !== "") v.unit = unit;
     variables.push(v);
+  }
+
+  // Error columns: "se of WTD" (the target by id or by its header).
+  if (errorRow) {
+    variables.forEach((v, k) => {
+      const cell = errorRow![k + firstVar] ?? "";
+      if (cell === "") return;
+      const m = ERROR_CELL.exec(cell);
+      const target = m && variables.find((x) => x !== v && (x.id === m[2]!.trim() || x.name === m[2]!.trim()));
+      if (!m || !target) warnings.push(`Error row, "${v.id}": "${cell}" is not "<lower|upper|se|sd> of <variable>"; ignored.`);
+      else v.companion = { errorOf: target.id, role: m[1]!.toLowerCase() as ErrorRole };
+    });
   }
 
   // Groups in order of first appearance.
@@ -285,6 +308,7 @@ export function importDelimited(text: string, options: DelimitedImportOptions = 
     id: name,
     name,
     depthUnit: options.depthUnit ?? "cm",
+    ...(ageUnit ? { ageUnit } : {}),
     samples,
     variables,
     groups,
@@ -327,9 +351,9 @@ function csvField(text: string, delimiter: Delimiter): string {
 }
 
 /**
- * The dataset as CSV in the importer's wide format, so it reads back the same: header (depth[, age],
- * variable names with markup), then "id" (only if an id differs from its name without markup),
- * "group" (if any), "kind" and "unit" (if any) rows, then one row per sample. null → empty cell,
+ * The dataset as CSV in the importer's wide format, so it reads back the same: header (depth[, age
+ * with its unit], variable names with markup), then "id" (only if an id differs from its name without
+ * markup), "group" (if any), "kind", "unit" (if any) and "error" (if any) rows, then one row per sample. null → empty cell,
  * 0 → "0"; text codes are written as their codes. Numbers use the shortest exact form.
  */
 export function exportDelimited(ds: Dataset, options: DelimitedExportOptions = {}): string {
@@ -337,11 +361,13 @@ export function exportDelimited(ds: Dataset, options: DelimitedExportOptions = {
   const hasAge = ds.samples.some((s) => s.age !== undefined);
   const lead = hasAge ? 2 : 1;
   const row = (label: string, cells: readonly string[]) => [label, ...Array<string>(lead - 1).fill(""), ...cells];
-  const lines: string[][] = [["depth", ...(hasAge ? ["age"] : []), ...ds.variables.map((v) => v.name)]];
+  const age = ds.ageUnit ? `age (${ds.ageUnit})` : "age";
+  const lines: string[][] = [["depth", ...(hasAge ? [age] : []), ...ds.variables.map((v) => v.name)]];
   if (ds.variables.some((v) => v.id !== stripMarkup(v.name))) lines.push(row("id", ds.variables.map((v) => v.id)));
   if (ds.variables.some((v) => v.group !== undefined)) lines.push(row("group", ds.variables.map((v) => v.group ?? "")));
   lines.push(row("kind", ds.variables.map((v) => v.kind)));
   if (ds.variables.some((v) => v.unit !== undefined)) lines.push(row("unit", ds.variables.map((v) => v.unit ?? "")));
+  if (ds.variables.some((v) => v.companion)) lines.push(row("error", ds.variables.map((v) => (v.companion ? `${v.companion.role} of ${v.companion.errorOf}` : ""))));
   ds.samples.forEach((s, i) => {
     const cells = ds.variables.map((v, j) => {
       const x = ds.values[i]?.[j] ?? null;

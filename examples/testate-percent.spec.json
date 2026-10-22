@@ -1,11 +1,16 @@
 {
-  "specVersion": 8,
+  "specVersion": 10,
   "preset": "testate-percent",
   "page": { "width": 180, "height": 130, "units": "mm", "font": { "family": "Arial", "size": 7 } },
   "yAxis": { "primary": "depth", "reverse": true, "ticks": { "major": 10, "minor": 5 } },
   "datasets": [{ "dataset": "testate-percent" }],
   "panels": [
     { "type": "yAxis" },
-    { "type": "taxonCurves", "dataset": "testate-percent", "variables": { "order": "weightedAverageDepth" } }
-  ]
+    { "type": "taxonCurves", "dataset": "testate-percent", "variables": { "kinds": ["percent"], "order": "weightedAverageDepth" } },
+    { "type": "taxonCurves", "dataset": "testate-percent", "variables": { "kinds": ["continuous"] }, "style": { "commonScale": false, "columnWidth": 16 } }
+  ],
+  "curveStyles": {
+    "WTD": { "axis": { "reverse": true, "min": -5, "max": 30, "step": 10, "title": "WTD (cm)" }, "error": { "show": "envelope" } },
+    "LOI": { "axis": { "title": "LOI (%)" } }
+  }
 }

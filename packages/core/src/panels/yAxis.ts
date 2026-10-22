@@ -1,7 +1,9 @@
-// yAxis panel — SPEC.md §7.1. Depth axis with major/minor ticks and title; optional secondary
-// age axis whose ticks are placed by interpolating sample depth–age pairs (never by re-scaling).
+// yAxis panel — SPEC.md §7.1. The primary axis (depth, or age: samples placed by their age) with
+// major/minor ticks and title; an optional secondary axis (age, or depth) whose ticks are placed by
+// interpolating the samples' depth–age pairs (never by re-scaling, never extrapolated).
 // Titles (yAxis.titles, default from the dataset units) are rotated 90°, left of the tick labels.
 
+import { ageDepthPairs, ageInversionAt, type AxisKind } from "../layout/ageDepth.js";
 import { interpolate, formatNumber, niceStep, ticksAt } from "../layout/scales.js";
 import { estimateTextWidth, familyAttr } from "../layout/theme.js";
 import type { SvgGroup } from "../render/svg.js";
@@ -9,8 +11,8 @@ import { rotate, translate } from "../render/svg.js";
 import type { Panel, PanelContext } from "./types.js";
 
 interface Tick {
-  /** Position in depth units. */
-  depth: number;
+  /** Position in primary-axis units. */
+  pos: number;
   label?: string;
 }
 
@@ -18,66 +20,66 @@ interface Axis {
   title: string;
   major: Tick[];
   minor: Tick[];
-  /** Depth range covered by the axis line. */
+  /** Range covered by the axis line, in primary-axis units. */
   from: number;
   to: number;
 }
 
-function depthAxis(ctx: PanelContext): Axis {
+/** Axis title: yAxis.titles, else from the dataset's units ("Depth (cm)", "Age (cal BP)", "Age"). */
+function titleOf(ctx: PanelContext, kind: AxisKind): string {
+  const ds = ctx.data?.dataset;
+  if (kind === "depth") return ctx.yAxis.titles.depth ?? `Depth (${ds?.depthUnit ?? "cm"})`;
+  return ctx.yAxis.titles.age ?? (ds?.ageUnit ? `Age (${ds.ageUnit})` : "Age");
+}
+
+function primaryAxis(ctx: PanelContext): Axis {
   const [d0, d1] = ctx.y.domain;
   const major = ctx.yAxis.ticks?.major ?? niceStep(d1 - d0, 6);
   const minor = ctx.yAxis.ticks?.minor;
   const majors = ticksAt(d0, d1, major);
-  const unit = ctx.data?.dataset.depthUnit ?? "cm";
   return {
-    title: ctx.yAxis.titles.depth ?? `Depth (${unit})`,
-    major: majors.map((d) => ({ depth: d, label: formatNumber(d) })),
-    minor: minor ? ticksAt(d0, d1, minor).filter((d) => !majors.includes(d)).map((d) => ({ depth: d })) : [],
+    title: titleOf(ctx, ctx.yAxis.primary),
+    major: majors.map((d) => ({ pos: d, label: formatNumber(d) })),
+    minor: minor ? ticksAt(d0, d1, minor).filter((d) => !majors.includes(d)).map((d) => ({ pos: d })) : [],
     from: d0,
     to: d1,
   };
 }
 
-function ageAxis(ctx: PanelContext): Axis | undefined {
-  const ds = ctx.data?.dataset;
-  const pairs = (ds?.samples ?? [])
-    .filter((s) => s.age !== undefined)
-    .map((s) => ({ depth: s.depth, age: s.age! }))
-    .sort((a, b) => a.depth - b.depth);
-  if (pairs.length < 2) {
-    ctx.warn("Secondary age axis requested but fewer than two samples have ages; age axis omitted.");
+/** The other axis (age on a depth axis, depth on an age axis), interpolated between depth–age pairs. */
+function secondaryAxis(ctx: PanelContext, kind: AxisKind): Axis | undefined {
+  const pairs = ageDepthPairs(ctx.data?.dataset);
+  if (pairs.depths.length < 2) {
+    ctx.warn(`Secondary ${kind} axis requested but fewer than two samples have ages; ${kind} axis omitted.`);
     return undefined;
   }
-  const depths = pairs.map((p) => p.depth);
-  const ages = pairs.map((p) => p.age);
-  if (ages.some((a, i) => i > 0 && a < ages[i - 1]!)) {
-    ctx.warn("Ages do not increase with depth; age axis omitted.");
+  if (ageInversionAt(pairs) !== undefined) {
+    ctx.warn(`Ages do not increase with depth; ${kind} axis omitted.`);
     return undefined;
   }
-
+  // p = primary-axis values, s = secondary-axis values; both ascending.
+  const [ps, ss] = kind === "age" ? [pairs.depths, pairs.ages] : [pairs.ages, pairs.depths];
   const [d0, d1] = ctx.y.domain;
-  const from = Math.max(d0, depths[0]!);
-  const to = Math.min(d1, depths[depths.length - 1]!);
+  const from = Math.max(d0, ps[0]!);
+  const to = Math.min(d1, ps[ps.length - 1]!);
   if (from >= to) return undefined;
-  const a0 = interpolate(depths, ages, from)!;
-  const a1 = interpolate(depths, ages, to)!;
+  const s0 = interpolate(ps, ss, from)!;
+  const s1 = interpolate(ps, ss, to)!;
   const major: Tick[] = [];
-  for (const age of ticksAt(a0, a1, niceStep(a1 - a0, 6))) {
-    const depth = interpolate(ages, depths, age);
-    if (depth !== undefined) major.push({ depth, label: formatNumber(age) });
+  for (const v of ticksAt(s0, s1, niceStep(s1 - s0, 6))) {
+    const pos = interpolate(ss, ps, v);
+    if (pos !== undefined) major.push({ pos, label: formatNumber(v) });
   }
-  const unit = ds?.ageUnit;
-  return { title: ctx.yAxis.titles.age ?? (unit ? `Age (${unit})` : "Age"), major, minor: [], from, to };
+  return { title: titleOf(ctx, kind), major, minor: [], from, to };
 }
 
 function axes(ctx: PanelContext): Axis[] {
-  if (ctx.yAxis.primary !== "depth") ctx.warn(`Primary y-axis "${ctx.yAxis.primary}" is not supported yet; using depth.`);
-  const out = [depthAxis(ctx)];
-  if (ctx.yAxis.secondary === "age") {
-    const age = ageAxis(ctx);
-    if (age) out.push(age);
-  } else if (ctx.yAxis.secondary !== undefined) {
-    ctx.warn(`Secondary y-axis "${ctx.yAxis.secondary}" is not supported yet; omitted.`);
+  const out = [primaryAxis(ctx)];
+  const secondary = ctx.yAxis.secondary;
+  if (secondary === ctx.yAxis.primary) ctx.warn(`Secondary y-axis "${secondary}" is the primary axis already; omitted.`);
+  else if (secondary !== undefined) {
+    const axis = secondaryAxis(ctx, secondary);
+    if (axis) out.push(axis);
   }
   return out;
 }
@@ -117,10 +119,10 @@ export const yAxisPanel: Panel = {
       }
       ag.line(w, y.toMm(axis.from), w, y.toMm(axis.to), stroke);
       for (const t of axis.minor) {
-        ag.line(w - theme.minorTickLength, y.toMm(t.depth), w, y.toMm(t.depth), stroke);
+        ag.line(w - theme.minorTickLength, y.toMm(t.pos), w, y.toMm(t.pos), stroke);
       }
       for (const t of axis.major) {
-        const ty2 = y.toMm(t.depth);
+        const ty2 = y.toMm(t.pos);
         ag.line(w - theme.tickLength, ty2, w, ty2, stroke);
         ag.text(w - theme.tickLength - 0.6, ty2 + 0.35 * theme.tickFontSize, t.label ?? "", {
           "font-family": family,

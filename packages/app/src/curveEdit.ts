@@ -219,7 +219,8 @@ export function sourceLabel(source: CurveStyleSource, t: CurveTarget, preset: st
     case "variable":
       return "from this curve";
     case "kind":
-      return "from the data (kind presence)";
+      // Defaults of the variable's kind (continuous), or presence marks for kind presence.
+      return "from the data's kind";
   }
 }
 
@@ -316,7 +317,7 @@ export function copyCurveStyle(env: CurveEnv, sel: CurveSelection): CurveStyleOv
   const t = curveTargets(env, one, defaultApplyTo(sel))[0];
   if (!t) return undefined;
   const { style, source } = t.resolved;
-  // A type that comes from the data (kind presence) is not the curve's style.
+  // A type that comes from the data's kind (presence, continuous defaults) is not the curve's style.
   const keep = (k: string) => (k === "type" ? source.type !== "kind" : COPIED.has(source[k] ?? "default"));
   return unflatten(new Map([...flatten(style)].filter(([k]) => keep(k)))) as CurveStyleOverride;
 }

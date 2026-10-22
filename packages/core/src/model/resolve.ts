@@ -200,8 +200,9 @@ export function resolveVariableStyle(panel: ResolvedTaxonCurvesPanel, variableId
 }
 
 /**
- * Cascade level an option came from. "kind": a variable of kind presence (no x-scale) is drawn with
- * presence marks whatever its type, unless the type is "none".
+ * Cascade level an option came from. "kind": the defaults of the variable's measurement kind (e.g.
+ * continuous), and a variable of kind presence (no x-scale) drawn with presence marks whatever its
+ * type, unless the type is "none".
  */
 export type CurveStyleSource = "default" | "preset" | "panel" | "group" | "variable" | "kind";
 
@@ -263,11 +264,16 @@ export function cascadeCurveStyle(levels: readonly (readonly [CurveStyleSource, 
   return { style, source };
 }
 
-/** Curve style of one column: `group` = the variable's group, `kind` its measurement kind. */
+/**
+ * Curve style of one column: `group` = the variable's group, `kind` its measurement kind. A kind with
+ * its own defaults (coreDefaults.kindCurves, e.g. continuous → line + points) is a level between the
+ * preset and the panel: it wins over the proxy preset, never over what the user set.
+ */
 export function resolveColumnCurve(panel: ResolvedTaxonCurvesPanel, variableId: string, group?: string, kind?: MeasurementKind): ResolvedCurveStyle {
   const { preset, panel: own, groups, variables } = panel.curve;
   const levels: [CurveStyleSource, CurveStyleOverride | undefined][] = [
     ["preset", preset],
+    ["kind", kind === undefined ? undefined : coreDefaults.kindCurves[kind]],
     ["panel", own],
     ["group", group === undefined ? undefined : groups[group]],
     ["variable", variables[variableId]],

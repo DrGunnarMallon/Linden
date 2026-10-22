@@ -127,6 +127,10 @@ describe("x-axis tick labels", () => {
     x: 0,
     width,
     scale,
+    lo: 0,
+    hi: width / scale,
+    log: false,
+    reverse: false,
     key: "percent|%",
   });
   const labels = (ticks: Tick[]) => ticks.filter((t) => t.label).map((t) => t.text);

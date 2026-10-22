@@ -136,7 +136,7 @@ describe("curve inspector: cascade awareness", () => {
     const env: CurveEnv = { spec: base, presets, prepared: prepareDatasets([pres], base, presets).datasets, layout: undefined };
     const v = curveView(curveTargets(env, curves("Betula"), "curve"), base);
     expect(v.type).toBe("presence");
-    expect(v.sources.get("type")).toBe("from the data (kind presence)");
+    expect(v.sources.get("type")).toBe("from the data's kind");
   });
 });
 
@@ -160,7 +160,7 @@ describe("curve inspector: multi-select", () => {
     const s = edit(base, curves("Betula"), "curve", (l) => setIn(l, ["type"], "line"));
     const v = viewOf(s, curves("Betula", "Pinus"), "curve");
     expect(v.type).toBe(MIXED);
-    expect([...v.keys].sort()).toEqual(["baseline", "exaggeration", "nulls", "plus", "valueLabels"]);
+    expect([...v.keys].sort()).toEqual(["axis", "baseline", "error", "exaggeration", "nulls", "plus", "valueLabels"]);
     expect(curveTargets(envOf(s), curves("Betula", "Pinus", "Poaceae"), "group").map((t) => t.path)).toEqual([
       ["groupStyles", "trees"],
       ["groupStyles", "herbs"],

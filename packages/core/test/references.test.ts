@@ -9,7 +9,7 @@ import { readRepoFile } from "./fixtures.js";
 const ds = importDelimited(readRepoFile("examples/demo-bryophytes.csv"), { name: "bryo" }).datasets[0]!;
 
 const spec: Spec = {
-  specVersion: 9,
+  specVersion: 10,
   datasets: [
     {
       dataset: "bryo",

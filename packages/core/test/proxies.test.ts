@@ -306,8 +306,19 @@ describe("example diagrams (synthetic data, presets only)", () => {
     for (const row of ds.values) expect(row.reduce((s: number, x) => s + (x ?? 0), 0)).toBeCloseTo(100, 8);
   });
 
-  it("testate: x-axis title from the preset", () => {
-    expect(xTitlesOf(example("testate-percent").svg)).toEqual([["% of total tests"]]);
+  it("testate: x-axis title from the preset; the continuous columns have their own", () => {
+    expect(xTitlesOf(example("testate-percent").svg)).toEqual([["% of total tests"], ["WTD (cm)", "LOI (%)"]]);
+  });
+
+  it("testate on the age axis (same data, ages from the CSV) renders without warnings and matches its golden SVG", async () => {
+    const spec = parseSpec(readRepoFile("examples/testate-percent-age.spec.json"));
+    if (!spec.ok) throw new Error(spec.errors.join("\n"));
+    const { datasets } = importDelimited(readRepoFile("examples/testate-percent.csv"), { name: "testate-percent" });
+    const r = render(datasets, spec.value, presets);
+    expect(r.warnings).toEqual([]);
+    expect(r.layout.y).toEqual({ domain: [-60, 1466.4], reverse: true, primary: "age" });
+    expect(r.svg).toContain('class="axis-secondary"');
+    await expect(r.svg).toMatchFileSnapshot("./__snapshots__/testate-percent-age.svg");
   });
 
   it("macrofossils: counts, classes and presence in one panel, each column its own scale", () => {

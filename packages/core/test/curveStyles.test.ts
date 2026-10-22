@@ -353,7 +353,7 @@ describe("v7 → v8 migration of panel modes and per-variable overrides", () => 
 
   it("moves the curve keys into style.curve and curveStyles, keeping only what was set", () => {
     expect(migrateSpec(v7)).toEqual({
-      specVersion: 9,
+      specVersion: 10,
       panels: [
         { type: "yAxis" },
         {

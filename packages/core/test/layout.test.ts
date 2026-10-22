@@ -141,6 +141,10 @@ describe("per-column x axes", () => {
     x: 0,
     width,
     scale: 0.4,
+    lo: 0,
+    hi: width / 0.4,
+    log: false,
+    reverse: false,
   });
   const labelled = (ticks: { value: number; label: boolean }[]) => ticks.filter((t) => t.label).map((t) => t.value);
 

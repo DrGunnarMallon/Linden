@@ -82,6 +82,8 @@ export interface OverlayContext {
   theme: Theme;
   /** Width of all panels, from the left plot edge. */
   width: number;
+  /** A depth on the primary y axis (on an age axis: the interpolated age); undefined = cannot be placed. */
+  toAxis(depth: number): number | undefined;
   warn(message: string): void;
 }
 

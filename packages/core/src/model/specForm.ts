@@ -12,17 +12,17 @@ export const SPEC_FORM_SECTIONS: FormSection[] = [
   { id: "yAxis", title: "Y axis", fields: ["yAxis"] },
   { id: "headers", title: "Headers", fields: ["headerBand", "groupHeaders", "headers"] },
   { id: "datasets", title: "Datasets & transforms", fields: ["datasets"] },
-  { id: "panels", title: "Panels", fields: ["panels", "groupStyles", "curveStyles"] },
+  { id: "panels", title: "Panels", fields: ["panels", "groupStyles", "curveStyles", "styleLibrary"] },
   { id: "overlays", title: "Overlays", fields: ["overlays"] },
 ];
 
 const mm = { unit: "mm", step: 0.5 } as const;
 const pt = { unit: "pt", step: 0.25 } as const;
 const colour = { help: "CSS colour, e.g. #2f6b3a." } as const;
-const curveColour = { help: "CSS colour, or \"group\" = the group colour." } as const;
+const curveColour = { help: "CSS colour, or \"group\" = the group colour.", widget: "curveColour" } as const;
 const lineWidth = { unit: "mm", step: 0.05, nullLabel: "Figure curve width" } as const;
-const dash: FormHint = { unionLabels: ["Style", "Custom (mm)"], optionLabels: { solid: "Solid", dashed: "Dashed", dotted: "Dotted" } };
-const pattern = { optionLabels: { solid: "Solid", hatch: "Hatch", crosshatch: "Crosshatch", dots: "Dots" } } as const;
+const dash: FormHint = { unionLabels: ["Style", "Custom (mm)"], optionLabels: { solid: "Solid", dashed: "Dashed", dotted: "Dotted" }, widget: "dash" };
+const pattern = { optionLabels: { solid: "Solid", hatch: "Hatch", crosshatch: "Crosshatch", dots: "Dots" }, widget: "pattern" } as const;
 
 const selectionOrder: FormHint = {
   label: "Order",
@@ -152,7 +152,7 @@ const SPEC_HINTS: Record<string, FormHint> = {
   "panels[].style.curve.fill.pattern.type": pattern,
   "panels[].style.curve.fill.pattern.angle": { unit: "°", step: 15 },
   "panels[].style.curve.fill.pattern.spacing": { unit: "mm", step: 0.25 },
-  "panels[].style.curve.outline.colour": colour,
+  "panels[].style.curve.outline.colour": curveColour,
   "panels[].style.curve.outline.width": lineWidth,
   "panels[].style.curve.outline.dash": dash,
   "panels[].style.curve.shape": { help: "Step: each sample a block reaching halfway to its neighbours.", optionLabels: { linear: "Linear", step: "Step (histogram)" } },
@@ -169,9 +169,9 @@ const SPEC_HINTS: Record<string, FormHint> = {
   "panels[].style.curve.presence.colour": curveColour,
   "panels[].style.curve.presence.size": { unit: "mm", step: 0.1 },
   "panels[].style.curve.exaggeration": { help: "Lighter curve at value × factor behind the main one." },
-  "panels[].style.curve.exaggeration.colour": { help: "CSS colour, \"group\", or \"curve\" = the curve colour." },
+  "panels[].style.curve.exaggeration.colour": { help: "CSS colour, \"group\", or \"curve\" = the curve colour.", widget: "exaggerationColour" },
   "panels[].style.curve.baseline": { label: "Zero line", advanced: true },
-  "panels[].style.curve.baseline.colour": { help: "CSS colour, \"group\", or \"axis\" = the axis colour." },
+  "panels[].style.curve.baseline.colour": { help: "CSS colour, \"group\", or \"axis\" = the axis colour.", widget: "baselineColour" },
   "panels[].style.curve.baseline.width": { unit: "mm", step: 0.05, nullLabel: "Figure axis width" },
   "panels[].style.curve.baseline.dash": dash,
   "panels[].style.curve.plus": { label: "\"+\" for small values", help: "\"+\" right of non-zero values below the threshold." },
@@ -182,16 +182,32 @@ const SPEC_HINTS: Record<string, FormHint> = {
   "panels[].style.curve.nulls": { label: "Missing values", advanced: true, optionLabels: { gap: "Gap", connect: "Connect" } },
   groupStyles: { label: "Group curve styles", advanced: true, help: "Group id → curve style, between the panel and the variable styles." },
   curveStyles: { label: "Variable curve styles", advanced: true, help: "Variable id → curve style; wins over panel and group styles." },
+  styleLibrary: { label: "Saved curve styles", advanced: true, itemLabel: "style", itemTitle: ["name"], help: "Named curve styles, applied from the curve menu or the Curve tab." },
 
   overlays: { itemLabel: "overlay", itemTitle: ["type"] },
   "overlays[]": { optionLabels: { zones: "Zones" } },
   "overlays[].manual": { label: "Boundaries", itemLabel: "boundary", itemTitle: ["depth", "label"] },
 };
 
+/**
+ * Sections of the curve inspector (the app's Curve tab), top to bottom: curve style options by key
+ * (`type` has its own control). A section shows only the options the curve's type has.
+ */
+export const CURVE_FORM_SECTIONS: FormSection[] = [
+  { id: "fill", title: "Fill", fields: ["filled", "fill", "shape"] },
+  { id: "outline", title: "Outline", fields: ["outline"] },
+  { id: "line", title: "Line", fields: ["line", "interpolation"] },
+  { id: "points", title: "Points", fields: ["points"] },
+  { id: "bars", title: "Bars", fields: ["barWidth", "align"] },
+  { id: "exaggeration", title: "Exaggeration", fields: ["exaggeration"] },
+  { id: "markers", title: "Markers & labels", fields: ["presence", "plus", "valueLabels", "baseline"] },
+  { id: "nulls", title: "Missing values", fields: ["nulls"] },
+];
+
 /** Hints for the spec form; overrides reuse the panel style hints, group and variable curve styles the panel curve hints. */
 export const SPEC_FORM_HINTS: FormHints = {
   hints: SPEC_HINTS,
-  aliases: { "panels[].overrides{}": "panels[].style", "groupStyles{}": "panels[].style.curve", "curveStyles{}": "panels[].style.curve" },
+  aliases: { "panels[].overrides{}": "panels[].style", "groupStyles{}": "panels[].style.curve", "curveStyles{}": "panels[].style.curve", "styleLibrary[].style": "panels[].style.curve" },
 };
 
 let cached: FormNode | undefined;

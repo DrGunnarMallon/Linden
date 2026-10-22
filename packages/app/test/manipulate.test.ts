@@ -1,11 +1,13 @@
-import { render, resolveSpec, type Dataset, type Spec } from "@linden/core";
+import { groupRowHeight, makeTheme, render, resolveSpec, type Dataset, type Spec } from "@linden/core";
 import { describe, expect, it } from "vitest";
 import {
   applyResize,
   applyZoneDepth,
   depthAtY,
   geometryAt,
+  groupRuns,
   hitPanel,
+  hitPreview,
   hitZone,
   resizeLabel,
   resizeTarget,
@@ -60,6 +62,42 @@ describe("hit-testing on the layout metadata", () => {
     expect(hitZone(layout, spec, layout.plot.x + 5, y + 2, 1)).toBeNull();
     expect(hitZone(layout, spec, layout.plot.x - 1, y, 1)).toBeNull();
     expect(depthAtY(layout, y)).toBeCloseTo(25, 9);
+  });
+});
+
+describe("clicks on curves, group headers and panel backgrounds", () => {
+  // A and B in group "g" (drawn with a group header), S ungrouped.
+  const grouped: Dataset = { ...ds, groups: [{ id: "g", name: "G", order: 1 }], variables: ds.variables.map((v) => (v.id === "S" ? v : { ...v, group: "g" })) };
+  const layout = render([grouped], base).layout;
+  const rs = resolveSpec(base).spec;
+  const opts = {
+    groupOf: (_: number, id: string) => grouped.variables.find((v) => v.id === id)?.group,
+    groupRow: groupRowHeight(makeTheme(rs.page, rs.style, rs.xScale)),
+    labelAngle: rs.headerBand.angle,
+  };
+  const panel = layout.panels[1]!;
+  const col = (id: string) => panel.columns.find((c) => c.id === id)!;
+  const centre = (id: string) => panel.box.x + col(id).x + col(id).width / 2;
+
+  it("a column's plot area or axis selects its curve; a gap between columns selects the panel", () => {
+    expect(hitPreview(layout, centre("A"), layout.plot.y + 5, opts)).toEqual({ kind: "curve", panel: 1, id: "A" });
+    expect(hitPreview(layout, centre("B"), layout.plot.y + layout.plot.height + 1, opts)).toEqual({ kind: "curve", panel: 1, id: "B" });
+    const gap = panel.box.x + col("A").x + col("A").width + 0.3;
+    expect(gap).toBeLessThan(panel.box.x + col("B").x);
+    expect(hitPreview(layout, gap, layout.plot.y + 5, opts)).toEqual({ kind: "panel", panel: 1 });
+    expect(hitPreview(layout, layout.panels[0]!.box.x + 1, layout.plot.y + 5, opts)).toEqual({ kind: "panel", panel: 0 });
+    expect(hitPreview(layout, 1, 1, opts)).toBeNull();
+  });
+
+  it("a rotated taxon label selects its column; the group row selects the group", () => {
+    const angle = (rs.headerBand.angle * Math.PI) / 180;
+    const up = 2; // mm above the plot, along B's label (below the group row)
+    expect(hitPreview(layout, centre("B") + up / Math.tan(angle), layout.plot.y - up, opts)).toEqual({ kind: "curve", panel: 1, id: "B" });
+    expect(hitPreview(layout, centre("A"), panel.box.y + opts.groupRow / 2, opts)).toEqual({ kind: "group", panel: 1, group: "g" });
+    expect(groupRuns(layout, 1, opts.groupOf)).toEqual([{ group: "g", x0: col("A").x, x1: col("B").x + col("B").width }]);
+    // Ungrouped columns have no group header.
+    const s = layout.panels[2]!;
+    expect(hitPreview(layout, s.box.x + s.columns[0]!.x + 1, s.box.y + opts.groupRow / 2, opts)).toEqual({ kind: "panel", panel: 2 });
   });
 });
 

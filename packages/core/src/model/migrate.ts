@@ -18,6 +18,8 @@ const steps: Record<number, (spec: JsonObject) => JsonObject> = {
   // v7 added the global xScale and taxonCurves style.columnWidth, both optional (defaults = the former constants).
   6: (spec) => ({ ...spec, specVersion: 7 }),
   7: toV8,
+  // v9 added the optional styleLibrary (saved curve styles).
+  8: (spec) => ({ ...spec, specVersion: 9 }),
 };
 
 const MODE_TYPES: Record<string, string> = { silhouette: "polygon", bars: "bars", line: "line", linePoints: "linePoints" };

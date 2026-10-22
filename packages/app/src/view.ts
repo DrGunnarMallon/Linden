@@ -1,6 +1,8 @@
 // Workspace view state (zoom, sidebars). Not part of the spec and not in the undo history.
 
 import { create } from "zustand";
+import type { CurveStyleOverride } from "@linden/core";
+import type { CurveSelection } from "./curveEdit";
 
 export type Zoom = "fit" | number;
 /** The inspector's spec editor: generated form or raw JSON. Remembered in localStorage. */
@@ -53,6 +55,23 @@ function readSidebarWidths(): Record<Side, number> {
   }
 }
 
+export const RECENT_COLOURS_KEY = "linden.recentColours";
+const RECENT_COLOURS_MAX = 8;
+
+/** Most recent first, unique (case-insensitive), at most 8; `colour` (if any) goes in front. */
+export function pushRecentColour(recent: readonly string[], colour: string): string[] {
+  return [colour, ...recent.filter((c) => c.toLowerCase() !== colour.toLowerCase())].slice(0, RECENT_COLOURS_MAX);
+}
+
+function readRecentColours(): string[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(RECENT_COLOURS_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((c): c is string => typeof c === "string").slice(0, RECENT_COLOURS_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
 export const MIN_ZOOM = 0.1;
 export const MAX_ZOOM = 8;
 const STEPS = [0.1, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8];
@@ -77,6 +96,14 @@ interface ViewState {
   inspectorTab: InspectorTab;
   /** Panel selected in the preview; `seq` grows with every selection so the form reveals its card again. */
   selection: { panel: number; seq: number } | null;
+  /** Curves or a group selected in the preview or the variable list (Curve tab). Exclusive with `selection`. */
+  curveSelection: CurveSelection | null;
+  /** The inspector shows the Curve tab (while there is a curve selection). */
+  curveTab: boolean;
+  /** Colours recently picked in colour fields, most recent first. Remembered in localStorage. */
+  recentColours: string[];
+  /** Curve style copied with Copy style (context menu, Ctrl/Cmd+Alt+C); not in the spec. */
+  styleClipboard: CurveStyleOverride | null;
   setZoom(zoom: Zoom): void;
   zoomBy(dir: 1 | -1): void;
   setScale(scale: number): void;
@@ -85,8 +112,13 @@ interface ViewState {
   /** Sets a sidebar's width (clamped); `persist` stores it (at the end of a drag). */
   setSidebarWidth(side: Side, width: number, persist?: boolean): void;
   /** Opens the inspector on the given tab. */
-  showInspector(tab: InspectorTab): void;
+  showInspector(tab: InspectorTab | "curve"): void;
+  /** Selects a panel (clearing any curve selection); null clears both. */
   selectPanel(panel: number | null): void;
+  /** Selects curves or a group (clearing the panel selection) and opens the Curve tab (`reveal: false`: leaves the inspector as it is); null clears it. */
+  selectCurves(sel: CurveSelection | null, opts?: { reveal?: boolean }): void;
+  setStyleClipboard(style: CurveStyleOverride | null): void;
+  addRecentColour(colour: string): void;
 }
 
 export const useView = create<ViewState>()((set, get) => ({
@@ -97,6 +129,10 @@ export const useView = create<ViewState>()((set, get) => ({
   ...(({ left, right }) => ({ leftWidth: left, rightWidth: right }))(readSidebarWidths()),
   inspectorTab: readInspectorTab(),
   selection: null,
+  curveSelection: null,
+  curveTab: false,
+  recentColours: readRecentColours(),
+  styleClipboard: null,
   setZoom: (zoom) => set({ zoom: zoom === "fit" ? zoom : clampZoom(zoom) }),
   zoomBy: (dir) => set({ zoom: stepZoom(get().scale, dir) }),
   setScale: (scale) => set({ scale }),
@@ -112,12 +148,29 @@ export const useView = create<ViewState>()((set, get) => ({
     }
   },
   showInspector: (tab) => {
+    // The Curve tab depends on the selection, so it is not remembered.
+    if (tab === "curve") {
+      set({ rightOpen: true, curveTab: true });
+      return;
+    }
     try {
       localStorage.setItem(INSPECTOR_STORAGE_KEY, tab);
     } catch {
       // Private mode etc.: the choice just isn't remembered.
     }
-    set({ rightOpen: true, inspectorTab: tab });
+    set({ rightOpen: true, inspectorTab: tab, curveTab: false });
   },
-  selectPanel: (panel) => set({ selection: panel === null ? null : { panel, seq: (get().selection?.seq ?? 0) + 1 } }),
+  selectPanel: (panel) => set({ selection: panel === null ? null : { panel, seq: (get().selection?.seq ?? 0) + 1 }, curveSelection: null, curveTab: false }),
+  selectCurves: (sel, opts = {}) =>
+    set(sel === null ? { curveSelection: null, curveTab: false } : opts.reveal === false ? { curveSelection: sel, selection: null } : { curveSelection: sel, selection: null, curveTab: true, rightOpen: true }),
+  setStyleClipboard: (styleClipboard) => set({ styleClipboard }),
+  addRecentColour: (colour) => {
+    const recentColours = pushRecentColour(get().recentColours, colour);
+    set({ recentColours });
+    try {
+      localStorage.setItem(RECENT_COLOURS_KEY, JSON.stringify(recentColours));
+    } catch {
+      // Private mode etc.: not remembered.
+    }
+  },
 }));

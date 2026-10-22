@@ -132,7 +132,7 @@ function EnumControl({ node, path, value, optional, label }: ControlOf<"enum">) 
   const options = node.options.map((o) => ({ value: o, label: optionLabel(node, o) }));
   if (optional) {
     const eff = typeof effective === "string" && node.options.includes(effective) ? ` (${optionLabel(node, effective)})` : "";
-    options.unshift({ value: DEFAULT, label: `Default${eff}` });
+    options.unshift({ value: DEFAULT, label: `${ctx.unsetLabel ?? "Default"}${eff}` });
   }
   return (
     <Select
@@ -205,11 +205,16 @@ function FieldLabel({ label, help }: { label: string; help?: string }) {
   );
 }
 
-function Row({ label, help, children, end }: { label: string; help?: string; children: ReactNode; end?: ReactNode }) {
+function Row({ label, help, children, end, note, muted }: { label: string; help?: string; children: ReactNode; end?: ReactNode; note?: string; muted?: boolean }) {
   return (
     <div className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_1.75rem] items-start gap-2">
-      <div className="flex min-h-8 min-w-0 items-center">
+      <div className={cn("flex min-h-8 min-w-0 flex-col justify-center", muted && "opacity-75")}>
         <FieldLabel label={label} help={help} />
+        {note && (
+          <span className="truncate text-2xs text-fg-muted italic" title={note}>
+            {note}
+          </span>
+        )}
       </div>
       <div className="flex min-h-8 min-w-0 items-center">{children}</div>
       <div className="flex h-8 items-center justify-end">{end}</div>
@@ -233,15 +238,24 @@ function FieldErrors({ path }: { path: Path }) {
 /** One field of an object: label, control, reset-to-default and errors. */
 export function Field({ node, path, value, optional, label }: ControlProps) {
   const ctx = useForm();
+  // Cascade-aware (Curve tab): reset = back to the inherited value; inherited options are muted and say where they come from.
+  const state = ctx.cascade?.(path);
   const reset =
-    optional && value !== undefined ? (
-      <IconButton label="Reset to default" icon={<RotateCcw />} size="sm" tooltipSide="left" onClick={() => ctx.apply((s) => removeIn(s, path))} />
+    (state ? state.overridden : optional && value !== undefined) ? (
+      <IconButton
+        label={state ? "Reset to inherited" : "Reset to default"}
+        icon={<RotateCcw />}
+        size="sm"
+        tooltipSide="left"
+        onClick={() => ctx.apply((s) => removeIn(s, path))}
+      />
     ) : undefined;
+  const note = state?.mixed ? "Mixed" : state && !state.overridden ? state.source : undefined;
   const control = <Control node={node} path={path} value={value} optional={optional} label={label} />;
   if (!isBlock(node)) {
     return (
       <div>
-        <Row label={label} help={node.hint.help} end={reset}>
+        <Row label={label} help={node.hint.help} end={reset} note={note} muted={state !== undefined && !state.overridden}>
           {control}
         </Row>
         <FieldErrors path={path} />
@@ -251,7 +265,7 @@ export function Field({ node, path, value, optional, label }: ControlProps) {
   return (
     <div>
       <div className="flex h-7 items-center gap-2">
-        <span className="min-w-0 flex-1 text-xs font-medium text-fg">
+        <span className={cn("min-w-0 flex-1 text-xs font-medium text-fg", state && !state.overridden && "opacity-75")}>
           <FieldLabel label={label} help={node.hint.help} />
         </span>
         {reset}

@@ -693,9 +693,10 @@ export const taxonCurvesPanel: Panel = {
     }
     const cols = taxonColumns(ctx);
     if (ds && cols.length === 0) ctx.warn(`taxonCurves: no variables selected from dataset "${ds.id}".`);
-    const kinds = [...new Set(cols.map((c) => c.variable.kind))];
+    // Independent scales may mix kinds (each column has its own axis); a common scale may not.
+    const kinds = [...new Set(cols.filter((c) => c.style.commonScale).map((c) => c.variable.kind))];
     if (kinds.length > 1) {
-      ctx.warn(`taxonCurves (${ctx.id}): mixes kinds (${kinds.join(", ")}); each kind gets its own x-scale. Use one panel per kind (selection "kinds").`);
+      ctx.warn(`taxonCurves (${ctx.id}): mixes kinds (${kinds.join(", ")}) on a common scale; each kind gets its own x-scale. Use one panel per kind (selection "kinds") or commonScale false.`);
     }
     for (const c of cols) {
       if (c.variable.codes) {

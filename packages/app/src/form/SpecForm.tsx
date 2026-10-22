@@ -11,6 +11,7 @@ import { FormContext, useForm, type ControlProps, type FormContextValue } from "
 import { Control, CONTROLS, Field } from "./controls";
 import { fieldLabel, formSections, isBlock } from "./model";
 import { removeIn, setIn } from "./paths";
+import { CURVE_WIDGETS } from "./widgets";
 
 const NONE = "__none__"; // Radix Select cannot use "" as a value
 /** Sections open on first show; the rest start folded. */
@@ -47,7 +48,7 @@ function DatasetWidget(props: ControlProps) {
   return <Select label={props.label} className="w-full min-w-0" value={value} options={options} onValueChange={(v) => ctx.apply((s) => setIn(s, props.path, v))} />;
 }
 
-export const WIDGETS: Record<string, ComponentType<ControlProps>> = { preset: PresetWidget, dataset: DatasetWidget };
+export const WIDGETS: Record<string, ComponentType<ControlProps>> = { preset: PresetWidget, dataset: DatasetWidget, ...CURVE_WIDGETS };
 
 /** Journal / A4 page sizes; only change spec.page (through the store). */
 function PageSizePreset({ page }: { page: { width: number; height: number } | undefined }) {

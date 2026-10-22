@@ -3,10 +3,13 @@
 import { MOD_KEY } from "./ui";
 
 const mac = MOD_KEY === "⌘";
+/** macOS modifier order (⌥⇧⌘), then the key. */
+const MAC_ORDER = ["⌥", "⇧", "⌘"];
+const macRank = (p: string) => (MAC_ORDER.includes(p) ? MAC_ORDER.indexOf(p) : MAC_ORDER.length);
 /** keys("mod", "shift", "Z") → "⇧⌘Z" on macOS, "Ctrl+Shift+Z" elsewhere. */
 function keys(...parts: string[]): string {
-  if (mac) return parts.map((p) => ({ mod: "⌘", shift: "⇧" })[p] ?? p).sort((a, b) => (a === "⇧" ? -1 : b === "⇧" ? 1 : 0)).join("");
-  return parts.map((p) => ({ mod: "Ctrl", shift: "Shift" })[p] ?? p).join("+");
+  if (mac) return parts.map((p) => ({ mod: "⌘", shift: "⇧", alt: "⌥" })[p] ?? p).sort((a, b) => macRank(a) - macRank(b)).join("");
+  return parts.map((p) => ({ mod: "Ctrl", shift: "Shift", alt: "Alt" })[p] ?? p).join("+");
 }
 
 export const SHORTCUTS = {
@@ -17,4 +20,6 @@ export const SHORTCUTS = {
   zoomFit: keys("shift", "1"),
   zoom100: keys("shift", "0"),
   zoom200: keys("shift", "2"),
+  copyStyle: keys("mod", "alt", "C"),
+  pasteStyle: keys("mod", "alt", "V"),
 };

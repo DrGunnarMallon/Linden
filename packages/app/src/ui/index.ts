@@ -5,11 +5,26 @@ export { Card } from "./Card";
 export { Checkbox } from "./Checkbox";
 export { cn, MOD_KEY } from "./cn";
 export { CollapsibleSection } from "./Collapsible";
+export {
+  ContextMenu,
+  ContextMenuCheckboxItem,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "./ContextMenu";
 export { IconButton } from "./IconButton";
 export { fieldClass, Input } from "./Input";
 export { Menu, MenuContent, MenuItem, MenuLabel, MenuRadioGroup, MenuRadioItem, MenuSeparator, MenuSub, MenuSubContent, MenuSubTrigger, MenuTrigger } from "./Menu";
 export { NumberInput } from "./NumberInput";
 export { Popover, PopoverContent, PopoverTrigger } from "./Popover";
+export { Segmented, type SegmentedOption } from "./Segmented";
 export { Select, type SelectOption } from "./Select";
 export { Switch } from "./Switch";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="240mm" height="150mm" viewBox="0 0 240 150">
-  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: 94aa5ce104f5afaa519b29283a18412cec482cf761a2ebdef334e044236b09c9</metadata>
+  <metadata id="linden-metadata">generator: Linden 0.0.0; spec-sha256: 0f4cbccd8c0be2c239403e7467f6236690f4528c28697842e21782911f570960</metadata>
   <rect id="background" x="0" y="0" width="240" height="150" fill="#ffffff"/>
   <g fill="#000000" font-family="Arial" font-size="2.47">
     <g id="panel-0-yAxis" transform="translate(5,41.52)">
@@ -30,7 +30,35 @@
       </g>
     </g>
     <g id="panel-1-taxonCurves" transform="translate(15.57,41.52)">
-      <g id="panel-1-taxonCurves-Betula_seeds" class="column" transform="translate(0,0)">
+      <g id="panel-1-taxonCurves-Ericaceae_rootlets" class="column" transform="translate(0,0)">
+        <g class="curve">
+          <rect x="0" y="-0.3" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="6.16" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="12.62" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="19.08" width="9" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="25.54" width="9" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="32" width="6" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="38.47" width="3" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="96.91" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="96.91" x2="15" y2="96.91" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="96.91" x2="0" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="100.09" font-size="2.1" text-anchor="start">-</text>
+          <line x1="3" y1="96.91" x2="3" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="3" y="100.09" font-size="2.1" text-anchor="middle">R</text>
+          <line x1="6" y1="96.91" x2="6" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="6" y="100.09" font-size="2.1" text-anchor="middle">O</text>
+          <line x1="9" y1="96.91" x2="9" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="9" y="100.09" font-size="2.1" text-anchor="middle">F</text>
+          <line x1="12" y1="96.91" x2="12" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="12" y="100.09" font-size="2.1" text-anchor="middle">A</text>
+          <line x1="15" y1="96.91" x2="15" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="100.09" font-size="2.1" text-anchor="end">D</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Ericaceae rootlets</text>
+      </g>
+      <g id="panel-1-taxonCurves-Betula_seeds" class="column" transform="translate(16,0)">
         <g class="curve">
           <rect x="0" y="-0.3" width="11.25" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
           <rect x="0" y="6.16" width="6" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
@@ -55,7 +83,7 @@
         </g>
         <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Betula</tspan> seeds</text>
       </g>
-      <g id="panel-1-taxonCurves-Carex_nutlets" class="column" transform="translate(18,0)">
+      <g id="panel-1-taxonCurves-Carex_nutlets" class="column" transform="translate(34,0)">
         <g class="curve">
           <rect x="0" y="-0.3" width="1.05" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
           <rect x="0" y="6.16" width="0.9" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
@@ -86,7 +114,7 @@
         </g>
         <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Carex</tspan> nutlets</text>
       </g>
-      <g id="panel-1-taxonCurves-Menyanthes_trifoliata_seeds" class="column" transform="translate(34,0)">
+      <g id="panel-1-taxonCurves-Menyanthes_trifoliata_seeds" class="column" transform="translate(50,0)">
         <g class="curve">
           <rect x="0" y="32" width="1" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
           <rect x="0" y="38.47" width="2" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
@@ -113,83 +141,7 @@
         </g>
         <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Menyanthes trifoliata</tspan> seeds</text>
       </g>
-      <g id="panel-1-taxonCurves-Potamogeton_natans_endocarps" class="column" transform="translate(52,0)">
-        <g class="curve">
-          <rect x="0" y="57.85" width="0.38" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="64.31" width="0.75" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="70.77" width="2.25" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="77.23" width="6.75" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="83.69" width="7.13" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="90.15" width="6.38" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="96.61" width="10.13" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-        </g>
-        <line x1="0" y1="0" x2="0" y2="96.91" stroke="#000000" stroke-width="0.15"/>
-        <g class="x-axis">
-          <line x1="0" y1="96.91" x2="15" y2="96.91" stroke="#000000" stroke-width="0.15"/>
-          <line x1="0" y1="96.91" x2="0" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="0" y="100.09" font-size="2.1" text-anchor="start">0</text>
-          <line x1="7.5" y1="96.91" x2="7.5" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="7.5" y="100.09" font-size="2.1" text-anchor="middle">20</text>
-          <line x1="15" y1="96.91" x2="15" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="15" y="100.09" font-size="2.1" text-anchor="end">40</text>
-        </g>
-        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Potamogeton natans</tspan> endocarps</text>
-      </g>
-      <g id="panel-1-taxonCurves-Nymphaea_alba_seeds" class="column" transform="translate(68,0)">
-        <g class="curve">
-          <rect x="0" y="64.31" width="1.5" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="70.77" width="3" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="77.23" width="9" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="83.69" width="9" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="90.15" width="7.5" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="96.61" width="3" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
-        </g>
-        <line x1="0" y1="0" x2="0" y2="96.91" stroke="#000000" stroke-width="0.15"/>
-        <g class="x-axis">
-          <line x1="0" y1="96.91" x2="15" y2="96.91" stroke="#000000" stroke-width="0.15"/>
-          <line x1="0" y1="96.91" x2="0" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="0" y="100.09" font-size="2.1" text-anchor="start">0</text>
-          <line x1="7.5" y1="96.91" x2="7.5" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="7.5" y="100.09" font-size="2.1" text-anchor="middle">5</text>
-          <line x1="15" y1="96.91" x2="15" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="15" y="100.09" font-size="2.1" text-anchor="end">10</text>
-        </g>
-        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Nymphaea alba</tspan> seeds</text>
-      </g>
-      <g class="x-title">
-        <text x="41.5" y="102.86" text-anchor="middle">Counts (n/20 cm³)</text>
-      </g>
-    </g>
-    <g id="panel-2-taxonCurves" transform="translate(100.57,41.52)">
-      <g id="panel-2-taxonCurves-Ericaceae_rootlets" class="column" transform="translate(0,0)">
-        <g class="curve">
-          <rect x="0" y="-0.3" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="6.16" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="12.62" width="15" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="19.08" width="9" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="25.54" width="9" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="32" width="6" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-          <rect x="0" y="38.47" width="3" height="0.6" fill="#6b5a2e" stroke="#000000" stroke-width="0.1"/>
-        </g>
-        <line x1="0" y1="0" x2="0" y2="96.91" stroke="#000000" stroke-width="0.15"/>
-        <g class="x-axis">
-          <line x1="0" y1="96.91" x2="15" y2="96.91" stroke="#000000" stroke-width="0.15"/>
-          <line x1="0" y1="96.91" x2="0" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="0" y="100.09" font-size="2.1" text-anchor="start">-</text>
-          <line x1="3" y1="96.91" x2="3" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="3" y="100.09" font-size="2.1" text-anchor="middle">R</text>
-          <line x1="6" y1="96.91" x2="6" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="6" y="100.09" font-size="2.1" text-anchor="middle">O</text>
-          <line x1="9" y1="96.91" x2="9" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="9" y="100.09" font-size="2.1" text-anchor="middle">F</text>
-          <line x1="12" y1="96.91" x2="12" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="12" y="100.09" font-size="2.1" text-anchor="middle">A</text>
-          <line x1="15" y1="96.91" x2="15" y2="97.91" stroke="#000000" stroke-width="0.15"/>
-          <text x="15" y="100.09" font-size="2.1" text-anchor="end">D</text>
-        </g>
-        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Ericaceae rootlets</text>
-      </g>
-      <g id="panel-2-taxonCurves-Sphagnum_leaves" class="column" transform="translate(18,0)">
+      <g id="panel-1-taxonCurves-Sphagnum_leaves" class="column" transform="translate(66,0)">
         <g class="curve">
           <rect x="0" y="-0.3" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
           <rect x="0" y="6.16" width="12" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
@@ -219,7 +171,7 @@
         </g>
         <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Sphagnum</tspan> leaves</text>
       </g>
-      <g id="panel-2-taxonCurves-Monocot_remains_undiff_" class="column" transform="translate(34,0)">
+      <g id="panel-1-taxonCurves-Monocot_remains_undiff_" class="column" transform="translate(82,0)">
         <g class="curve">
           <rect x="0" y="6.16" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
           <rect x="0" y="12.62" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
@@ -255,7 +207,7 @@
         </g>
         <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Monocot remains undiff.</text>
       </g>
-      <g id="panel-2-taxonCurves-Brown_mosses" class="column" transform="translate(50,0)">
+      <g id="panel-1-taxonCurves-Brown_mosses" class="column" transform="translate(98,0)">
         <g class="curve">
           <rect x="0" y="44.93" width="3" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
           <rect x="0" y="51.39" width="6" height="0.6" fill="#4f7d3a" stroke="#000000" stroke-width="0.1"/>
@@ -285,12 +237,50 @@
         </g>
         <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)">Brown mosses</text>
       </g>
-      <g class="x-title">
-        <text x="32.5" y="102.86" text-anchor="middle">Abundance class</text>
+      <g id="panel-1-taxonCurves-Potamogeton_natans_endocarps" class="column" transform="translate(116,0)">
+        <g class="curve">
+          <rect x="0" y="57.85" width="0.38" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="64.31" width="0.75" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="70.77" width="2.25" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="77.23" width="6.75" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="83.69" width="7.13" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="90.15" width="6.38" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="96.61" width="10.13" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="96.91" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="96.91" x2="15" y2="96.91" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="96.91" x2="0" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="100.09" font-size="2.1" text-anchor="start">0</text>
+          <line x1="7.5" y1="96.91" x2="7.5" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.5" y="100.09" font-size="2.1" text-anchor="middle">20</text>
+          <line x1="15" y1="96.91" x2="15" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="100.09" font-size="2.1" text-anchor="end">40</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Potamogeton natans</tspan> endocarps</text>
       </g>
-    </g>
-    <g id="panel-3-taxonCurves" transform="translate(167.57,41.52)">
-      <g id="panel-3-taxonCurves-Daphnia_ephippia" class="column" transform="translate(0,0)">
+      <g id="panel-1-taxonCurves-Nymphaea_alba_seeds" class="column" transform="translate(132,0)">
+        <g class="curve">
+          <rect x="0" y="64.31" width="1.5" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="70.77" width="3" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="77.23" width="9" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="83.69" width="9" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="90.15" width="7.5" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+          <rect x="0" y="96.61" width="3" height="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="96.91" stroke="#000000" stroke-width="0.15"/>
+        <g class="x-axis">
+          <line x1="0" y1="96.91" x2="15" y2="96.91" stroke="#000000" stroke-width="0.15"/>
+          <line x1="0" y1="96.91" x2="0" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="0" y="100.09" font-size="2.1" text-anchor="start">0</text>
+          <line x1="7.5" y1="96.91" x2="7.5" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="7.5" y="100.09" font-size="2.1" text-anchor="middle">5</text>
+          <line x1="15" y1="96.91" x2="15" y2="97.91" stroke="#000000" stroke-width="0.15"/>
+          <text x="15" y="100.09" font-size="2.1" text-anchor="end">10</text>
+        </g>
+        <text class="label" x="8.25" y="-0.57" transform="rotate(-60,8.25,-0.57)"><tspan font-style="italic">Nymphaea alba</tspan> seeds</text>
+      </g>
+      <g id="panel-1-taxonCurves-Daphnia_ephippia" class="column" transform="translate(148,0)">
         <g class="presence">
           <circle cx="3" cy="77.53" r="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
           <circle cx="3" cy="83.99" r="0.6" fill="#3a78a8" stroke="#000000" stroke-width="0.1"/>
@@ -302,7 +292,7 @@
         </g>
         <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)"><tspan font-style="italic">Daphnia</tspan> ephippia</text>
       </g>
-      <g id="panel-3-taxonCurves-Charcoal_fragments" class="column" transform="translate(9,0)">
+      <g id="panel-1-taxonCurves-Charcoal_fragments" class="column" transform="translate(157,0)">
         <g class="presence">
           <circle cx="3" cy="0" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
           <circle cx="3" cy="6.46" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
@@ -314,7 +304,7 @@
         </g>
         <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)">Charcoal fragments</text>
       </g>
-      <g id="panel-3-taxonCurves-Cenococcum_sclerotia" class="column" transform="translate(16,0)">
+      <g id="panel-1-taxonCurves-Cenococcum_sclerotia" class="column" transform="translate(164,0)">
         <g class="presence">
           <circle cx="3" cy="0" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
           <circle cx="3" cy="6.46" r="0.6" fill="#555555" stroke="#000000" stroke-width="0.1"/>
@@ -330,24 +320,22 @@
         <text class="label" x="3.75" y="-0.57" transform="rotate(-60,3.75,-0.57)"><tspan font-style="italic">Cenococcum</tspan> sclerotia</text>
       </g>
       <g class="x-title">
-        <text x="11" y="102.86" text-anchor="middle">Presence</text>
+        <text x="7.5" y="102.86" text-anchor="middle">Abundance class</text>
+        <text x="40.5" y="102.86" text-anchor="middle">Counts (n/20 cm³)</text>
+        <text x="89.5" y="102.86" text-anchor="middle">Abundance class</text>
+        <text x="131.5" y="102.86" text-anchor="middle">Counts (n/20 cm³)</text>
+        <text x="159" y="102.86" text-anchor="middle">Presence</text>
       </g>
     </g>
     <g id="headers" transform="translate(5,41.52)">
-      <path class="line" d="M10.57,-33.55L25.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="18.07" y="-34.05" text-anchor="middle">Terrestrial</text>
-      <path class="line" d="M28.57,-33.55L59.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="44.07" y="-34.05" text-anchor="middle">Wetland</text>
-      <path class="line" d="M62.57,-33.55L93.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="78.07" y="-34.05" text-anchor="middle">Aquatic</text>
-      <path class="line" d="M95.57,-33.55L110.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="103.07" y="-34.05" text-anchor="middle">Terrestrial</text>
-      <path class="line" d="M113.57,-33.55L160.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="137.07" y="-34.05" text-anchor="middle">Wetland</text>
-      <path class="line" d="M162.57,-33.55L168.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="165.57" y="-34.05" text-anchor="middle">Aquatic</text>
-      <path class="line" d="M171.57,-33.55L184.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
-      <text class="group-header" x="178.07" y="-34.05" text-anchor="middle">Other</text>
+      <path class="line" d="M10.57,-33.55L41.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
+      <text class="group-header" x="26.07" y="-34.05" text-anchor="middle">Terrestrial</text>
+      <path class="line" d="M44.57,-33.55L123.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
+      <text class="group-header" x="84.07" y="-34.05" text-anchor="middle">Wetland</text>
+      <path class="line" d="M126.57,-33.55L164.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
+      <text class="group-header" x="145.57" y="-34.05" text-anchor="middle">Aquatic</text>
+      <path class="line" d="M167.57,-33.55L180.57,-33.55" fill="none" stroke="#000000" stroke-width="0.15"/>
+      <text class="group-header" x="174.07" y="-34.05" text-anchor="middle">Other</text>
     </g>
   </g>
 </svg>

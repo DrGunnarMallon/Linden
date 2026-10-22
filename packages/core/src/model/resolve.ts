@@ -31,7 +31,7 @@ import type {
   TransformSpec,
   YAxisPanelSpec,
 } from "./spec.js";
-import type { MeasurementKind, OutsideSum, SumDefinition } from "./types.js";
+import type { Dataset, MeasurementKind, OutsideSum, SumDefinition } from "./types.js";
 
 export interface ResolvedDatasetEntry {
   dataset: string;
@@ -280,20 +280,39 @@ export function resolveColumnCurve(panel: ResolvedTaxonCurvesPanel, variableId: 
 }
 
 /**
+ * A variable's current group, read live from the spec (never stored on the variable): its assignment,
+ * else (merged variable) the merge transform's group or its first source's current group, else the
+ * data's group (e.g. a CSV group row).
+ */
+function currentGroup(entry: DatasetEntry | undefined, dataset: Dataset | undefined, variableId: string, seen = new Set<string>()): string | undefined {
+  const assigned = entry?.assignments?.[variableId];
+  if (assigned !== undefined) return assigned;
+  const merge = entry?.transforms?.find((t) => t.type === "merge" && t.id === variableId);
+  if (merge?.type === "merge" && !seen.has(variableId)) {
+    seen.add(variableId);
+    return merge.group ?? (merge.from[0] === undefined ? undefined : currentGroup(entry, dataset, merge.from[0], seen));
+  }
+  return dataset?.variables.find((v) => v.id === variableId)?.group;
+}
+
+/**
  * The resolved curve style of a variable and the level each option came from (for the app's
- * inspector). `panel` = spec panel index (default: the first taxonCurves panel); `group` = the
- * variable's group (default: its assignment in that panel's dataset entry); `kind` = its kind.
+ * inspector). `panel` = spec panel index (default: the first taxonCurves panel); `dataset` = that
+ * panel's dataset (raw or as prepareDatasets returns it), for the data's groups and kinds; `group` /
+ * `kind` override the variable's current group (assignment → merge → data, see currentGroup) / kind.
  */
 export function resolveCurveStyle(
   spec: Spec,
   variableId: string,
-  options: { panel?: number; group?: string; kind?: MeasurementKind; presets?: readonly Preset[] } = {},
+  options: { panel?: number; dataset?: Dataset; group?: string; kind?: MeasurementKind; presets?: readonly Preset[] } = {},
 ): ResolvedCurveStyle {
   const index = options.panel ?? spec.panels.findIndex((p) => p.type === "taxonCurves");
   const panelSpec = spec.panels[index];
   const panelOrEmpty: PanelSpec = panelSpec?.type === "taxonCurves" ? panelSpec : { type: "taxonCurves", dataset: "" };
   const preset = options.presets?.find((p) => p.name === spec.preset);
   const panel = resolvePanel(panelOrEmpty, preset, spec) as ResolvedTaxonCurvesPanel;
-  const group = options.group ?? spec.datasets?.find((d) => d.dataset === panel.dataset)?.assignments?.[variableId];
-  return resolveColumnCurve(panel, variableId, group, options.kind);
+  const entry = spec.datasets?.find((d) => d.dataset === panel.dataset);
+  const group = options.group ?? currentGroup(entry, options.dataset, variableId);
+  const kind = options.kind ?? options.dataset?.variables.find((v) => v.id === variableId)?.kind;
+  return resolveColumnCurve(panel, variableId, group, kind);
 }

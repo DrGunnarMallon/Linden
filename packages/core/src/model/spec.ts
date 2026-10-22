@@ -3,7 +3,7 @@
 
 import { z } from "zod/v4";
 
-export const SPEC_VERSION = 8;
+export const SPEC_VERSION = 9;
 export const PRESET_VERSION = 2;
 
 export const MeasurementKindSchema = z.enum([
@@ -308,6 +308,21 @@ export const TaxonCurvesStyleSchema = z.strictObject({
   xTitle: XTitleSchema.optional(),
 });
 
+/** A named curve style saved in the project (spec.styleLibrary): one cascade level, applied by copying it. */
+export const SavedCurveStyleSchema = z.strictObject({
+  name: z.string().min(1),
+  style: CurveStyleOverrideSchema,
+});
+
+/** Saved curve styles; names are unique. */
+export const StyleLibrarySchema = z.array(SavedCurveStyleSchema).superRefine((list, ctx) => {
+  const seen = new Set<string>();
+  list.forEach((s, i) => {
+    if (seen.has(s.name)) ctx.addIssue({ code: "custom", message: `Duplicate style name "${s.name}".`, path: [i, "name"] });
+    seen.add(s.name);
+  });
+});
+
 export const YAxisPanelSchema = z.strictObject({
   type: z.literal("yAxis"),
   width: z.number().positive().optional(),
@@ -407,6 +422,8 @@ export const SpecSchema = z.strictObject({
   groupStyles: z.record(z.string(), CurveStyleOverrideSchema).optional(),
   /** Curve style per variable id (cascade level "variable"). */
   curveStyles: z.record(z.string(), CurveStyleOverrideSchema).optional(),
+  /** Named curve styles saved with the project; never drawn by themselves. */
+  styleLibrary: StyleLibrarySchema.optional(),
 });
 
 export const PresetSchema = z.strictObject({
@@ -441,6 +458,7 @@ export type CurveStyle = z.infer<typeof CurveStyleSchema>;
 export type CurveType = CurveStyle["type"];
 export type Dash = z.infer<typeof DashSchema>;
 export type FillStyle = z.infer<typeof FillSchema>;
+export type SavedCurveStyle = z.infer<typeof SavedCurveStyleSchema>;
 export type PointMark = z.infer<typeof PointMarkSchema>;
 
 type DeepPartial<T> = T extends readonly unknown[] ? T : T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fileBase } from "../src/store";
 import { parsePreference, resolveTheme } from "../src/theme";
-import { clampSidebar, clampZoom, MAX_ZOOM, MIN_ZOOM, parseSidebarWidths, SIDEBAR_WIDTH, stepZoom } from "../src/view";
+import { clampSidebar, clampZoom, MAX_ZOOM, MIN_ZOOM, parseSidebarWidths, pushRecentColour, SIDEBAR_WIDTH, stepZoom } from "../src/view";
 
 describe("theme", () => {
   it("defaults to following the system, which falls back to dark", () => {
@@ -56,5 +56,13 @@ describe("sidebar widths", () => {
     expect(parseSidebarWidths(null)).toEqual({ left: 272, right: 384 });
     expect(parseSidebarWidths("not json")).toEqual({ left: 272, right: 384 });
     expect(parseSidebarWidths('{"left":"wide"}')).toEqual({ left: 272, right: 384 });
+  });
+});
+
+describe("recent colours", () => {
+  it("most recent first, unique regardless of case, at most 8", () => {
+    expect(pushRecentColour(["#aa0000", "#00bb00"], "#00BB00")).toEqual(["#00BB00", "#aa0000"]);
+    const many = Array.from({ length: 8 }, (_, i) => `#00000${i}`);
+    expect(pushRecentColour(many, "#ffffff")).toEqual(["#ffffff", ...many.slice(0, 7)]);
   });
 });

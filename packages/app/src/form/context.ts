@@ -13,6 +13,16 @@ export interface ControlProps<N extends FormNode = FormNode> {
   label: string;
 }
 
+/** Cascade-aware forms (the Curve tab): where the option at a path stands in the style cascade. */
+export interface CascadeState {
+  /** Set at the level being edited (normal look, reset button); else inherited (muted). */
+  overridden: boolean;
+  /** Differs across the selection. */
+  mixed: boolean;
+  /** Where an inherited value comes from, e.g. "from group Bryophytes" (leaf options only). */
+  source?: string;
+}
+
 export type ControlOf<K extends FormNodeKind> = ControlProps<Extract<FormNode, { kind: K }>>;
 
 export interface FormContextValue {
@@ -27,6 +37,10 @@ export interface FormContextValue {
   errors: string[];
   /** App controls named by `hint.widget`. */
   widgets: Record<string, ComponentType<ControlProps>>;
+  /** Cascade state of the option at `path`; absent in the spec form. */
+  cascade?(path: Path): CascadeState | undefined;
+  /** Label of an unset choice ("Default"; the Curve tab: "Inherited"). */
+  unsetLabel?: string;
 }
 
 export const FormContext = createContext<FormContextValue | null>(null);

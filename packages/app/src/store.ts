@@ -1,9 +1,37 @@
 // App state. The spec is the single source of truth: the editor text, the variable checkboxes
 // and the preset picker all produce new Spec values via commitSpec, which feeds undo/redo.
 
-import { SPEC_VERSION, importers, parseProject, parseSpec, render, resolveSpec, serializeProject, type Dataset, type DiagramLayout, type Preset, type Spec } from "@linden/core";
+import {
+  SPEC_VERSION,
+  importers,
+  parseProject,
+  parseSpec,
+  prepareDatasets,
+  render,
+  resolveSpec,
+  serializeProject,
+  type CurveStyleOverride,
+  type Dataset,
+  type DiagramLayout,
+  type Preset,
+  type SavedCurveStyle,
+  type Spec,
+} from "@linden/core";
 import { create } from "zustand";
 import { examples, loadBundledPresets } from "./bundled";
+import {
+  applyCurveStyle,
+  curveTargets,
+  defaultApplyTo,
+  importLibraryStyles,
+  removeLibraryStyle,
+  resetCurveTargets,
+  saveLibraryStyle,
+  setCurveOption,
+  type ApplyTo,
+  type CurveEnv,
+  type CurveSelection,
+} from "./curveEdit";
 import { download } from "./download";
 import { exporters } from "./export";
 import { fontSubstitutionWarning } from "./export/fonts";
@@ -86,6 +114,16 @@ interface State {
   mergeVariables(datasetId: string, ids: string[], name: string): void;
   unmergeVariable(datasetId: string, mergedId: string): void;
   setPageSize(size: { width?: number; height?: number }): void;
+  /** What curve quick actions work on: spec, presets, the datasets as the diagram sees them, the last layout. */
+  curveEnv(): CurveEnv;
+  /** Curve quick actions (SPEC §11), one undo step each; `applyTo` defaults to the selection's own level. */
+  applyCurveStyle(sel: CurveSelection, style: CurveStyleOverride, applyTo?: ApplyTo): void;
+  setCurveOption(sel: CurveSelection, option: string, value: unknown): void;
+  resetCurveStyle(sel: CurveSelection): void;
+  /** Saved curve styles (spec.styleLibrary). */
+  saveCurveStyle(name: string, style: CurveStyleOverride): void;
+  removeCurveStyle(name: string): void;
+  importCurveStyles(styles: SavedCurveStyle[]): void;
   applyPagePreset(presetId: string): void;
   /** Resolves to the downloaded file name, or undefined if nothing was exported (see exportWarnings). */
   exportDiagram(type: "svg" | "pdf" | "png", png?: PngOptions): Promise<string | undefined>;
@@ -134,6 +172,11 @@ export const useStore = create<State>()((set, get) => {
   /** Commits `next` as one undo step if it differs from the current spec. */
   const edit = (next: Spec) => {
     if (!sameSpec(next, get().spec)) commitSpec(next);
+  };
+  /** Commits `next` as one undo step if it is a valid spec (quick actions never should produce an invalid one). */
+  const editValid = (next: Spec) => {
+    const parsed = parseSpec(next);
+    if (parsed.ok) edit(parsed.value);
   };
   const rawDataset = (id: string) => get().datasets.find((d) => d.id === id);
 
@@ -287,6 +330,42 @@ export const useStore = create<State>()((set, get) => {
 
     setPageSize(size) {
       edit(setPageSize(get().spec, size));
+    },
+
+    curveEnv() {
+      const { datasets, spec, presets, layout } = get();
+      let prepared: Dataset[] = [];
+      try {
+        prepared = prepareDatasets(datasets, spec, presets).datasets;
+      } catch {
+        // Unrenderable spec: no current groups or kinds.
+      }
+      return { spec, presets, prepared, layout };
+    },
+
+    applyCurveStyle(sel, style, applyTo) {
+      editValid(applyCurveStyle(get().curveEnv(), sel, style, applyTo ?? defaultApplyTo(sel)));
+    },
+
+    setCurveOption(sel, option, value) {
+      editValid(setCurveOption(get().curveEnv(), sel, defaultApplyTo(sel), option, value));
+    },
+
+    resetCurveStyle(sel) {
+      const targets = curveTargets(get().curveEnv(), sel, defaultApplyTo(sel));
+      editValid(resetCurveTargets(get().spec, targets.map((t) => t.path)));
+    },
+
+    saveCurveStyle(name, style) {
+      editValid(saveLibraryStyle(get().spec, name, style));
+    },
+
+    removeCurveStyle(name) {
+      editValid(removeLibraryStyle(get().spec, name));
+    },
+
+    importCurveStyles(styles) {
+      editValid(importLibraryStyles(get().spec, styles));
     },
 
     applyPagePreset(presetId) {

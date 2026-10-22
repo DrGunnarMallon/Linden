@@ -201,11 +201,44 @@ describe("common vs independent scales", () => {
     expect(xTitlesOf(svg)).toEqual([["Counts (n/20 cm³)"]]);
   });
 
-  it("warns when one panel mixes kinds", () => {
+  it("warns when a common-scale panel mixes kinds", () => {
     const { warnings } = render([mixed], { specVersion: 4, panels: [{ type: "taxonCurves", dataset: "x" }] });
     expect(warnings).toEqual([
-      'taxonCurves (panel-0-taxonCurves): mixes kinds (count, presence, percent); each kind gets its own x-scale. Use one panel per kind (selection "kinds").',
+      'taxonCurves (panel-0-taxonCurves): mixes kinds (count, presence, percent) on a common scale; each kind gets its own x-scale. Use one panel per kind (selection "kinds") or commonScale false.',
     ]);
+  });
+
+  it("independent scales may mix kinds: per-column ticks (numbers, class codes, none for presence), titles per run of kind and unit", () => {
+    const csv = [
+      "depth,Seeds A,Seeds B,Moss,Charcoal,Temperature",
+      "kind,count,count,abundanceClass,presence,continuous",
+      "unit,n,n,,,°C",
+      "10,3,1,D,+,4.2",
+      "20,0,4,R,-,8",
+      "30,12,2,F,+,13.5",
+    ].join("\n");
+    const ds = importDelimited(csv, { name: "m" }).datasets[0]!;
+    const spec: Spec = {
+      specVersion: 8,
+      preset: "macrofossil-counts",
+      page: { width: 200, height: 100 },
+      datasets: [{ dataset: "m" }],
+      panels: [{ type: "taxonCurves", dataset: "m", style: { columnWidth: 25 } }],
+    };
+    const { svg, warnings } = render([ds], spec, presets);
+    expect(warnings).toEqual([]);
+    const labels = Object.fromEntries(
+      [...svg.matchAll(/id="panel-0-taxonCurves-([^"]+)" class="column"[\s\S]*?<g class="x-axis">([\s\S]*?)<\/g>/g)].map((m) => [m[1], [...m[2]!.matchAll(/>([^<]+)<\/text>/g)].map((t) => t[1])]),
+    );
+    expect(labels).toEqual({
+      // Ticks ≥ 6 mm apart (xTicks.minSpacing), axis rounded up to a whole step.
+      Seeds_A: ["0", "5", "10", "15"], // max 12: 25 mm / 12 → step 5, axis 0–15
+      Seeds_B: ["0", "1", "2", "3", "4"], // max 4: 6.25 mm per seed → step 1
+      Moss: ["-", "R", "O", "F", "A", "D"], // the DAFOR class codes, not numbers
+      Charcoal: [], // presence: no scale
+      Temperature: ["0", "5", "10", "15"], // max 13.5 → step 5, axis 0–15
+    });
+    expect(xTitlesOf(svg)).toEqual([["Counts (n)", "Abundance class", "Presence", "°C"]]);
   });
 });
 
@@ -277,11 +310,87 @@ describe("example diagrams (synthetic data, presets only)", () => {
     expect(xTitlesOf(example("testate-percent").svg)).toEqual([["% of total tests"]]);
   });
 
-  it("macrofossils: counts, classes and presence each in their own panel and scale", () => {
-    const { svg } = example("macrofossil-counts");
+  it("macrofossils: counts, classes and presence in one panel, each column its own scale", () => {
+    const { svg, layout } = example("macrofossil-counts");
+    expect(layout.panels.map((p) => p.type)).toEqual(["yAxis", "taxonCurves"]);
     expect(svg).toContain('text-anchor="end">D</text>'); // DAFOR axis ends on D
     expect(svg).toContain('text-anchor="end">5</text>'); // numeric class axis ends on 5
-    expect(xTitlesOf(svg)).toEqual([["Counts (n/20 cm³)"], ["Abundance class"], ["Presence"]]);
+    expect(xTitlesOf(svg)).toEqual([["Abundance class", "Counts (n/20 cm³)", "Abundance class", "Counts (n/20 cm³)", "Presence"]]);
     expect(svg).toContain("<circle ");
+  });
+
+  describe("macrofossils: group headers follow the rendered columns and current groups", () => {
+    const base = parseSpec(readRepoFile("examples/macrofossil-counts.spec.json"));
+    if (!base.ok) throw new Error(base.errors.join("\n"));
+    const datasets = importDelimited(readRepoFile("examples/macrofossil-counts.csv"), { name: "macrofossil-counts" }).datasets;
+    const entry = base.value.datasets![0]!;
+    const withEntry = (extra: object, top: Partial<Spec> = {}): Spec => ({ ...base.value, ...top, datasets: [{ ...entry, ...extra }] });
+    /** Group header label → ids of the columns its line spans (from the layout, not the SVG columns). */
+    const headerColumns = (spec: Spec) => {
+      const r = render(datasets, spec, presets);
+      const panel = r.layout.panels[1]!;
+      const offset = panel.box.x - r.layout.plot.x; // header coordinates are plot-relative
+      const headers = r.svg.split('id="headers"')[1]!.split("</g>")[0]!;
+      const lines = [...headers.matchAll(/d="M([\d.]+),[-\d.]+L([\d.]+),[-\d.]+"/g)].map((m) => [Number(m[1]), Number(m[2])]);
+      const labels = [...headers.matchAll(/class="group-header"[^>]*>([^<]+)</g)].map((m) => m[1]!);
+      expect(lines).toHaveLength(labels.length);
+      const covered = ([x0, x1]: number[]) =>
+        panel.columns.filter((c) => offset + c.x >= x0! - 0.01 && offset + c.x + c.width <= x1! + 0.01).map((c) => c.id);
+      return { spans: labels.map((l, i) => [l, covered(lines[i]!)] as const), warnings: r.warnings, columns: panel.columns.map((c) => c.id) };
+    };
+    const membership = (spec: Spec) => {
+      const ds = prepareDatasets(datasets, spec, presets).datasets[0]!;
+      return (g: string) => ds.variables.filter((v) => v.group === g).map((v) => v.id);
+    };
+
+    it("each group header is drawn exactly once and spans exactly its members' columns", () => {
+      const { spans, columns } = headerColumns(base.value);
+      expect(spans).toEqual([
+        ["Terrestrial", ["Ericaceae rootlets", "Betula seeds"]],
+        ["Wetland", ["Carex nutlets", "Menyanthes trifoliata seeds", "Sphagnum leaves", "Monocot remains undiff.", "Brown mosses"]],
+        ["Aquatic", ["Potamogeton natans endocarps", "Nymphaea alba seeds", "Daphnia ephippia"]],
+        ["Other", ["Charcoal fragments", "Cenococcum sclerotia"]],
+      ]);
+      const of = membership(base.value);
+      for (const [label, ids] of spans) expect([...ids].sort()).toEqual(of(label.toLowerCase()).sort());
+      expect(spans.flatMap(([, ids]) => ids)).toEqual(columns); // every column under exactly one header
+    });
+
+    it("moving Menyanthes from Wetland to Aquatic moves its column and updates both spans", () => {
+      const moved = withEntry({ assignments: { "Menyanthes trifoliata seeds": "aquatic" } });
+      const { spans, warnings } = headerColumns(moved);
+      expect(spans).toEqual([
+        ["Terrestrial", ["Ericaceae rootlets", "Betula seeds"]],
+        ["Wetland", ["Carex nutlets", "Sphagnum leaves", "Monocot remains undiff.", "Brown mosses"]],
+        ["Aquatic", ["Menyanthes trifoliata seeds", "Potamogeton natans endocarps", "Nymphaea alba seeds", "Daphnia ephippia"]],
+        ["Other", ["Charcoal fragments", "Cenococcum sclerotia"]],
+      ]);
+      expect(warnings.filter((w) => /split|overlap/.test(w))).toEqual([]);
+      // An explicit order cannot pull it out of its group: columns stay ordered by group first.
+      const ordered = withEntry({ assignments: { "Menyanthes trifoliata seeds": "aquatic" }, order: ["Menyanthes trifoliata seeds", "Ericaceae rootlets"] });
+      expect(headerColumns(ordered).spans).toEqual(spans);
+      const panelOrder = withEntry({ assignments: { "Menyanthes trifoliata seeds": "aquatic" } }, {
+        panels: [{ type: "yAxis" }, { type: "taxonCurves", dataset: "macrofossil-counts", variables: { order: ["Menyanthes trifoliata seeds", "Charcoal fragments"] } }],
+      });
+      expect(headerColumns(panelOrder).spans.map(([l]) => l)).toEqual(["Terrestrial", "Wetland", "Aquatic", "Other"]);
+    });
+
+    it("Sphagnum leaves gets its own dashed line; the rest of Aquatic stays polygons, at identical widths", () => {
+      const styled = (curveStyles?: Spec["curveStyles"]) =>
+        withEntry({ ...entry, assignments: { "Sphagnum leaves": "aquatic" } }, { groupStyles: { aquatic: { type: "polygon" } }, ...(curveStyles ? { curveStyles } : {}) });
+      const s = styled({ "Sphagnum leaves": { type: "line", line: { dash: "dashed" } } });
+      const r = render(datasets, s, presets);
+      expect(r.warnings).toEqual([]);
+      const col = (id: string) => r.svg.split(`-taxonCurves-${id}" class="column"`)[1]!.split('class="column"')[0]!;
+      expect(col("Sphagnum_leaves")).toMatch(/<g class="curve">\s*<path [^>]*fill="none"[^>]*stroke="#3a78a8"[^>]*stroke-dasharray="1 0.5"/);
+      for (const id of ["Potamogeton_natans_endocarps", "Nymphaea_alba_seeds"]) {
+        expect(col(id)).toMatch(/<g class="curve">\s*<path [^>]*fill="#3a78a8"/);
+        expect(col(id)).not.toContain("stroke-dasharray");
+      }
+      expect(col("Daphnia_ephippia")).toContain('<g class="presence">'); // presence kind keeps its marks
+      expect(col("Brown_mosses")).toMatch(/<g class="curve">\s*<rect /); // Wetland keeps the preset's bars
+      const widths = (x: Spec) => render(datasets, x, presets).layout.panels[1]!.columns.map((c) => [c.id, c.x, c.width]);
+      expect(widths(s)).toEqual(widths(styled()));
+    });
   });
 });

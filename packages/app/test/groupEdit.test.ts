@@ -83,6 +83,29 @@ describe("moving taxa", () => {
   });
 });
 
+describe("moving taxa: curve styles follow the group", () => {
+  const styled = valid({ ...pollen.spec, groupStyles: { trees: { type: "polygon" }, herbs: { type: "bars" } }, curveStyles: { Pinus: { fill: { colour: "#aa0000" } } } });
+  const curveOf = (s: Spec, id: string) => (render([pollen.ds], s, presets).svg.split(`-taxonCurves-${id}" class="column"`)[1]!.match(/<g class="curve">\s*<(\w+)[^>]*fill="([^"]+)"/) ?? []).slice(1);
+
+  it("dragging a taxon into another group changes only the assignment; its style follows, its own options stay", () => {
+    expect(curveOf(styled, "Betula")[0]).toBe("path");
+    const moved = valid(moveVariable(styled, presets, pollen.ds, "Betula", "herbs", 0));
+    expect(curveOf(moved, "Betula")[0]).toBe("rect");
+    const back = valid(moveVariable(moved, presets, pollen.ds, "Betula", "trees", 0));
+    expect(curveOf(back, "Betula")[0]).toBe("path");
+    // A taxon with an override: bars in herbs, with its own colour.
+    const pinus = valid(moveVariable(back, presets, pollen.ds, "Pinus", "herbs", 0));
+    expect(curveOf(pinus, "Pinus")).toEqual(["rect", "#aa0000"]);
+    // No style was copied anywhere: only the assignment and the explicit overrides are stored.
+    expect(pinus.groupStyles).toEqual(styled.groupStyles);
+    expect(pinus.curveStyles).toEqual(styled.curveStyles);
+    expect(pinus.datasets![0]!.assignments).toEqual({ Pinus: "herbs" });
+    const entry = pinus.datasets![0]!;
+    expect(Object.keys(entry).sort()).toEqual(Object.keys({ ...styled.datasets![0], assignments: {}, order: [] }).sort());
+    for (const g of entry.groups!) expect(Object.keys(g).every((k) => ["id", "name", "colour", "order"].includes(k))).toBe(true);
+  });
+});
+
 describe("group edits", () => {
   it("reorder, rename and recolour are stored in the dataset's groups and drive the diagram", () => {
     let s = valid(reorderGroups(pollen.spec, "demo-pollen", ["herbs", "trees", "shrubs", "aquatics", "spores"]));

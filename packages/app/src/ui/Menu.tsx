@@ -12,6 +12,8 @@ const panel = "animate-pop-in z-50 min-w-48 rounded-lg border border-border bg-s
 const item =
   "relative flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-sm text-fg outline-none select-none " +
   "data-[highlighted]:bg-surface-3 data-[disabled]:opacity-(--disabled-opacity) [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-fg-secondary";
+/** Shared with ContextMenu, so both menus look the same. */
+export { item as menuItemClass, panel as menuPanelClass };
 
 export function MenuContent({ className, align = "start", ...props }: ComponentProps<typeof M.Content>) {
   return (

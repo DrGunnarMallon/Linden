@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupSpans, layoutLabels, type HeaderColumn, type LabelOptions } from "../src/layout/header.js";
+import { autoGroupSpans, groupSpans, layoutLabels, type HeaderColumn, type LabelOptions } from "../src/layout/header.js";
 import { charWidth, textWidthEm } from "../src/layout/metrics.js";
 import { estimateTextWidth, makeTheme, PT_TO_MM } from "../src/layout/theme.js";
 import { coreDefaults } from "../src/model/defaults.js";
@@ -159,6 +159,28 @@ function manyTaxa(groups = false): Dataset {
 
 const labelSizes = (svg: string) =>
   [...svg.matchAll(/<text class="label"[^>]*>/g)].map((m) => / font-size="([^"]+)"/.exec(m[0])?.[1]);
+
+describe("autoGroupSpans — automatic group headers", () => {
+  const theme = makeTheme(coreDefaults.page);
+  const col = (id: string, group: string, x: number, panel: number): HeaderColumn => ({ id, label: id, group, groupName: group.toUpperCase(), x, width: 10, panel });
+
+  it("one header per contiguous group within a panel, spanning exactly its columns", () => {
+    const warnings: string[] = [];
+    const spans = autoGroupSpans([col("A", "t", 0, 1), col("B", "t", 11, 1), col("C", "h", 23, 1)], theme, (m) => warnings.push(m));
+    expect(spans).toEqual([
+      { label: "T", x0: 0, x1: 21 },
+      { label: "H", x0: 23, x1: 33 },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it("a group split within one panel: one header per run and a warning; the same group in two panels does not warn", () => {
+    const warnings: string[] = [];
+    const spans = autoGroupSpans([col("A", "t", 0, 1), col("C", "h", 23, 1), col("D", "t", 45, 1), col("E", "t", 80, 2)], theme, (m) => warnings.push(m));
+    expect(spans.map((s) => [s.label, s.x0, s.x1])).toEqual([["T", 0, 10], ["H", 23, 33], ["T", 45, 55], ["T", 80, 90]]);
+    expect(warnings).toEqual(['Group "T" (panel 1) is split into 2 runs of columns; drawn as 2 headers. Keep its columns together.']);
+  });
+});
 
 describe("render — header band with 40 long taxon names", () => {
   const base: Spec = {

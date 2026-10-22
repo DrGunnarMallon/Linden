@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 import { describe, expect, it } from "vitest";
 import { defaultValue, describeSchema, formNodes, humanize, matchesNode } from "../src/model/schemaForm.js";
 import { SpecSchema } from "../src/model/spec.js";
-import { SPEC_FORM_HINTS, SPEC_FORM_SECTIONS, specForm } from "../src/model/specForm.js";
+import { CURVE_FORM_SECTIONS, SPEC_FORM_HINTS, SPEC_FORM_SECTIONS, specForm } from "../src/model/specForm.js";
 
 const nodes = formNodes(specForm());
 const byPath = (path: string) => nodes.filter((n) => n.path === path);
@@ -36,6 +36,21 @@ describe("spec form description", () => {
     const listed = SPEC_FORM_SECTIONS.flatMap((s) => s.fields);
     expect(listed.filter((k) => !top.includes(k))).toEqual([]);
     expect(new Set(listed).size).toBe(listed.length);
+  });
+
+  it("curve inspector sections hold every curve style option except the type, each once", () => {
+    const curve = byPath("curveStyles{}")[0];
+    if (curve?.kind !== "object") throw new Error("curveStyles{} is not an object");
+    const listed = CURVE_FORM_SECTIONS.flatMap((s) => s.fields);
+    expect(new Set(listed).size).toBe(listed.length);
+    expect([...listed].sort()).toEqual(curve.fields.map((f) => f.key).filter((k) => k !== "type").sort());
+  });
+
+  it("curve colours, dashes and fill patterns name their app widgets", () => {
+    expect(byPath("curveStyles{}.fill.colour")[0]?.hint.widget).toBe("curveColour");
+    expect(byPath("curveStyles{}.exaggeration.colour")[0]?.hint.widget).toBe("exaggerationColour");
+    expect(byPath("groupStyles{}.line.dash")[0]?.hint.widget).toBe("dash");
+    expect(byPath("panels[].style.curve.fill.pattern.type")[0]?.hint.widget).toBe("pattern");
   });
 
   it("reads limits, enums, literals and discriminated unions from the schema", () => {
@@ -74,7 +89,7 @@ describe("defaultValue", () => {
     const transforms = byPath("datasets[].transforms[]").find((n) => n.kind === "variants")!;
     if (panels.kind !== "variants" || overlays.kind !== "variants" || transforms.kind !== "variants") throw new Error();
     const spec = {
-      specVersion: 8,
+      specVersion: 9,
       panels: panels.variants.map((v) => defaultValue(v.node)),
       overlays: overlays.variants.map((v) => defaultValue(v.node)),
       datasets: [{ dataset: "d", transforms: transforms.variants.map((v) => defaultValue(v.node)) }],

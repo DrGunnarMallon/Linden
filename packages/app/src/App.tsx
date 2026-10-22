@@ -1,5 +1,6 @@
 import { TreeDeciduous } from "lucide-react";
 import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { copyStyle, pasteStyle } from "./actions";
 import { Inspector } from "./Inspector";
 import { Preview } from "./Preview";
 import { StatusBar } from "./StatusBar";
@@ -107,11 +108,16 @@ export function App() {
 
   // Ctrl/Cmd+Z, Shift+Ctrl/Cmd+Z, Ctrl+Y: spec history. Text fields keep their own native undo.
   // Ctrl/Cmd +/−: zoom in/out; Shift+1 / Shift+0 / Shift+2: fit / 100% / 200%.
+  // Ctrl/Cmd+Alt+C / V: copy / paste the curve style of the selected curves or group.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTextField(document.activeElement)) return;
       const view = useView.getState();
-      if (e.ctrlKey || e.metaKey) {
+      if ((e.ctrlKey || e.metaKey) && e.altKey) {
+        // By key position: with Alt (Option) held, e.key is another character on many layouts.
+        if (e.code !== "KeyC" && e.code !== "KeyV") return;
+        if (view.curveSelection && useStore.getState().specErrors.length === 0) (e.code === "KeyC" ? copyStyle : pasteStyle)(view.curveSelection);
+      } else if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase();
         if (key === "z" && !e.shiftKey) useStore.getState().undo();
         else if ((key === "z" && e.shiftKey) || key === "y") useStore.getState().redo();

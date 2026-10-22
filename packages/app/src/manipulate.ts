@@ -54,6 +54,67 @@ export function hitPanel(layout: DiagramLayout, x: number, y: number): number | 
   return p ? p.index : null;
 }
 
+/** What a click in the preview selects: a curve column, a group header, or the panel itself. */
+export type PreviewHit = { kind: "curve"; panel: number; id: string } | { kind: "group"; panel: number; group: string } | { kind: "panel"; panel: number };
+
+export interface HitOptions {
+  /** Current group of a column (variable id) of a panel; undefined = ungrouped. */
+  groupOf(panel: number, id: string): string | undefined;
+  /** Height of the group header row at the top of the header band (mm); 0 = no group headers. */
+  groupRow: number;
+  /** Taxon label angle (°, headerBand.angle): labels rise to the right from their column's centre. */
+  labelAngle: number;
+}
+
+/** Runs of adjacent columns of one group within a panel (x relative to the panel), as the group headers span them. */
+export function groupRuns(layout: DiagramLayout, panel: number, groupOf: HitOptions["groupOf"]): { group: string; x0: number; x1: number }[] {
+  const runs: { group: string; x0: number; x1: number }[] = [];
+  let prev: string | undefined;
+  for (const c of layout.panels[panel]?.columns ?? []) {
+    const g = groupOf(panel, c.id);
+    const last = runs[runs.length - 1];
+    if (g !== undefined && g === prev && last) last.x1 = c.x + c.width;
+    else if (g !== undefined) runs.push({ group: g, x0: c.x, x1: c.x + c.width });
+    prev = g;
+  }
+  return runs;
+}
+
+/**
+ * What a click at a page point (mm) hits (SPEC §11, hit-testing on layout metadata): in a panel with
+ * columns, a column's plot area, axis or rotated label selects that curve and the group header row
+ * selects the group under it; anything else in the panel (gaps, other panels) selects the panel.
+ */
+export function hitPreview(layout: DiagramLayout, x: number, y: number, opts: HitOptions): PreviewHit | null {
+  const headerTop = layout.plot.y - layout.headerHeight;
+  if (y < layout.plot.y && y > headerTop + opts.groupRow) {
+    // Rotated labels rise to the right, often past their panel: follow the label back down to the
+    // column it is anchored on (its centre), in whichever panel that is.
+    const angle = (Math.min(90, Math.max(1, opts.labelAngle)) * Math.PI) / 180;
+    const x0 = x - (layout.plot.y - y) / Math.tan(angle);
+    let best: { hit: PreviewHit; d: number } | undefined;
+    for (const p of layout.panels) {
+      for (const c of p.columns) {
+        const d = Math.abs(p.box.x + c.x + c.width / 2 - x0);
+        if (d <= Math.max(c.width / 2, 1.5) && (!best || d < best.d)) best = { hit: { kind: "curve", panel: p.index, id: c.id }, d };
+      }
+    }
+    if (best) return best.hit;
+  }
+  const panel = hitPanel(layout, x, y);
+  if (panel === null) return null;
+  const p = layout.panels[panel]!;
+  const rx = x - p.box.x;
+  if (y >= layout.plot.y) {
+    const c = p.columns.find((c) => rx >= c.x && rx <= c.x + c.width);
+    if (c) return { kind: "curve", panel, id: c.id };
+  } else if (y <= headerTop + opts.groupRow) {
+    const run = groupRuns(layout, panel, opts.groupOf).find((r) => rx >= r.x0 && rx <= r.x1);
+    if (run) return { kind: "group", panel, group: run.group };
+  }
+  return { kind: "panel", panel };
+}
+
 /** Panel types whose schema has a `width` (mm). */
 function hasWidth(type: string): boolean {
   return PanelSchema.options.some((o) => o.shape.type.value === type && "width" in o.shape);

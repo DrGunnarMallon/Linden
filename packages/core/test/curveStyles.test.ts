@@ -353,7 +353,7 @@ describe("v7 → v8 migration of panel modes and per-variable overrides", () => 
 
   it("moves the curve keys into style.curve and curveStyles, keeping only what was set", () => {
     expect(migrateSpec(v7)).toEqual({
-      specVersion: 8,
+      specVersion: 9,
       panels: [
         { type: "yAxis" },
         {
@@ -435,3 +435,128 @@ function leafKeys(value: object, prefix = ""): string[] {
     typeof v === "object" && v !== null && !Array.isArray(v) ? leafKeys(v as object, `${prefix}${k}.`) : [`${prefix}${k}`],
   );
 }
+
+describe("curve styles follow the current group", () => {
+  // Group A (polygons): a1–a3 share the same maximum (40), so their column widths are equal.
+  // Group B (bars): b1–b3. Merged variable m (a1 + a2 sources would clash; it merges b1 + b2).
+  const gds: Dataset = {
+    id: "g",
+    name: "g",
+    depthUnit: "cm",
+    samples: [0, 10, 20, 30, 40].map((depth, i) => ({ id: String(i), depth })),
+    variables: [
+      ...["a1", "a2", "a3"].map((id) => ({ id, name: id, kind: "percent" as const, group: "A" })),
+      ...["b1", "b2", "b3"].map((id) => ({ id, name: id, kind: "percent" as const, group: "B" })),
+    ],
+    groups: [
+      { id: "A", name: "A", colour: "#2f6b3a", order: 1 },
+      { id: "B", name: "B", colour: "#c9a227", order: 2 },
+    ],
+    values: [
+      [40, 10, 20, 5, 8, 2],
+      [20, 40, 10, 10, 6, 4],
+      [10, 20, 40, 15, 4, 6],
+      [30, 30, 30, 10, 2, 8],
+      [5, 15, 25, 5, 0, 10],
+    ],
+  };
+  const dashed: CurveStyleOverride = { type: "line", line: { dash: "dashed" } };
+  const base = (extra: Partial<Spec> = {}): Spec =>
+    spec({
+      specVersion: 8,
+      page: { width: 120, height: 70 },
+      datasets: [{ dataset: "g" }],
+      panels: [{ type: "taxonCurves", dataset: "g", style: { xTitle: { show: "none" } } }],
+      groupHeaders: { show: false },
+      groupStyles: { A: { type: "polygon" }, B: { type: "bars" } },
+      ...extra,
+    });
+  const withAssignments = (s: Spec, assignments: Record<string, string>): Spec => spec({ ...s, datasets: [{ dataset: "g", assignments }] });
+  const svgCol = (svg: string, id: string) => svg.split(`-taxonCurves-${id}" class="column"`)[1]!.split('class="column"')[0]!;
+  const curveOf = (svg: string, id: string) => (svgCol(svg, id).match(/<g class="curve">\s*<(\w+)/) ?? [])[1];
+  const typeOf = (s: Spec, id: string) => resolveCurveStyle(s, id, { dataset: gds }).style.type;
+  const widths = (s: Spec) => Object.fromEntries(render([gds], s).layout.panels[0]!.columns.map((c) => [c.id, c.width]));
+
+  it("one group, three taxa: two follow the group (polygons), one has its own dashed line; widths are identical", async () => {
+    const s = base({ curveStyles: { a3: dashed } });
+    const r = render([gds], s);
+    expect(r.warnings).toEqual([]);
+    expect(curveOf(r.svg, "a1")).toBe("path");
+    expect(svgCol(r.svg, "a1")).toMatch(/<g class="curve">\s*<path [^>]*fill="#2f6b3a"/);
+    expect(svgCol(r.svg, "a2")).toMatch(/<g class="curve">\s*<path [^>]*fill="#2f6b3a"/);
+    expect(svgCol(r.svg, "a3")).toMatch(/<g class="curve">\s*<path [^>]*fill="none"[^>]*stroke-dasharray="1 0.5"/);
+    expect([typeOf(s, "a1"), typeOf(s, "a2"), typeOf(s, "a3")]).toEqual(["polygon", "polygon", "line"]);
+    const w = widths(s);
+    expect(w.a2).toBe(w.a1);
+    expect(w.a3).toBe(w.a1);
+    expect(widths(base())).toEqual(w); // the curve style never changes widths
+    await expect(r.svg).toMatchFileSnapshot("./__snapshots__/curve-group-override.svg");
+  });
+
+  it("moving a taxon from A (polygons) to B (bars) draws bars; moving it back draws polygons again", () => {
+    const s = base();
+    const moved = withAssignments(s, { a1: "B" });
+    expect(curveOf(render([gds], moved).svg, "a1")).toBe("rect");
+    expect(typeOf(moved, "a1")).toBe("bars");
+    expect(resolveCurveStyle(moved, "a1", { dataset: gds }).source.type).toBe("group");
+    const back = withAssignments(moved, {});
+    expect(curveOf(render([gds], back).svg, "a1")).toBe("path");
+    expect(typeOf(back, "a1")).toBe("polygon");
+    const body = (x: Spec) => render([gds], x).svg.replace(/<metadata[^<]*<\/metadata>/, ""); // metadata hashes the spec
+    expect(body(back)).toBe(body(s));
+  });
+
+  it("a per-variable override moves with the variable and keeps winning only for the options it sets", () => {
+    const s = withAssignments(base({ curveStyles: { a1: { fill: { colour: "#aa0000" } } } }), { a1: "B" });
+    const r = resolveCurveStyle(s, "a1", { dataset: gds });
+    expect(r.style.type).toBe("bars");
+    expect(r.style.type === "bars" && r.style.fill.colour).toBe("#aa0000");
+    expect(r.source).toMatchObject({ type: "group", "fill.colour": "variable", "fill.opacity": "default" });
+  });
+
+  it("editing group B's style changes every member without an override; an override keeps only its own options", () => {
+    const s = base({ curveStyles: { b3: { fill: { colour: "#aa0000" } } } });
+    const edited = spec({ ...s, groupStyles: { ...s.groupStyles, B: { type: "bars", fill: { colour: "#0000ff", opacity: 0.5 }, barWidth: { mode: "mm", value: 1 } } } });
+    const fillOf = (id: string) => {
+      const st = resolveCurveStyle(edited, id, { dataset: gds }).style;
+      return st.type === "bars" ? [st.fill.colour, st.fill.opacity, st.barWidth.value] : st.type;
+    };
+    expect(fillOf("b1")).toEqual(["#0000ff", 0.5, 1]);
+    expect(fillOf("b2")).toEqual(["#0000ff", 0.5, 1]);
+    expect(fillOf("b3")).toEqual(["#aa0000", 0.5, 1]);
+    const svg = render([gds], edited).svg;
+    expect(svgCol(svg, "b1")).toMatch(/<rect [^>]*height="1" fill="#0000ff"/);
+    expect(svgCol(svg, "b3")).toMatch(/<rect [^>]*height="1" fill="#aa0000"/);
+    expect(svgCol(svg, "a1")).toMatch(/<g class="curve">\s*<path /); // group A untouched
+  });
+
+  it("curveStyles works for a single merged variable (keyed by the merge id), which takes its sources' group", () => {
+    const s = base({ datasets: [{ dataset: "g", transforms: [{ type: "merge", id: "m", name: "m", from: ["b1", "b2"] }] }], curveStyles: { m: dashed } });
+    expect(resolveCurveStyle(s, "m").style.type).toBe("line"); // no data needed for the merge's group
+    const svg = render([gds], s).svg;
+    expect(svgCol(svg, "m")).toMatch(/stroke-dasharray="1 0.5"/);
+    expect(curveOf(svg, "b3")).toBe("rect");
+    // Without the override the merged variable follows its (sources') group B, or the merge's own group.
+    const plain = base({ datasets: [{ dataset: "g", transforms: [{ type: "merge", id: "m", name: "m", from: ["b1", "b2"] }] }] });
+    expect(typeOf(plain, "m")).toBe("bars");
+    const toA = base({ datasets: [{ dataset: "g", transforms: [{ type: "merge", id: "m", name: "m", from: ["b1", "b2"], group: "A" }] }] });
+    expect(typeOf(toA, "m")).toBe("polygon");
+    expect(curveOf(render([gds], toA).svg, "m")).toBe("path");
+  });
+
+  it("resolveCurveStyle takes the data's group (e.g. a CSV group row) when there is no assignment", () => {
+    const s = spec(readRepoFile("examples/curve-styles.spec.json"));
+    const ds = importDelimited(readRepoFile("examples/curve-styles.csv"), { name: "curve-styles" }).datasets[0]!;
+    expect(resolveCurveStyle(s, "Poaceae", { dataset: ds }).style.type).toBe("bars");
+    expect(resolveCurveStyle(s, "Charcoal", { dataset: ds }).style.type).toBe("presence"); // kind from the data
+  });
+
+  it("the spec keeps only assignments and the explicit overrides, never resolved styles", () => {
+    const s = withAssignments(base({ curveStyles: { a3: dashed } }), { a1: "B" });
+    render([gds], s);
+    resolveCurveStyle(s, "a1", { dataset: gds });
+    expect(s.groupStyles).toEqual({ A: { type: "polygon" }, B: { type: "bars" } });
+    expect(s.curveStyles).toEqual({ a3: dashed });
+    expect(s.datasets).toEqual([{ dataset: "g", assignments: { a1: "B" } }]);
+  });
+});

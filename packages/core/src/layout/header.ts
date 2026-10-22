@@ -197,16 +197,28 @@ export function groupSpans(
 /**
  * Automatic group headers: one per run of adjacent columns of the same group within one panel,
  * labelled with the group name. Ungrouped columns get none; empty groups have no columns, so none.
+ * A group split into several runs within one panel gets one header per run and a warning.
  */
 export function autoGroupSpans(cols: readonly HeaderColumn[], theme: Theme, warn: (m: string) => void): GroupSpan[] {
   const spans: GroupSpan[] = [];
+  const runs = new Map<string, number>();
   cols.forEach((c, i) => {
     if (c.group === undefined) return;
     const prev = cols[i - 1];
     const last = spans[spans.length - 1];
     if (last && prev && prev.group === c.group && prev.panel === c.panel) last.x1 = c.x + c.width;
-    else spans.push({ label: c.groupName ?? c.group, x0: c.x, x1: c.x + c.width });
+    else {
+      spans.push({ label: c.groupName ?? c.group, x0: c.x, x1: c.x + c.width });
+      const key = JSON.stringify([c.panel ?? null, c.group]);
+      runs.set(key, (runs.get(key) ?? 0) + 1);
+    }
   });
+  for (const [key, n] of runs) {
+    if (n < 2) continue;
+    const [panel, group] = JSON.parse(key) as [number | null, string];
+    const name = cols.find((c) => c.group === group)?.groupName ?? group;
+    warn(`Group "${name}"${panel === null ? "" : ` (panel ${panel})`} is split into ${n} runs of columns; drawn as ${n} headers. Keep its columns together.`);
+  }
   warnOverlaps(spans, theme, warn);
   return spans;
 }

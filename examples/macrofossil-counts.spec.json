@@ -11,13 +11,12 @@
         { "id": "wetland", "name": "Wetland", "colour": "#4f7d3a", "order": 2 },
         { "id": "aquatic", "name": "Aquatic", "colour": "#3a78a8", "order": 3 },
         { "id": "other", "name": "Other", "colour": "#555555", "order": 4 }
-      ]
+      ],
+      "order": ["Ericaceae rootlets"]
     }
   ],
   "panels": [
     { "type": "yAxis" },
-    { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["count"] } },
-    { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["abundanceClass"] } },
-    { "type": "taxonCurves", "dataset": "macrofossil-counts", "variables": { "kinds": ["presence"] } }
+    { "type": "taxonCurves", "dataset": "macrofossil-counts" }
   ]
 }
